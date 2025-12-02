@@ -1,8 +1,8 @@
 package com.mzc.backend.lms.common.exceptions.application;
 
 
-import com.teambind.springproject.common.exceptions.CommonErrorCode;
-import com.teambind.springproject.common.exceptions.CommonException;
+import com.mzc.backend.lms.common.exceptions.CommonErrorCode;
+import com.mzc.backend.lms.common.exceptions.CommonException;
 
 /**
  * 인증되지 않은 요청일 때 발생하는 예외

@@ -36,8 +36,6 @@ dependencies {
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
 
-    // API Documentation
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
 
 
     // Lombok
