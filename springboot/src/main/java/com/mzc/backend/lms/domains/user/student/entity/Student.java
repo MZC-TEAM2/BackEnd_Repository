@@ -38,26 +38,41 @@ public class Student {
     @Column(name = "admission_year", nullable = false)
     private Integer admissionYear;  // 입학년도
 
+    @Column(name = "grade", nullable = false)
+    private Integer grade;  // 학년 (1~4)
+
     @CreationTimestamp
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @Builder
-    private Student(User user, String studentNumber, Integer admissionYear) {
+    private Student(User user, String studentNumber, Integer admissionYear, Integer grade) {
         this.user = user;
         this.studentNumber = studentNumber;
         this.admissionYear = admissionYear;
+        this.grade = grade != null ? grade : 1;  // 기본값 1학년
         this.userId = user.getId();
     }
 
     /**
      * 학생 생성
      */
-    public static Student create(User user, String studentNumber, Integer admissionYear) {
+    public static Student create(User user, String studentNumber, Integer admissionYear, Integer grade) {
         return Student.builder()
                 .user(user)
                 .studentNumber(studentNumber)
                 .admissionYear(admissionYear)
+                .grade(grade)
                 .build();
+    }
+
+    /**
+     * 학년 업데이트
+     */
+    public void updateGrade(Integer newGrade) {
+        if (newGrade < 1 || newGrade > 4) {
+            throw new IllegalArgumentException("학년은 1~4 사이여야 합니다.");
+        }
+        this.grade = newGrade;
     }
 }
