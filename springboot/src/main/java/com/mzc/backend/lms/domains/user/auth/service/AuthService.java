@@ -93,9 +93,7 @@ public class AuthService {
         // 6. UserProfile 생성
         UserProfile profile = UserProfile.create(
             user,
-            dto.getName(),
-            null,  // 생년월일 (옵션)
-            null   // 성별 (옵션)
+            dto.getName()
         );
         userProfileRepository.save(profile);
 
@@ -139,7 +137,7 @@ public class AuthService {
         StudentDepartment studentDept = StudentDepartment.create(
             student,
             department,
-            grade != null ? grade : 1,  // 기본 1학년
+            true,  // isPrimary (주전공)
             LocalDate.now()
         );
         studentDepartmentRepository.save(studentDept);
@@ -164,6 +162,7 @@ public class AuthService {
         ProfessorDepartment professorDept = ProfessorDepartment.create(
             professor,
             department,
+            true,  // isPrimary
             LocalDate.now()
         );
         professorDepartmentRepository.save(professorDept);
