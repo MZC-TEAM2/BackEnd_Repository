@@ -40,7 +40,6 @@ import java.util.Optional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class AuthService {
 
     private final UserRepository userRepository;
@@ -60,28 +59,30 @@ public class AuthService {
 
     /**
      * 회원가입
+     * 전체 프로세스를 하나의 트랜잭션으로 처리
+     * 실패 시 모든 DB 변경사항 롤백
      */
+    @Transactional(rollbackFor = Exception.class)
     public Long signup(SignupRequestDto dto) {
-        // 1. 비밀번호 일치 확인
-        if (!dto.isPasswordMatched()) {
-            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
-        }
+        try {
+            // 1. 비밀번호 일치 확인
+            if (!dto.isPasswordMatched()) {
+                throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+            }
 
-        // 2. 이메일 인증 확인
-        if (!emailVerificationService.isEmailVerified(dto.getEmail())) {
-            throw new IllegalArgumentException("이메일 인증이 필요합니다.");
-        }
+            // 2. 이메일 인증 확인
+            if (!emailVerificationService.isEmailVerified(dto.getEmail())) {
+                throw new IllegalArgumentException("이메일 인증이 필요합니다.");
+            }
 
-        // 3. 이메일 중복 확인
-        if (userRepository.existsByEmail(encryptionService.encryptEmail(dto.getEmail()))) {
-            throw new IllegalArgumentException("이미 가입된 이메일입니다.");
-        }
+            // 3. 이메일 중복 확인
+            if (userRepository.existsByEmail(encryptionService.encryptEmail(dto.getEmail()))) {
+                throw new IllegalArgumentException("이미 가입된 이메일입니다.");
+            }
 
-        // 4. 대학/학과 조회
-        College college = collegeRepository.findById(dto.getCollegeId())
-                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 대학입니다."));
-        Department department = departmentRepository.findById(dto.getDepartmentId())
-                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 학과입니다."));
+            // 4. 대학/학과 조회
+            Department department = departmentRepository.findById(dto.getDepartmentId())
+                    .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 학과입니다."));
 
         // 5. User 엔티티 생성
         User user = User.create(
@@ -106,31 +107,41 @@ public class AuthService {
         );
         userContactRepository.save(contact);
 
-        // 8. 사용자 타입별 처리
-        if (dto.isStudent()) {
-            createStudent(user, department, dto.getGrade());
-        } else if (dto.isProfessor()) {
-            createProfessor(user, department, dto.getProfessorNumber());
+            // 8. 사용자 타입별 처리
+            if (dto.isStudent()) {
+                createStudent(user, department, dto.getGrade());
+            } else if (dto.isProfessor()) {
+                createProfessor(user, department, dto.getProfessorNumber());
+            }
+
+            // 9. 이메일 인증 정보 삭제
+            emailVerificationService.clearVerification(dto.getEmail());
+
+            log.info("회원가입 완료: userId={}, email={}, userType={}",
+                    user.getId(), dto.getEmail(), dto.getUserType());
+
+            return user.getId();
+
+        } catch (Exception e) {
+            log.error("회원가입 실패: email={}, error={}", dto.getEmail(), e.getMessage());
+            throw e;  // 트랜잭션 롤백을 위해 예외 재발생
         }
-
-        // 9. 이메일 인증 정보 삭제
-        emailVerificationService.clearVerification(dto.getEmail());
-
-        log.info("회원가입 완료: userId={}, email={}, userType={}",
-                user.getId(), dto.getEmail(), dto.getUserType());
-
-        return user.getId();
     }
 
     /**
      * 학생 생성
      */
     private void createStudent(User user, Department department, Integer grade) {
+        // 학년 유효성 검사
+        if (grade == null || grade < 1 || grade > 4) {
+            grade = 1;  // 기본값 1학년
+        }
+
         // 학번 생성 (년도 + 시퀀스)
         String studentNumber = generateStudentNumber();
 
-        // Student 엔티티 생성
-        Student student = Student.create(user, studentNumber, Year.now().getValue());
+        // Student 엔티티 생성 (grade 포함)
+        Student student = Student.create(user, studentNumber, Year.now().getValue(), grade);
         studentRepository.save(student);
 
         // StudentDepartment 생성
@@ -210,7 +221,9 @@ public class AuthService {
 
     /**
      * 로그인
+     * RefreshToken 저장을 위한 트랜잭션 처리
      */
+    @Transactional
     public LoginResponseDto login(LoginRequestDto dto, String ipAddress) {
         // 1. 사용자 조회 (이메일 또는 학번/교번)
         User user = findUserByUsername(dto.getUsername());
@@ -310,7 +323,9 @@ public class AuthService {
 
     /**
      * 토큰 갱신 (Token Rotation)
+     * 토큰 로테이션을 위한 트랜잭션 처리
      */
+    @Transactional
     public RefreshTokenResponseDto refreshToken(RefreshTokenRequestDto dto) {
         // 1. Refresh Token 조회
         RefreshToken refreshToken = refreshTokenRepository.findByToken(dto.getRefreshToken())
@@ -369,7 +384,9 @@ public class AuthService {
 
     /**
      * 로그아웃
+     * RefreshToken 삭제를 위한 트랜잭션 처리
      */
+    @Transactional
     public void logout(String refreshToken) {
         // Refresh Token 조회 및 폐기
         refreshTokenRepository.findByToken(refreshToken)
