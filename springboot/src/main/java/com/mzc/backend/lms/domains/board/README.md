@@ -117,15 +117,17 @@ Table comments {
   content text [not null, note: "댓글 내용"]
   depth int [default: 0, note: "댓글 깊이 (0: 댓글, 1: 대댓글)"]
   is_anonymous boolean [default: false, note: "익명 댓글 여부"]
+  is_deleted boolean [default: false, note: "삭제 여부 (성능 최적화용)"]
   created_at timestamp [not null, default: `now()`, note: "생성일시"]
   updated_at timestamp [note: "수정일시"]
   deleted_at timestamp [note: "삭제일시 (Soft Delete)"]
 
   indexes {
-    (post_id, created_at) [name: 'idx_post_created']
-    (parent_comment_id, created_at) [name: 'idx_parent_created']
+    (post_id, is_deleted, created_at) [name: 'idx_post_active_created']
+    (parent_comment_id, is_deleted, created_at) [name: 'idx_parent_active_created']
     (author_id, created_at) [name: 'idx_author_created']
     depth
+    is_deleted
   }
 }
 
