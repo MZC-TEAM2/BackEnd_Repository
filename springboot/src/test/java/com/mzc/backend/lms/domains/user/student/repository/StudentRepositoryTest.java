@@ -2,6 +2,7 @@ package com.mzc.backend.lms.domains.user.student.repository;
 
 import com.mzc.backend.lms.domains.user.student.entity.Student;
 import com.mzc.backend.lms.domains.user.user.entity.User;
+import com.mzc.backend.lms.domains.user.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
