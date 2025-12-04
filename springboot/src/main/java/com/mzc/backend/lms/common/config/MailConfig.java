@@ -1,4 +1,4 @@
-package com.mzc.backend.lms.config;
+package com.mzc.backend.lms.common.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

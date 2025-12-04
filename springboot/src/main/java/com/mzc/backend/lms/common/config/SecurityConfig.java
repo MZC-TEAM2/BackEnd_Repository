@@ -1,4 +1,4 @@
-package com.mzc.backend.lms.config;
+package com.mzc.backend.lms.common.config;
 
 import com.mzc.backend.lms.domains.user.auth.jwt.filter.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
