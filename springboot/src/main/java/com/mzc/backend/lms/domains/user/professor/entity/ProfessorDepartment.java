@@ -1,5 +1,6 @@
 package com.mzc.backend.lms.domains.user.professor.entity;
 
+import com.mzc.backend.lms.domains.user.organization.entity.Department;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
