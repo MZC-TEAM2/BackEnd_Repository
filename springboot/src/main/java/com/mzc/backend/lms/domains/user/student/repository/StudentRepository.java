@@ -41,4 +41,9 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
      */
     @Query("SELECT s FROM Student s WHERE s.studentNumber LIKE :pattern")
     List<Student> findByStudentNumberPattern(@Param("pattern") String pattern);
+
+    /**
+     * 학번 접두사로 시작하는 마지막 학생 조회 (학번 생성용)
+     */
+    Optional<Student> findTopByStudentNumberStartingWithOrderByStudentNumberDesc(String prefix);
 }

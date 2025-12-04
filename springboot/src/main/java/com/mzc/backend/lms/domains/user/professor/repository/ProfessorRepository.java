@@ -38,4 +38,9 @@ public interface ProfessorRepository extends JpaRepository<Professor, Long> {
      */
     @Query("SELECT p FROM Professor p WHERE p.userId = :userId")
     Optional<Professor> findByUserId(@Param("userId") Long userId);
+
+    /**
+     * 교번 접두사로 시작하는 마지막 교수 조회 (교번 생성용)
+     */
+    Optional<Professor> findTopByProfessorNumberStartingWithOrderByProfessorNumberDesc(String prefix);
 }
