@@ -1,0 +1,50 @@
+# Claude Code related files
+.claude/
+
+# IDE files
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Build directories
+build/
+out/
+target/
+
+# Gradle
+.gradle/
+gradle-app.setting
+!gradle-wrapper.jar
+.gradletasknamecache
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Compiled files
+*.class
+*.jar
+*.war
+*.ear
+
+# Log files
+*.log
+logs/
+
+# Package files
+*.tar.gz
+*.zip
+*.rar
+
+# Environment files
+.env
+*.env.local
+*.env.development
+*.env.production
+
+# Temporary files
+*.tmp
+*.swp
+*.swo
+*~
