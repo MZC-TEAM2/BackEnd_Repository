@@ -16,7 +16,7 @@ public class LoginResponseDto {
     private String userNumber;    // 학번 또는 교번
     private String name;
     private String email;
-    private Long userId;
+    private String userId;        // 학번 또는 교번 (User의 PK)
 
     /**
      * 토큰 정보만 포함한 응답 생성
@@ -33,7 +33,7 @@ public class LoginResponseDto {
      */
     public static LoginResponseDto of(String accessToken, String refreshToken,
                                      String userType, String userNumber,
-                                     String name, String email, Long userId) {
+                                     String name, String email, String userId) {
         return LoginResponseDto.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)

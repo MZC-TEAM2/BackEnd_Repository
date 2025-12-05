@@ -40,9 +40,7 @@ public class SignupRequestDto {
     // 학생인 경우에만 필수 (커스텀 벨리데이터가 처리)
     // 교수인 경우 무시됨
     private Integer grade;  // 학년 (1~4)
-
-    // 교수인 경우
-    private String professorNumber;  // 교번 (교수만 입력)
+	
 
     @NotBlank(message = "전화번호는 필수입니다")
     @Pattern(regexp = "^01[0-9]-?\\d{3,4}-?\\d{4}$", message = "올바른 전화번호 형식이 아닙니다")

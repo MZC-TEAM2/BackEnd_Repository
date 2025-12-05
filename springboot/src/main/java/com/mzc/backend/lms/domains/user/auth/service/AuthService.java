@@ -28,9 +28,9 @@ public class AuthService {
      * 회원가입
      *
      * @param dto 회원가입 요청 정보
-     * @return 생성된 사용자 ID
+     * @return 생성된 사용자 ID (학번 또는 교번)
      */
-    public Long signup(SignupRequestDto dto) {
+    public String signup(SignupRequestDto dto) {
         log.debug("회원가입 요청: email={}", dto.getEmail());
         return signupUseCase.execute(dto);
     }

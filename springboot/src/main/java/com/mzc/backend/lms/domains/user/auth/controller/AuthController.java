@@ -75,7 +75,7 @@ public class AuthController {
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@Valid @RequestBody SignupRequestDto dto) {
         try {
-            Long userId = authService.signup(dto);
+            String userId = authService.signup(dto);
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
