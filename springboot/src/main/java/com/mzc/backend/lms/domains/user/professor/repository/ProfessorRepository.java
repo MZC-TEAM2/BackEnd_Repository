@@ -95,8 +95,8 @@ public interface ProfessorRepository extends JpaRepository<Professor, Long> {
         SELECT p.user_id, p.professor_number, p.appointment_date,
                u.email,
                prof.name as profile_name,
-               c.contact_value as phone_number,
-               c2.contact_value as office_number,
+               pc.mobile_number as phone_number,
+               pc.office_number as office_number,
                d.id as department_id, d.name as department_name,
                col.id as college_id, col.name as college_name,
                pd.join_date as dept_join_date, pd.is_active as dept_active,
@@ -104,12 +104,11 @@ public interface ProfessorRepository extends JpaRepository<Professor, Long> {
         FROM professors p
         INNER JOIN users u ON p.user_id = u.id
         LEFT JOIN user_profiles prof ON u.id = prof.user_id
-        LEFT JOIN user_contacts c ON u.id = c.user_id AND c.contact_type = 'MOBILE' AND c.is_primary = true
-        LEFT JOIN user_contacts c2 ON u.id = c2.user_id AND c2.contact_type = 'OFFICE'
+        LEFT JOIN user_primary_contacts pc ON u.id = pc.user_id
         LEFT JOIN professor_departments pd ON p.user_id = pd.professor_id AND pd.is_active = true
         LEFT JOIN departments d ON pd.department_id = d.id
         LEFT JOIN colleges col ON d.college_id = col.id
-        LEFT JOIN user_profile_images img ON u.id = img.user_id AND img.is_current = true
+        LEFT JOIN user_profile_images img ON u.id = img.user_id
         WHERE p.professor_number = :professorNumber
         """, nativeQuery = true)
     Object[] findProfessorFullInfoByProfessorNumber(@Param("professorNumber") String professorNumber);
@@ -121,8 +120,8 @@ public interface ProfessorRepository extends JpaRepository<Professor, Long> {
         SELECT p.user_id, p.professor_number, p.appointment_date,
                u.email,
                prof.name as profile_name,
-               c.contact_value as phone_number,
-               c2.contact_value as office_number,
+               pc.mobile_number as phone_number,
+               pc.office_number as office_number,
                d.id as department_id, d.name as department_name,
                col.id as college_id, col.name as college_name,
                pd.join_date as dept_join_date, pd.is_active as dept_active,
@@ -130,12 +129,11 @@ public interface ProfessorRepository extends JpaRepository<Professor, Long> {
         FROM professors p
         INNER JOIN users u ON p.user_id = u.id
         LEFT JOIN user_profiles prof ON u.id = prof.user_id
-        LEFT JOIN user_contacts c ON u.id = c.user_id AND c.contact_type = 'MOBILE' AND c.is_primary = true
-        LEFT JOIN user_contacts c2 ON u.id = c2.user_id AND c2.contact_type = 'OFFICE'
+        LEFT JOIN user_primary_contacts pc ON u.id = pc.user_id
         LEFT JOIN professor_departments pd ON p.user_id = pd.professor_id AND pd.is_active = true
         LEFT JOIN departments d ON pd.department_id = d.id
         LEFT JOIN colleges col ON d.college_id = col.id
-        LEFT JOIN user_profile_images img ON u.id = img.user_id AND img.is_current = true
+        LEFT JOIN user_profile_images img ON u.id = img.user_id
         WHERE p.professor_number IN :professorNumbers
         """, nativeQuery = true)
     List<Object[]> findProfessorsFullInfoByProfessorNumbers(@Param("professorNumbers") List<String> professorNumbers);
