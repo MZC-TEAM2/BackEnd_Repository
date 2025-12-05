@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "professors", indexes = {
-    @Index(name = "idx_professors_user_id", columnList = "user_id")
+    @Index(name = "idx_professors_professor_id", columnList = "professor_id")
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
