@@ -1,4 +1,4 @@
-package com.mzc.backend.lms.domains.user.exceptions;
+package com.mzc.backend.lms.domains.user.user.exceptions;
 
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
