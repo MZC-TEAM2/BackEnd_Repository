@@ -32,7 +32,7 @@ public class StudentNumberGenerator {
      * @return 생성된 학번
      */
     @Transactional
-    public String generateStudentNumber(Long collegeId, Long departmentId) {
+    public Long generateStudentNumber(Long collegeId, Long departmentId) {
         return generateNumber(collegeId, departmentId);
     }
 
@@ -43,14 +43,14 @@ public class StudentNumberGenerator {
      * @return 생성된 교번
      */
     @Transactional
-    public String generateProfessorNumber(Long collegeId, Long departmentId) {
+    public Long generateProfessorNumber(Long collegeId, Long departmentId) {
         return generateNumber(collegeId, departmentId);
     }
 
     /**
      * 번호 생성 공통 로직
      */
-    private String generateNumber(Long collegeId, Long departmentId) {
+    private Long generateNumber(Long collegeId, Long departmentId) {
         Integer currentYear = Year.now().getValue();
 
         // 시퀀스 조회 또는 생성 (비관적 락)
@@ -66,39 +66,44 @@ public class StudentNumberGenerator {
         Integer nextSequence = sequence.getNextSequence();
         sequenceRepository.save(sequence);
 
-        // 번호 생성
-        String number = String.format("%d%02d%02d%03d",
+        // 번호 생성 (Long 타입)
+        Long generatedNumber = Long.parseLong(String.format("%d%02d%02d%03d",
                 currentYear,           // 년도 (4자리)
                 collegeId,            // 단과대학 (2자리)
                 departmentId,         // 학과 (2자리)
-                nextSequence);        // 순번 (3자리)
+                nextSequence));        // 순번 (3자리)
 
-        log.info("Generated number: {}", number);
-        return number;
+        log.info("Generated number: {}", generatedNumber);
+        return generatedNumber;
     }
 
     /**
      * 학번에서 정보 추출
      */
-    public StudentNumberInfo parseStudentNumber(String studentNumber) {
-        if (studentNumber == null || studentNumber.length() != 11) {
+    public StudentNumberInfo parseStudentNumber(Long studentNumber) {
+        if (studentNumber == null) {
+            throw new IllegalArgumentException("학번이 null입니다.");
+        }
+
+        String numberStr = studentNumber.toString();
+        if (numberStr.length() != 11) {
             throw new IllegalArgumentException("잘못된 학번 형식입니다.");
         }
 
         return StudentNumberInfo.builder()
-                .year(Integer.parseInt(studentNumber.substring(0, 4)))
-                .collegeId(Long.parseLong(studentNumber.substring(4, 6)))
-                .departmentId(Long.parseLong(studentNumber.substring(6, 8)))
-                .sequence(Integer.parseInt(studentNumber.substring(8, 11)))
+                .year(Integer.parseInt(numberStr.substring(0, 4)))
+                .collegeId(Long.parseLong(numberStr.substring(4, 6)))
+                .departmentId(Long.parseLong(numberStr.substring(6, 8)))
+                .sequence(Integer.parseInt(numberStr.substring(8, 11)))
                 .build();
     }
 
     /**
      * 교번에서 정보 추출
      */
-    public StudentNumberInfo parseProfessorNumber(String professorNumber) {
-        if (professorNumber == null || professorNumber.length() != 11) {
-            throw new IllegalArgumentException("잘못된 교번 형식입니다.");
+    public StudentNumberInfo parseProfessorNumber(Long professorNumber) {
+        if (professorNumber == null) {
+            throw new IllegalArgumentException("교번이 null입니다.");
         }
 
         return parseStudentNumber(professorNumber);
