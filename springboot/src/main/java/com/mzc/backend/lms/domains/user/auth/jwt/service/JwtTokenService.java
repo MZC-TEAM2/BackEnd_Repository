@@ -37,12 +37,12 @@ public class JwtTokenService {
     /**
      * Access Token 생성
      */
-    public String generateAccessToken(User user, String userType, String userNumber) {
+    public String generateAccessToken(User user, String userType, Long userNumber) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", user.getId());
         claims.put("email", user.getEmail());
         claims.put("userType", userType); // STUDENT or PROFESSOR
-        claims.put("userNumber", userNumber); // 학번 또는 교번
+        claims.put("userNumber", userNumber.toString()); // 학번 또는 교번
 
         return createToken(claims, user.getEmail(), accessTokenExpiration);
     }
