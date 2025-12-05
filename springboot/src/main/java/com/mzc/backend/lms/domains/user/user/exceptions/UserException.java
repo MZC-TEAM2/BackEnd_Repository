@@ -1,4 +1,4 @@
-package com.mzc.backend.lms.domains.user.exceptions;
+package com.mzc.backend.lms.domains.user.user.exceptions;
 
 import com.mzc.backend.lms.common.exceptions.CommonException;
 import com.mzc.backend.lms.common.exceptions.CommonErrorCode;
