@@ -17,23 +17,20 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "professors", indexes = {
-    @Index(name = "idx_professors_professor_number", columnList = "professor_number")
+    @Index(name = "idx_professors_user_id", columnList = "user_id")
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Professor {
 
     @Id
-    @Column(name = "user_id")
-    private Long userId;
+    @Column(name = "professor_id", length = 20)
+    private String professorId;  // 교번 (예: 20240101001) - PK이자 User.id와 동일
 
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "professor_id")
     private User user;
-
-    @Column(name = "professor_number", length = 20, unique = true, nullable = false)
-    private String professorNumber;  // 교번 (예: P2024001)
 
     @Column(name = "appointment_date", nullable = false)
     private LocalDate appointmentDate;  // 임용일자
@@ -43,21 +40,27 @@ public class Professor {
     private LocalDateTime createdAt;
 
     @Builder
-    private Professor(User user, String professorNumber, LocalDate appointmentDate) {
+    private Professor(String professorId, User user, LocalDate appointmentDate) {
+        this.professorId = professorId;
         this.user = user;
-        this.professorNumber = professorNumber;
         this.appointmentDate = appointmentDate;
-        this.userId = user.getId();
     }
 
     /**
      * 교수 생성
      */
-    public static Professor create(User user, String professorNumber, LocalDate appointmentDate) {
+    public static Professor create(String professorId, User user, LocalDate appointmentDate) {
         return Professor.builder()
+                .professorId(professorId)
                 .user(user)
-                .professorNumber(professorNumber)
                 .appointmentDate(appointmentDate)
                 .build();
+    }
+
+    /**
+     * 교번 getter (기존 코드 호환용)
+     */
+    public String getProfessorNumber() {
+        return this.professorId;
     }
 }
