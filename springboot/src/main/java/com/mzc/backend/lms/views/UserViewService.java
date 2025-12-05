@@ -14,19 +14,19 @@ public interface UserViewService {
     /**
      * User ID로 사용자 타입 확인
      *
-     * @param userId User ID
+     * @param userId User ID (학번 또는 교번)
      * @return "STUDENT" 또는 "PROFESSOR", 없으면 null
      */
-    String getUserType(Long userId);
+    String getUserType(String userId);
 
     /**
      * User ID로 사용자 이름만 간단히 조회
      * 캐싱 가능한 간단한 조회용
      *
-     * @param userId User ID
+     * @param userId User ID (학번 또는 교번)
      * @return 복호화된 이름, 없으면 null
      */
-    String getUserName(Long userId);
+    String getUserName(String userId);
 
     /**
      * 여러 User ID로 이름 일괄 조회
@@ -34,21 +34,21 @@ public interface UserViewService {
      * @param userIds User ID 목록
      * @return User ID를 키로 하는 이름 맵
      */
-    Map<Long, String> getUserNames(List<Long> userIds);
+    Map<String, String> getUserNames(List<String> userIds);
 
     /**
      * User ID로 프로필 이미지 URL 조회
      *
-     * @param userId User ID
+     * @param userId User ID (학번 또는 교번)
      * @return 현재 프로필 이미지 URL, 없으면 null
      */
-    String getUserProfileImageUrl(Long userId);
+    String getUserProfileImageUrl(String userId);
 
     /**
      * User ID 존재 여부 확인
      *
-     * @param userId User ID
+     * @param userId User ID (학번 또는 교번)
      * @return 존재하면 true, 없으면 false
      */
-    boolean existsByUserId(Long userId);
+    boolean existsByUserId(String userId);
 }

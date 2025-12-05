@@ -37,16 +37,16 @@ public class UserViewServiceImpl implements UserViewService {
 
     @Override
     @Transactional(readOnly = true)
-    public String getUserType(Long userId) {
+    public String getUserType(String userId) {
         log.debug("Getting user type for userId: {}", userId);
 
         // 학생인지 확인
-        if (studentRepository.findByUserId(userId).isPresent()) {
+        if (studentRepository.findById(userId).isPresent()) {
             return "STUDENT";
         }
 
         // 교수인지 확인
-        if (professorRepository.findByUserId(userId).isPresent()) {
+        if (professorRepository.findById(userId).isPresent()) {
             return "PROFESSOR";
         }
 
@@ -55,7 +55,7 @@ public class UserViewServiceImpl implements UserViewService {
 
     @Override
     @Transactional(readOnly = true)
-    public String getUserName(Long userId) {
+    public String getUserName(String userId) {
         log.debug("Getting user name for userId: {}", userId);
 
         Optional<UserProfile> profileOpt = userProfileRepository.findByUserId(userId);
@@ -70,7 +70,7 @@ public class UserViewServiceImpl implements UserViewService {
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Long, String> getUserNames(List<Long> userIds) {
+    public Map<String, String> getUserNames(List<String> userIds) {
         if (userIds == null || userIds.isEmpty()) {
             return Collections.emptyMap();
         }
@@ -80,9 +80,9 @@ public class UserViewServiceImpl implements UserViewService {
         // 프로젝션 쿼리로 userId와 name만 조회
         List<Object[]> results = userProfileRepository.findNamesByUserIds(userIds);
 
-        Map<Long, String> nameMap = new HashMap<>();
+        Map<String, String> nameMap = new HashMap<>();
         for (Object[] result : results) {
-            Long userId = ((Number) result[0]).longValue();
+            String userId = (String) result[0];
             String encryptedName = (String) result[1];
             String decryptedName = decryptName(encryptedName);
             nameMap.put(userId, decryptedName);
@@ -93,7 +93,7 @@ public class UserViewServiceImpl implements UserViewService {
 
     @Override
     @Transactional(readOnly = true)
-    public String getUserProfileImageUrl(Long userId) {
+    public String getUserProfileImageUrl(String userId) {
         log.debug("Getting profile image URL for userId: {}", userId);
 
         Optional<UserProfileImage> imageOpt = userProfileImageRepository
@@ -104,7 +104,7 @@ public class UserViewServiceImpl implements UserViewService {
 
     @Override
     @Transactional(readOnly = true)
-    public boolean existsByUserId(Long userId) {
+    public boolean existsByUserId(String userId) {
         return userRepository.existsById(userId);
     }
 

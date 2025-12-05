@@ -49,38 +49,7 @@ public class StudentViewServiceImpl implements StudentViewService {
         log.debug("Finding student by studentNumber: {}", studentNumber);
 
         // Native Query로 전체 정보 조회
-        Object[] result = studentRepository.findStudentFullInfoByStudentNumber(studentNumber);
-
-        if (result == null) {
-            return Optional.empty();
-        }
-
-        return Optional.of(mapToStudentView(result));
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public StudentView getStudentByUserId(Long userId) {
-        return findStudentByUserId(userId)
-            .orElseThrow(() -> UserException.studentNotFoundByUserId(userId));
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Optional<StudentView> findStudentByUserId(Long userId) {
-        log.debug("Finding student by userId: {}", userId);
-
-        // 먼저 Student 엔티티 조회
-        Optional<Student> studentOpt = studentRepository.findByUserIdWithUser(userId);
-
-        if (studentOpt.isEmpty()) {
-            return Optional.empty();
-        }
-
-        Student student = studentOpt.get();
-
-        // Native Query로 전체 정보 조회
-        Object[] result = studentRepository.findStudentFullInfoByStudentNumber(student.getStudentNumber());
+        Object[] result = studentRepository.findStudentFullInfoById(studentNumber);
 
         if (result == null) {
             return Optional.empty();
@@ -99,7 +68,7 @@ public class StudentViewServiceImpl implements StudentViewService {
         log.debug("Finding {} students by numbers", studentNumbers.size());
 
         // Native Query로 여러 학생 정보 조회
-        List<Object[]> results = studentRepository.findStudentsFullInfoByStudentNumbers(studentNumbers);
+        List<Object[]> results = studentRepository.findStudentsFullInfoByIds(studentNumbers);
 
         return results.stream()
             .map(this::mapToStudentView)
@@ -109,48 +78,9 @@ public class StudentViewServiceImpl implements StudentViewService {
             ));
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public Map<Long, StudentView> getStudentsByUserIds(List<Long> userIds) {
-        if (userIds == null || userIds.isEmpty()) {
-            return Collections.emptyMap();
-        }
-
-        log.debug("Finding {} students by userIds", userIds.size());
-
-        // 먼저 Student 엔티티들 조회
-        List<Student> students = studentRepository.findByUserIdsWithUser(userIds);
-
-        if (students.isEmpty()) {
-            return Collections.emptyMap();
-        }
-
-        // 학번 목록 추출
-        List<String> studentNumbers = students.stream()
-            .map(Student::getStudentNumber)
-            .collect(Collectors.toList());
-
-        // Native Query로 전체 정보 조회
-        List<Object[]> results = studentRepository.findStudentsFullInfoByStudentNumbers(studentNumbers);
-
-        return results.stream()
-            .map(this::mapToStudentView)
-            .collect(Collectors.toMap(
-                StudentView::getUserId,
-                student -> student
-            ));
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public boolean isStudent(Long userId) {
-        return studentRepository.findByUserId(userId).isPresent();
-    }
-
-    @Override
     @Transactional(readOnly = true)
     public boolean existsByStudentNumber(String studentNumber) {
-        return studentRepository.existsByStudentNumber(studentNumber);
+        return studentRepository.existsById(studentNumber);
     }
 
     /**

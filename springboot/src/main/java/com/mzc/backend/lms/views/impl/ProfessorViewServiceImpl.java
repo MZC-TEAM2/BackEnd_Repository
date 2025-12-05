@@ -49,7 +49,7 @@ public class ProfessorViewServiceImpl implements ProfessorViewService {
         log.debug("Finding professor by professorNumber: {}", professorNumber);
 
         // Native Query로 전체 정보 조회
-        Object[] result = professorRepository.findProfessorFullInfoByProfessorNumber(professorNumber);
+        Object[] result = professorRepository.findProfessorFullInfoById(professorNumber);
 
         if (result == null) {
             return Optional.empty();
@@ -58,36 +58,8 @@ public class ProfessorViewServiceImpl implements ProfessorViewService {
         return Optional.of(mapToProfessorView(result));
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public ProfessorView getProfessorByUserId(Long userId) {
-        return findProfessorByUserId(userId)
-            .orElseThrow(() -> UserException.professorNotFoundByUserId(userId));
-    }
 
-    @Override
-    @Transactional(readOnly = true)
-    public Optional<ProfessorView> findProfessorByUserId(Long userId) {
-        log.debug("Finding professor by userId: {}", userId);
 
-        // 먼저 Professor 엔티티 조회
-        Optional<Professor> professorOpt = professorRepository.findByUserIdWithUser(userId);
-
-        if (professorOpt.isEmpty()) {
-            return Optional.empty();
-        }
-
-        Professor professor = professorOpt.get();
-
-        // Native Query로 전체 정보 조회
-        Object[] result = professorRepository.findProfessorFullInfoByProfessorNumber(professor.getProfessorNumber());
-
-        if (result == null) {
-            return Optional.empty();
-        }
-
-        return Optional.of(mapToProfessorView(result));
-    }
 
     @Override
     @Transactional(readOnly = true)
@@ -99,7 +71,7 @@ public class ProfessorViewServiceImpl implements ProfessorViewService {
         log.debug("Finding {} professors by numbers", professorNumbers.size());
 
         // Native Query로 여러 교수 정보 조회
-        List<Object[]> results = professorRepository.findProfessorsFullInfoByProfessorNumbers(professorNumbers);
+        List<Object[]> results = professorRepository.findProfessorsFullInfoByIds(professorNumbers);
 
         return results.stream()
             .map(this::mapToProfessorView)
@@ -109,48 +81,12 @@ public class ProfessorViewServiceImpl implements ProfessorViewService {
             ));
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public Map<Long, ProfessorView> getProfessorsByUserIds(List<Long> userIds) {
-        if (userIds == null || userIds.isEmpty()) {
-            return Collections.emptyMap();
-        }
 
-        log.debug("Finding {} professors by userIds", userIds.size());
-
-        // 먼저 Professor 엔티티들 조회
-        List<Professor> professors = professorRepository.findByUserIdsWithUser(userIds);
-
-        if (professors.isEmpty()) {
-            return Collections.emptyMap();
-        }
-
-        // 교번 목록 추출
-        List<String> professorNumbers = professors.stream()
-            .map(Professor::getProfessorNumber)
-            .collect(Collectors.toList());
-
-        // Native Query로 전체 정보 조회
-        List<Object[]> results = professorRepository.findProfessorsFullInfoByProfessorNumbers(professorNumbers);
-
-        return results.stream()
-            .map(this::mapToProfessorView)
-            .collect(Collectors.toMap(
-                ProfessorView::getUserId,
-                professor -> professor
-            ));
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public boolean isProfessor(Long userId) {
-        return professorRepository.findByUserId(userId).isPresent();
-    }
 
     @Override
     @Transactional(readOnly = true)
     public boolean existsByProfessorNumber(String professorNumber) {
-        return professorRepository.existsByProfessorNumber(professorNumber);
+        return professorRepository.existsById(professorNumber);
     }
 
     /**

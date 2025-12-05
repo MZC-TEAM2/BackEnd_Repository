@@ -34,22 +34,6 @@ public interface ProfessorViewService {
      */
     Optional<ProfessorView> findProfessor(String professorNumber);
 
-    /**
-     * User ID로 교수 정보 조회
-     *
-     * @param userId 사용자 ID
-     * @return 교수 상세 정보
-     * @throws UserException 교수를 찾을 수 없는 경우
-     */
-    ProfessorView getProfessorByUserId(Long userId);
-
-    /**
-     * User ID로 교수 정보 조회 (Optional)
-     *
-     * @param userId 사용자 ID
-     * @return 교수 정보 Optional
-     */
-    Optional<ProfessorView> findProfessorByUserId(Long userId);
 
     /**
      * 여러 교번으로 교수 정보 일괄 조회
@@ -59,21 +43,7 @@ public interface ProfessorViewService {
      */
     Map<String, ProfessorView> getProfessorsByNumbers(List<String> professorNumbers);
 
-    /**
-     * 여러 User ID로 교수 정보 일괄 조회
-     *
-     * @param userIds User ID 목록
-     * @return User ID를 키로 하는 교수 정보 맵
-     */
-    Map<Long, ProfessorView> getProfessorsByUserIds(List<Long> userIds);
 
-    /**
-     * User ID로 교수 여부 확인
-     *
-     * @param userId User ID
-     * @return 교수이면 true, 아니면 false
-     */
-    boolean isProfessor(Long userId);
 
     /**
      * 교번 존재 여부 확인

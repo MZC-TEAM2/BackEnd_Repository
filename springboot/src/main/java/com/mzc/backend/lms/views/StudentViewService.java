@@ -34,22 +34,6 @@ public interface StudentViewService {
      */
     Optional<StudentView> findStudent(String studentNumber);
 
-    /**
-     * User ID로 학생 정보 조회
-     *
-     * @param userId 사용자 ID
-     * @return 학생 상세 정보
-     * @throws UserException 학생을 찾을 수 없는 경우
-     */
-    StudentView getStudentByUserId(Long userId);
-
-    /**
-     * User ID로 학생 정보 조회 (Optional)
-     *
-     * @param userId 사용자 ID
-     * @return 학생 정보 Optional
-     */
-    Optional<StudentView> findStudentByUserId(Long userId);
 
     /**
      * 여러 학번으로 학생 정보 일괄 조회
@@ -60,21 +44,6 @@ public interface StudentViewService {
      */
     Map<String, StudentView> getStudentsByNumbers(List<String> studentNumbers);
 
-    /**
-     * 여러 User ID로 학생 정보 일괄 조회
-     *
-     * @param userIds User ID 목록
-     * @return User ID를 키로 하는 학생 정보 맵
-     */
-    Map<Long, StudentView> getStudentsByUserIds(List<Long> userIds);
-
-    /**
-     * User ID로 학생 여부 확인
-     *
-     * @param userId User ID
-     * @return 학생이면 true, 아니면 false
-     */
-    boolean isStudent(Long userId);
 
     /**
      * 학번 존재 여부 확인
