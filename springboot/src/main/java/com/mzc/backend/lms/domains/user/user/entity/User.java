@@ -29,9 +29,8 @@ import java.time.LocalDateTime;
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private Long id;
+    @Column(name = "id", length = 20)
+    private String id;  // 학번 또는 교번
 
     @Column(name = "email", length = 100, unique = true, nullable = false)
     private String email;
@@ -61,7 +60,8 @@ public class User {
     private UserProfileImage profileImage;
 
     @Builder
-    private User(String email, String password) {
+    private User(String id, String email, String password) {
+        this.id = id;
         this.email = email;
         this.password = password;
     }
@@ -69,8 +69,9 @@ public class User {
     /**
      * 사용자 생성 팩토리 메소드
      */
-    public static User create(String email, String password) {
+    public static User create(String id, String email, String password) {
         return User.builder()
+                .id(id)
                 .email(email)
                 .password(password)
                 .build();
