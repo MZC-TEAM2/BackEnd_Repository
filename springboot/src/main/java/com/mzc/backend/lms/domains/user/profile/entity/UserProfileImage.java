@@ -7,46 +7,52 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
 /**
- * 사용자 프로필 이미지 엔티티
+ * 사용자 프로필 이미지 엔티티 (1:1 관계)
  * user_profile_images 테이블과 매핑
  */
 @Entity
-@Table(name = "user_profile_images", indexes = {
-    @Index(name = "idx_user_profile_images_user_id", columnList = "user_id"),
-    @Index(name = "idx_user_profile_images_is_current", columnList = "is_current")
-})
+@Table(name = "user_profile_images",
+    indexes = {
+        @Index(name = "idx_profile_image_created", columnList = "created_at")
+    })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class UserProfileImage {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private Long id;
+    @Column(name = "user_id")
+    private Long userId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @OneToOne(fetch = FetchType.LAZY)
+    @MapsId
+    @JoinColumn(name = "user_id")
     private User user;
 
     @Column(name = "image_url", nullable = false)
     private String imageUrl;
 
-    @Column(name = "is_current")
-    private Boolean isCurrent = true;
+    @Column(name = "thumbnail_url")
+    private String thumbnailUrl;
 
     @CreationTimestamp
-    @Column(name = "uploaded_at")
-    private LocalDateTime uploadedAt;
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     @Builder
-    private UserProfileImage(User user, String imageUrl) {
+    private UserProfileImage(User user, String imageUrl, String thumbnailUrl) {
         this.user = user;
+        this.userId = user.getId();
         this.imageUrl = imageUrl;
-        this.isCurrent = true;
+        this.thumbnailUrl = thumbnailUrl;
     }
 
     /**
@@ -60,16 +66,17 @@ public class UserProfileImage {
     }
 
     /**
-     * 현재 프로필 이미지로 설정
+     * 프로필 이미지 업데이트
      */
-    public void setCurrent() {
-        this.isCurrent = true;
+    public void updateImage(String imageUrl, String thumbnailUrl) {
+        this.imageUrl = imageUrl;
+        this.thumbnailUrl = thumbnailUrl;
     }
 
     /**
-     * 현재 프로필 이미지 해제
+     * 썸네일 URL 설정
      */
-    public void unsetCurrent() {
-        this.isCurrent = false;
+    public void setThumbnailUrl(String thumbnailUrl) {
+        this.thumbnailUrl = thumbnailUrl;
     }
 }
