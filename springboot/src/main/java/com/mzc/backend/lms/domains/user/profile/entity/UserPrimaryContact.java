@@ -29,8 +29,8 @@ import java.time.LocalDateTime;
 public class UserPrimaryContact {
 
     @Id
-    @Column(name = "user_id")
-    private Long userId;
+    @Column(name = "user_id", length = 20)
+    private String userId;
 
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId
