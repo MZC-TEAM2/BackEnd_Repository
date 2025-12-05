@@ -59,7 +59,7 @@ public class SignupUseCaseImpl implements SignupUseCase {
                     .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 학과입니다."));
 
             // 학번/교번 먼저 생성
-            String userNumber;
+            Long userNumber;
             if (dto.isStudent()) {
                 userNumber = studentNumberGenerator.generateStudentNumber(
                     department.getCollege().getId(),
@@ -90,7 +90,7 @@ public class SignupUseCaseImpl implements SignupUseCase {
             log.info("회원가입 완료: userId={}, email={}, userType={}",
                     user.getId(), dto.getEmail(), dto.getUserType());
 
-            return user.getId();
+            return user.getId().toString();
 
         } catch (Exception e) {
             log.error("회원가입 실패: email={}, error={}", dto.getEmail(), e.getMessage());
@@ -119,7 +119,7 @@ public class SignupUseCaseImpl implements SignupUseCase {
         }
     }
 
-    private User createUser(String id, SignupRequestDto dto) {
+    private User createUser(Long id, SignupRequestDto dto) {
         User user = User.create(
             id,
             encryptionService.encryptEmail(dto.getEmail()),
@@ -149,7 +149,7 @@ public class SignupUseCaseImpl implements SignupUseCase {
         }
 
         // User의 ID가 이미 학번임
-        String studentId = user.getId();
+        Long studentId = user.getId();
 
         // 학생 엔티티 생성 (새로운 PK 구조)
         Student student = Student.create(studentId, user, Year.now().getValue(), grade);
@@ -166,7 +166,7 @@ public class SignupUseCaseImpl implements SignupUseCase {
 
     private void createProfessor(User user, Department department) {
         // User의 ID가 이미 교번임
-        String professorId = user.getId();
+        Long professorId = user.getId();
 
         // 교수 엔티티 생성 (새로운 PK 구조)
         Professor professor = Professor.create(professorId, user, LocalDate.now());
