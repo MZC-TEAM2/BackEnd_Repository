@@ -13,22 +13,22 @@ import java.util.Optional;
  * 사용자 프로필 이미지 Repository (1:1 관계)
  */
 @Repository
-public interface UserProfileImageRepository extends JpaRepository<UserProfileImage, Long> {
+public interface UserProfileImageRepository extends JpaRepository<UserProfileImage, String> {
 
     /**
      * 사용자 ID로 프로필 이미지 조회
      */
-    Optional<UserProfileImage> findByUserId(Long userId);
+    Optional<UserProfileImage> findByUserId(String userId);
 
     /**
      * 여러 사용자의 프로필 이미지 일괄 조회
      */
     @Query("SELECT upi FROM UserProfileImage upi WHERE upi.userId IN :userIds")
-    List<UserProfileImage> findByUserIds(@Param("userIds") List<Long> userIds);
+    List<UserProfileImage> findByUserIds(@Param("userIds") List<String> userIds);
 
     /**
      * 프로필 이미지가 있는 사용자 ID 목록 조회
      */
     @Query("SELECT upi.userId FROM UserProfileImage upi WHERE upi.userId IN :userIds")
-    List<Long> findUserIdsWithProfileImage(@Param("userIds") List<Long> userIds);
+    List<String> findUserIdsWithProfileImage(@Param("userIds") List<String> userIds);
 }

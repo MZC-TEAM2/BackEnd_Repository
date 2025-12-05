@@ -12,7 +12,7 @@ import java.util.Optional;
  * 사용자 Repository
  */
 @Repository
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface UserRepository extends JpaRepository<User, String> {
 
     /**
      * 이메일로 사용자 조회
@@ -28,7 +28,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * 삭제되지 않은 사용자 조회 (Soft Delete 고려)
      */
     @Query("SELECT u FROM User u WHERE u.id = :id AND u.deletedAt IS NULL")
-    Optional<User> findActiveById(@Param("id") Long id);
+    Optional<User> findActiveById(@Param("id") String id);
 
     /**
      * 이메일로 삭제되지 않은 사용자 조회
