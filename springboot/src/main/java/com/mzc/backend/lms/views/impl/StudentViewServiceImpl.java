@@ -201,7 +201,7 @@ public class StudentViewServiceImpl implements StudentViewService {
      */
     private String decryptName(String encryptedName) {
         try {
-            return encryptionService.decryptName(encryptedName);
+            return encryptionService.decryptPersonalInfo(encryptedName);
         } catch (Exception e) {
             log.error("Failed to decrypt name", e);
             return encryptedName;
