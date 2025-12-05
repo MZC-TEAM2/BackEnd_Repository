@@ -39,8 +39,5 @@ public interface ProfessorDepartmentRepository extends JpaRepository<ProfessorDe
     @Query("SELECT pd FROM ProfessorDepartment pd WHERE pd.professor = :professor AND pd.endDate IS NULL")
     Optional<ProfessorDepartment> findActiveByProfessor(@Param("professor") Professor professor);
 
-    /**
-     * 교수의 모든 소속 학과 이력 조회
-     */
-    List<ProfessorDepartment> findByProfessorOrderByStartDateDesc(Professor professor);
+
 }
