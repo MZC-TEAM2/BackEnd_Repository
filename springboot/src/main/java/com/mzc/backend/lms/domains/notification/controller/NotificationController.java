@@ -1,12 +1,10 @@
 package com.mzc.backend.lms.domains.notification.controller;
 
-import com.mzc.backend.lms.domains.notification.dto.NotificationListResponseDto;
+import com.mzc.backend.lms.domains.notification.dto.NotificationCursorResponseDto;
 import com.mzc.backend.lms.domains.notification.dto.NotificationResponseDto;
 import com.mzc.backend.lms.domains.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +14,7 @@ import java.util.Map;
 
 /**
  * 알림 컨트롤러
+ * 커서 기반 페이징으로 대용량 데이터 효율적 처리
  */
 @Slf4j
 @RestController
@@ -25,27 +24,31 @@ public class NotificationController {
 
     private final NotificationService notificationService;
 
-    private static final int DEFAULT_PAGE_SIZE = 20;
-    private static final int MAX_PAGE_SIZE = 100;
+    private static final int DEFAULT_SIZE = 20;
+    private static final int MAX_SIZE = 100;
 
     /**
-     * 알림 목록 조회
+     * 알림 목록 조회 (커서 기반)
+     *
+     * @param cursor 커서 (이전 응답의 nextCursor, 첫 요청 시 생략)
+     * @param size 페이지 크기 (기본값: 20, 최대: 100)
+     * @param unreadOnly 읽지 않은 알림만 조회 여부
      */
     @GetMapping
     public ResponseEntity<?> getNotifications(
             @AuthenticationPrincipal Long userId,
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(required = false) Long cursor,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "false") boolean unreadOnly) {
         try {
             validateUserId(userId);
-            Pageable pageable = createPageable(page, size);
+            int validSize = validateSize(size);
 
-            NotificationListResponseDto response;
+            NotificationCursorResponseDto response;
             if (unreadOnly) {
-                response = notificationService.getUnreadNotifications(userId, pageable);
+                response = notificationService.getUnreadNotifications(userId, cursor, validSize);
             } else {
-                response = notificationService.getNotifications(userId, pageable);
+                response = notificationService.getNotifications(userId, cursor, validSize);
             }
 
             return ResponseEntity.ok(response);
@@ -186,11 +189,10 @@ public class NotificationController {
     }
 
     /**
-     * 페이징 정보 생성
+     * 페이지 크기 유효성 검증
      */
-    private Pageable createPageable(int page, int size) {
-        int validSize = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
-        return PageRequest.of(Math.max(page, 0), validSize);
+    private int validateSize(int size) {
+        return Math.min(Math.max(size, 1), MAX_SIZE);
     }
 
     /**
