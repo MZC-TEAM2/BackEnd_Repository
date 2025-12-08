@@ -136,14 +136,16 @@ class NotificationServiceImplTest {
     }
 
     @Test
-    @DisplayName("알림 상세 조회 성공")
+    @DisplayName("알림 상세 조회 성공 - 자동 읽음 처리")
     void getNotificationSuccess() {
         // given
         Long userId = 100L;
         Long notificationId = 1L;
         Notification notification = createMockNotification(notificationId);
+        when(notification.isUnread()).thenReturn(true);
 
         when(notificationRepository.findById(notificationId)).thenReturn(Optional.of(notification));
+        when(notificationRepository.save(notification)).thenReturn(notification);
 
         // when
         NotificationResponseDto response = notificationService.getNotification(userId, notificationId);
@@ -151,6 +153,8 @@ class NotificationServiceImplTest {
         // then
         assertThat(response).isNotNull();
         assertThat(response.getId()).isEqualTo(notificationId);
+        verify(notification).markAsRead();
+        verify(notificationRepository).save(notification);
     }
 
     @Test

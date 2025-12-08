@@ -81,11 +81,18 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    @Transactional
     public NotificationResponseDto getNotification(Long userId, Long notificationId) {
         Notification notification = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new IllegalArgumentException("알림을 찾을 수 없습니다: " + notificationId));
 
         validateRecipient(notification, userId);
+
+        // 상세 조회 시 자동 읽음 처리
+        if (notification.isUnread()) {
+            notification.markAsRead();
+            notificationRepository.save(notification);
+        }
 
         return NotificationResponseDto.from(notification);
     }
