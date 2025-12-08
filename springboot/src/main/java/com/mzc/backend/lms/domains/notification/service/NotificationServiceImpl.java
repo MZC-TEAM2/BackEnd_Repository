@@ -141,6 +141,26 @@ public class NotificationServiceImpl implements NotificationService {
         log.info("알림 삭제: notificationId={}, userId={}", notificationId, userId);
     }
 
+    @Override
+    @Transactional
+    public int deleteReadNotifications(Long userId) {
+        int deletedCount = notificationRepository.deleteReadByRecipientId(userId);
+
+        log.info("읽은 알림 삭제: userId={}, count={}", userId, deletedCount);
+
+        return deletedCount;
+    }
+
+    @Override
+    @Transactional
+    public int deleteAllNotifications(Long userId) {
+        int deletedCount = notificationRepository.deleteAllByRecipientId(userId);
+
+        log.info("모든 알림 삭제: userId={}, count={}", userId, deletedCount);
+
+        return deletedCount;
+    }
+
     /**
      * 알림 수신자 검증
      */
