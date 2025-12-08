@@ -63,4 +63,38 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
      */
     Page<Notification> findByRecipientIdAndNotificationTypeIdOrderByCreatedAtDesc(
             Long recipientId, Integer typeId, Pageable pageable);
+
+    // ========== 커서 기반 페이징 ==========
+
+    /**
+     * 커서 기반 알림 목록 조회 (최초 요청)
+     */
+    @Query("SELECT n FROM Notification n WHERE n.recipient.id = :recipientId ORDER BY n.id DESC")
+    List<Notification> findByRecipientIdOrderByIdDesc(
+            @Param("recipientId") Long recipientId, Pageable pageable);
+
+    /**
+     * 커서 기반 알림 목록 조회 (다음 페이지)
+     */
+    @Query("SELECT n FROM Notification n WHERE n.recipient.id = :recipientId AND n.id < :cursor ORDER BY n.id DESC")
+    List<Notification> findByRecipientIdAndIdLessThanOrderByIdDesc(
+            @Param("recipientId") Long recipientId,
+            @Param("cursor") Long cursor,
+            Pageable pageable);
+
+    /**
+     * 커서 기반 읽지 않은 알림 목록 조회 (최초 요청)
+     */
+    @Query("SELECT n FROM Notification n WHERE n.recipient.id = :recipientId AND n.isRead = false ORDER BY n.id DESC")
+    List<Notification> findUnreadByRecipientIdOrderByIdDesc(
+            @Param("recipientId") Long recipientId, Pageable pageable);
+
+    /**
+     * 커서 기반 읽지 않은 알림 목록 조회 (다음 페이지)
+     */
+    @Query("SELECT n FROM Notification n WHERE n.recipient.id = :recipientId AND n.isRead = false AND n.id < :cursor ORDER BY n.id DESC")
+    List<Notification> findUnreadByRecipientIdAndIdLessThanOrderByIdDesc(
+            @Param("recipientId") Long recipientId,
+            @Param("cursor") Long cursor,
+            Pageable pageable);
 }
