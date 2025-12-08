@@ -69,4 +69,20 @@ public interface NotificationService {
      * @param notificationId 알림 ID
      */
     void deleteNotification(Long userId, Long notificationId);
+
+    /**
+     * 읽은 알림 일괄 삭제
+     *
+     * @param userId 사용자 ID
+     * @return 삭제된 알림 개수
+     */
+    int deleteReadNotifications(Long userId);
+
+    /**
+     * 모든 알림 삭제
+     *
+     * @param userId 사용자 ID
+     * @return 삭제된 알림 개수
+     */
+    int deleteAllNotifications(Long userId);
 }
