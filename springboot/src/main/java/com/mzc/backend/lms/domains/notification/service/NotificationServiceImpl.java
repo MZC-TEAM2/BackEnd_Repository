@@ -1,18 +1,22 @@
 package com.mzc.backend.lms.domains.notification.service;
 
-import com.mzc.backend.lms.domains.notification.dto.NotificationListResponseDto;
+import com.mzc.backend.lms.domains.notification.dto.NotificationCursorResponseDto;
 import com.mzc.backend.lms.domains.notification.dto.NotificationResponseDto;
 import com.mzc.backend.lms.domains.notification.entity.Notification;
 import com.mzc.backend.lms.domains.notification.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 /**
  * 알림 서비스 구현체
+ * 커서 기반 페이징으로 대용량 데이터 효율적 처리
  */
 @Slf4j
 @Service
@@ -23,25 +27,57 @@ public class NotificationServiceImpl implements NotificationService {
     private final NotificationRepository notificationRepository;
 
     @Override
-    public NotificationListResponseDto getNotifications(Long userId, Pageable pageable) {
-        Page<Notification> notificationPage = notificationRepository
-                .findByRecipientIdOrderByCreatedAtDesc(userId, pageable);
+    public NotificationCursorResponseDto getNotifications(Long userId, Long cursor, int size) {
+        // hasNext 확인을 위해 size + 1 조회
+        Pageable pageable = PageRequest.of(0, size + 1);
 
-        Page<NotificationResponseDto> dtoPage = notificationPage.map(NotificationResponseDto::from);
-        long unreadCount = notificationRepository.countUnreadByRecipientId(userId);
+        List<Notification> notifications;
+        if (cursor == null) {
+            // 최초 요청
+            notifications = notificationRepository.findByRecipientIdOrderByIdDesc(userId, pageable);
+        } else {
+            // 다음 페이지 요청
+            notifications = notificationRepository.findByRecipientIdAndIdLessThanOrderByIdDesc(
+                    userId, cursor, pageable);
+        }
 
-        return NotificationListResponseDto.from(dtoPage, unreadCount);
+        List<NotificationResponseDto> dtos = notifications.stream()
+                .map(NotificationResponseDto::from)
+                .collect(Collectors.toList());
+
+        // 읽지 않은 개수는 첫 요청 시에만 조회 (성능 최적화)
+        Long unreadCount = cursor == null
+                ? notificationRepository.countUnreadByRecipientId(userId)
+                : null;
+
+        return NotificationCursorResponseDto.of(dtos, size, unreadCount);
     }
 
     @Override
-    public NotificationListResponseDto getUnreadNotifications(Long userId, Pageable pageable) {
-        Page<Notification> notificationPage = notificationRepository
-                .findByRecipientIdAndIsReadOrderByCreatedAtDesc(userId, false, pageable);
+    public NotificationCursorResponseDto getUnreadNotifications(Long userId, Long cursor, int size) {
+        // hasNext 확인을 위해 size + 1 조회
+        Pageable pageable = PageRequest.of(0, size + 1);
 
-        Page<NotificationResponseDto> dtoPage = notificationPage.map(NotificationResponseDto::from);
-        long unreadCount = notificationRepository.countUnreadByRecipientId(userId);
+        List<Notification> notifications;
+        if (cursor == null) {
+            // 최초 요청
+            notifications = notificationRepository.findUnreadByRecipientIdOrderByIdDesc(userId, pageable);
+        } else {
+            // 다음 페이지 요청
+            notifications = notificationRepository.findUnreadByRecipientIdAndIdLessThanOrderByIdDesc(
+                    userId, cursor, pageable);
+        }
 
-        return NotificationListResponseDto.from(dtoPage, unreadCount);
+        List<NotificationResponseDto> dtos = notifications.stream()
+                .map(NotificationResponseDto::from)
+                .collect(Collectors.toList());
+
+        // 읽지 않은 개수는 첫 요청 시에만 조회
+        Long unreadCount = cursor == null
+                ? notificationRepository.countUnreadByRecipientId(userId)
+                : null;
+
+        return NotificationCursorResponseDto.of(dtos, size, unreadCount);
     }
 
     @Override

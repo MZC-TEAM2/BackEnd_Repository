@@ -1,8 +1,7 @@
 package com.mzc.backend.lms.domains.notification.service;
 
-import com.mzc.backend.lms.domains.notification.dto.NotificationListResponseDto;
+import com.mzc.backend.lms.domains.notification.dto.NotificationCursorResponseDto;
 import com.mzc.backend.lms.domains.notification.dto.NotificationResponseDto;
-import org.springframework.data.domain.Pageable;
 
 /**
  * 알림 서비스 인터페이스
@@ -10,22 +9,24 @@ import org.springframework.data.domain.Pageable;
 public interface NotificationService {
 
     /**
-     * 사용자의 알림 목록 조회
+     * 커서 기반 알림 목록 조회
      *
      * @param userId 사용자 ID
-     * @param pageable 페이징 정보
-     * @return 알림 목록 응답
+     * @param cursor 커서 (null이면 처음부터)
+     * @param size 페이지 크기
+     * @return 커서 기반 알림 목록 응답
      */
-    NotificationListResponseDto getNotifications(Long userId, Pageable pageable);
+    NotificationCursorResponseDto getNotifications(Long userId, Long cursor, int size);
 
     /**
-     * 사용자의 읽지 않은 알림 목록 조회
+     * 커서 기반 읽지 않은 알림 목록 조회
      *
      * @param userId 사용자 ID
-     * @param pageable 페이징 정보
-     * @return 알림 목록 응답
+     * @param cursor 커서 (null이면 처음부터)
+     * @param size 페이지 크기
+     * @return 커서 기반 알림 목록 응답
      */
-    NotificationListResponseDto getUnreadNotifications(Long userId, Pageable pageable);
+    NotificationCursorResponseDto getUnreadNotifications(Long userId, Long cursor, int size);
 
     /**
      * 알림 상세 조회
