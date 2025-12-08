@@ -180,6 +180,56 @@ public class NotificationController {
     }
 
     /**
+     * 읽은 알림 일괄 삭제 (벌크 삭제)
+     */
+    @DeleteMapping("/read")
+    public ResponseEntity<?> deleteReadNotifications(@AuthenticationPrincipal Long userId) {
+        try {
+            validateUserId(userId);
+
+            int deletedCount = notificationService.deleteReadNotifications(userId);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "읽은 알림이 삭제되었습니다.");
+            response.put("deletedCount", deletedCount);
+
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(createErrorResponse(e.getMessage()));
+        } catch (Exception e) {
+            log.error("읽은 알림 삭제 실패: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError()
+                    .body(createErrorResponse("읽은 알림 삭제에 실패했습니다."));
+        }
+    }
+
+    /**
+     * 모든 알림 삭제 (벌크 삭제)
+     */
+    @DeleteMapping("/all")
+    public ResponseEntity<?> deleteAllNotifications(@AuthenticationPrincipal Long userId) {
+        try {
+            validateUserId(userId);
+
+            int deletedCount = notificationService.deleteAllNotifications(userId);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "모든 알림이 삭제되었습니다.");
+            response.put("deletedCount", deletedCount);
+
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(createErrorResponse(e.getMessage()));
+        } catch (Exception e) {
+            log.error("모든 알림 삭제 실패: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError()
+                    .body(createErrorResponse("모든 알림 삭제에 실패했습니다."));
+        }
+    }
+
+    /**
      * 사용자 ID 유효성 검증
      */
     private void validateUserId(Long userId) {
