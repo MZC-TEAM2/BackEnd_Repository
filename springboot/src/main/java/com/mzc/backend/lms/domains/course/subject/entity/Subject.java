@@ -28,7 +28,7 @@ import com.mzc.backend.lms.domains.user.organization.entity.Department;
 
 import java.time.LocalDateTime;
 
-/**l
+/**
  * 과목 엔티티
  * subjects 테이블과 매핑
  */
