@@ -81,7 +81,7 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     @Transactional
-    public void updateProfile(Long userId, ProfileUpdateRequestDto request) {
+    public ProfileResponseDto updateProfile(Long userId, ProfileUpdateRequestDto request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
 
@@ -94,6 +94,9 @@ public class ProfileServiceImpl implements ProfileService {
         if (hasContactInfo(request)) {
             updateContact(user, request);
         }
+
+        // 수정된 프로필 조회 후 반환
+        return getMyProfile(userId);
     }
 
     private void updateName(User user, String name) {

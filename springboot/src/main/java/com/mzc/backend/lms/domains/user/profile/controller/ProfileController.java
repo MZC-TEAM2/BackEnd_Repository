@@ -12,7 +12,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -46,17 +46,17 @@ public class ProfileController {
 
     /**
      * 프로필 수정
-     * PUT /api/v1/profile/me
+     * PATCH /api/v1/profile/me
      */
-    @PutMapping("/me")
-    public ResponseEntity<Void> updateProfile(
+    @PatchMapping("/me")
+    public ResponseEntity<ProfileResponseDto> updateProfile(
             @AuthenticationPrincipal Long userId,
             @RequestBody ProfileUpdateRequestDto request) {
         log.debug("프로필 수정 요청: userId={}", userId);
 
-        profileService.updateProfile(userId, request);
+        ProfileResponseDto updatedProfile = profileService.updateProfile(userId, request);
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(updatedProfile);
     }
 
     /**

@@ -19,6 +19,7 @@ public interface ProfileService {
      * 프로필 수정
      * @param userId 사용자 ID
      * @param request 수정 요청 DTO
+     * @return 수정된 프로필 정보
      */
-    void updateProfile(Long userId, ProfileUpdateRequestDto request);
+    ProfileResponseDto updateProfile(Long userId, ProfileUpdateRequestDto request);
 }

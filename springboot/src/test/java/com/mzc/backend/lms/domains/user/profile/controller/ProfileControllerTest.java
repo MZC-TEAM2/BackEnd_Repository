@@ -173,13 +173,23 @@ class ProfileControllerTest {
                     .mobileNumber("010-9999-8888")
                     .build();
 
-            doNothing().when(profileService).updateProfile(userId, request);
+            ProfileResponseDto expectedResponse = ProfileResponseDto.builder()
+                    .userId(userId)
+                    .email("user@test.com")
+                    .name("새이름")
+                    .mobileNumber("010-9999-8888")
+                    .build();
+
+            when(profileService.updateProfile(userId, request)).thenReturn(expectedResponse);
 
             // when
-            ResponseEntity<Void> response = controller.updateProfile(userId, request);
+            ResponseEntity<ProfileResponseDto> response = controller.updateProfile(userId, request);
 
             // then
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getBody()).isNotNull();
+            assertThat(response.getBody().getName()).isEqualTo("새이름");
+            assertThat(response.getBody().getMobileNumber()).isEqualTo("010-9999-8888");
             verify(profileService).updateProfile(userId, request);
         }
 
@@ -213,13 +223,21 @@ class ProfileControllerTest {
                     .name("새이름")
                     .build();
 
-            doNothing().when(profileService).updateProfile(userId, request);
+            ProfileResponseDto expectedResponse = ProfileResponseDto.builder()
+                    .userId(userId)
+                    .email("user@test.com")
+                    .name("새이름")
+                    .build();
+
+            when(profileService.updateProfile(userId, request)).thenReturn(expectedResponse);
 
             // when
-            ResponseEntity<Void> response = controller.updateProfile(userId, request);
+            ResponseEntity<ProfileResponseDto> response = controller.updateProfile(userId, request);
 
             // then
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getBody()).isNotNull();
+            assertThat(response.getBody().getName()).isEqualTo("새이름");
             verify(profileService).updateProfile(userId, request);
         }
 
@@ -234,13 +252,23 @@ class ProfileControllerTest {
                     .officeNumber("02-3333-4444")
                     .build();
 
-            doNothing().when(profileService).updateProfile(userId, request);
+            ProfileResponseDto expectedResponse = ProfileResponseDto.builder()
+                    .userId(userId)
+                    .email("user@test.com")
+                    .mobileNumber("010-9999-8888")
+                    .homeNumber("02-1111-2222")
+                    .officeNumber("02-3333-4444")
+                    .build();
+
+            when(profileService.updateProfile(userId, request)).thenReturn(expectedResponse);
 
             // when
-            ResponseEntity<Void> response = controller.updateProfile(userId, request);
+            ResponseEntity<ProfileResponseDto> response = controller.updateProfile(userId, request);
 
             // then
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getBody()).isNotNull();
+            assertThat(response.getBody().getMobileNumber()).isEqualTo("010-9999-8888");
             verify(profileService).updateProfile(userId, request);
         }
     }
