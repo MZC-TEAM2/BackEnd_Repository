@@ -8,6 +8,7 @@ import com.mzc.backend.lms.domains.user.professor.entity.ProfessorDepartment;
 import com.mzc.backend.lms.domains.user.professor.repository.ProfessorDepartmentRepository;
 import com.mzc.backend.lms.domains.user.professor.repository.ProfessorRepository;
 import com.mzc.backend.lms.domains.user.profile.dto.ProfileResponseDto;
+import com.mzc.backend.lms.domains.user.profile.dto.ProfileUpdateRequestDto;
 import com.mzc.backend.lms.domains.user.profile.entity.UserPrimaryContact;
 import com.mzc.backend.lms.domains.user.profile.entity.UserProfile;
 import com.mzc.backend.lms.domains.user.profile.entity.UserProfileImage;
@@ -193,6 +194,158 @@ class ProfileServiceImplTest {
             assertThat(result.getName()).isNull();
             assertThat(result.getMobileNumber()).isNull();
             assertThat(result.getUserType()).isNull();
+        }
+    }
+
+    @Nested
+    @DisplayName("프로필 수정")
+    class UpdateProfile {
+
+        @Test
+        @DisplayName("프로필 수정 성공 - 이름만 변경")
+        void updateProfileNameSuccess() {
+            // given
+            Long userId = 100L;
+            User mockUser = createMockUser(userId, "encrypted_email");
+            UserProfile mockProfile = mock(UserProfile.class);
+
+            ProfileUpdateRequestDto request = ProfileUpdateRequestDto.builder()
+                    .name("새이름")
+                    .build();
+
+            when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+            when(userProfileRepository.findByUserId(userId)).thenReturn(Optional.of(mockProfile));
+            when(encryptionService.encryptName("새이름")).thenReturn("encrypted_new_name");
+
+            // when
+            profileService.updateProfile(userId, request);
+
+            // then
+            verify(mockProfile).changeName("encrypted_new_name");
+            verify(userProfileRepository).save(mockProfile);
+        }
+
+        @Test
+        @DisplayName("프로필 수정 성공 - 연락처만 변경")
+        void updateProfileContactSuccess() {
+            // given
+            Long userId = 100L;
+            User mockUser = createMockUser(userId, "encrypted_email");
+            UserPrimaryContact mockContact = mock(UserPrimaryContact.class);
+
+            ProfileUpdateRequestDto request = ProfileUpdateRequestDto.builder()
+                    .mobileNumber("010-9999-8888")
+                    .homeNumber("02-1111-2222")
+                    .officeNumber("02-3333-4444")
+                    .build();
+
+            when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+            when(userProfileRepository.findByUserId(userId)).thenReturn(Optional.empty());
+            when(userPrimaryContactRepository.findByUserId(userId)).thenReturn(Optional.of(mockContact));
+            when(encryptionService.encryptPhoneNumber("010-9999-8888")).thenReturn("encrypted_mobile");
+            when(encryptionService.encryptPhoneNumber("02-1111-2222")).thenReturn("encrypted_home");
+            when(encryptionService.encryptPhoneNumber("02-3333-4444")).thenReturn("encrypted_office");
+
+            // when
+            profileService.updateProfile(userId, request);
+
+            // then
+            verify(mockContact).updateMobileNumber("encrypted_mobile");
+            verify(mockContact).updateHomeNumber("encrypted_home");
+            verify(mockContact).updateOfficeNumber("encrypted_office");
+            verify(userPrimaryContactRepository).save(mockContact);
+        }
+
+        @Test
+        @DisplayName("프로필 수정 성공 - 이름과 연락처 모두 변경")
+        void updateProfileAllSuccess() {
+            // given
+            Long userId = 100L;
+            User mockUser = createMockUser(userId, "encrypted_email");
+            UserProfile mockProfile = mock(UserProfile.class);
+            UserPrimaryContact mockContact = mock(UserPrimaryContact.class);
+
+            ProfileUpdateRequestDto request = ProfileUpdateRequestDto.builder()
+                    .name("새이름")
+                    .mobileNumber("010-9999-8888")
+                    .build();
+
+            when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+            when(userProfileRepository.findByUserId(userId)).thenReturn(Optional.of(mockProfile));
+            when(userPrimaryContactRepository.findByUserId(userId)).thenReturn(Optional.of(mockContact));
+            when(encryptionService.encryptName("새이름")).thenReturn("encrypted_new_name");
+            when(encryptionService.encryptPhoneNumber("010-9999-8888")).thenReturn("encrypted_mobile");
+
+            // when
+            profileService.updateProfile(userId, request);
+
+            // then
+            verify(mockProfile).changeName("encrypted_new_name");
+            verify(mockContact).updateMobileNumber("encrypted_mobile");
+            verify(userProfileRepository).save(mockProfile);
+            verify(userPrimaryContactRepository).save(mockContact);
+        }
+
+        @Test
+        @DisplayName("프로필 수정 실패 - 사용자 없음")
+        void updateProfileUserNotFound() {
+            // given
+            Long userId = 9999L;
+            ProfileUpdateRequestDto request = ProfileUpdateRequestDto.builder()
+                    .name("새이름")
+                    .build();
+
+            when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+            // when & then
+            assertThatThrownBy(() -> profileService.updateProfile(userId, request))
+                    .isInstanceOf(UserException.class);
+        }
+
+        @Test
+        @DisplayName("프로필 수정 - 프로필 없으면 생성")
+        void updateProfileCreateIfNotExists() {
+            // given
+            Long userId = 100L;
+            User mockUser = createMockUser(userId, "encrypted_email");
+
+            ProfileUpdateRequestDto request = ProfileUpdateRequestDto.builder()
+                    .name("새이름")
+                    .build();
+
+            when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+            when(userProfileRepository.findByUserId(userId)).thenReturn(Optional.empty());
+            when(userPrimaryContactRepository.findByUserId(userId)).thenReturn(Optional.empty());
+            when(encryptionService.encryptName("새이름")).thenReturn("encrypted_new_name");
+
+            // when
+            profileService.updateProfile(userId, request);
+
+            // then
+            verify(userProfileRepository).save(any(UserProfile.class));
+        }
+
+        @Test
+        @DisplayName("프로필 수정 - 연락처 없으면 생성")
+        void updateContactCreateIfNotExists() {
+            // given
+            Long userId = 100L;
+            User mockUser = createMockUser(userId, "encrypted_email");
+
+            ProfileUpdateRequestDto request = ProfileUpdateRequestDto.builder()
+                    .mobileNumber("010-9999-8888")
+                    .build();
+
+            when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+            when(userProfileRepository.findByUserId(userId)).thenReturn(Optional.empty());
+            when(userPrimaryContactRepository.findByUserId(userId)).thenReturn(Optional.empty());
+            when(encryptionService.encryptPhoneNumber("010-9999-8888")).thenReturn("encrypted_mobile");
+
+            // when
+            profileService.updateProfile(userId, request);
+
+            // then
+            verify(userPrimaryContactRepository).save(any(UserPrimaryContact.class));
         }
     }
 
