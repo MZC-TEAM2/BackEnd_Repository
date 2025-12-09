@@ -26,18 +26,17 @@ public interface CourseTARepository extends JpaRepository<CourseTA, Long> {
     boolean existsByCourseId(Long courseId);
 
     /**
-     * 강의 ID로 강의 TA 목록 조회
+     * 강의로 강의 TA 목록 조회
      */
-    List<CourseTA> findByCourseId(Course course);
+    List<CourseTA> findByCourse(Course course);
 
     /**
-     * 학생 ID로 강의 TA 목록 조회
+     * TA ID로 강의 TA 목록 조회
      */
-    List<CourseTA> findByStudentId(Long studentId);
+    List<CourseTA> findByTaId(Long taId);
 
     /**
-     * 학생 ID로 강의 TA 목록 조회
+     * 학생으로 강의 TA 목록 조회
      */
-
-    List<CourseTA> findByStudentId(Student student);
+    List<CourseTA> findByTa(Student student);
 }

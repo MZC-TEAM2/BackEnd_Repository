@@ -38,7 +38,7 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
     /**
      * 강의 유형 코드로 검색 (예: "MAJOR_REQ", "GEN_ELEC")
      */
-    List<Course> findByCourseTypeTypeCode(String typeCode);
+    List<Course> findByCourseTypeTypeCode(int typeCode);
 
     // ==================== 학점 필터 ====================
     
@@ -67,14 +67,9 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
     /**
      * 교수 ID로 강의 목록 조회
      */
-    List<Course> findByProfessorUserId(Long professorId);
+    List<Course> findByProfessorProfessorId(Long professorId);
 
     // ==================== 학점 필터 (필요시 사용) ====================
-    
-    /*
-    학점으로 강의 조회
-    */
-    List<Course> findBySubjectCreditsEqual(Integer credits);
 
     /**
      * 학기 ID로 강의 목록 조회

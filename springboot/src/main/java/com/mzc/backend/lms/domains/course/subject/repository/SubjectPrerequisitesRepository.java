@@ -11,9 +11,9 @@ import java.util.Optional;
 @Repository
 public interface SubjectPrerequisitesRepository extends JpaRepository<SubjectPrerequisites, Long> {
     /**
-     * 과목으로 선수과목 조회
+     * 과목으로 선수과목 목록 조회
      */
-    Optional<SubjectPrerequisites> findBySubject(Subject subject);
+    List<SubjectPrerequisites> findBySubject(Subject subject);
     /**
      * 과목 ID로 선수과목 존재 여부 확인
      */
@@ -27,11 +27,10 @@ public interface SubjectPrerequisitesRepository extends JpaRepository<SubjectPre
     /**
      * 선수과목으로 선수과목 목록 조회
      */
-    List<SubjectPrerequisites> findByPrerequisiteSubject(Subject prerequisiteSubject);
+    List<SubjectPrerequisites> findByPrerequisite(Subject prerequisite);
 
     /**
      * 선수과목 ID로 선수과목 목록 조회
      */
-
-    List<SubjectPrerequisites> findByPrerequisiteSubjectId(Long prerequisiteSubjectId);
+    List<SubjectPrerequisites> findByPrerequisiteId(Long prerequisiteId);
 }

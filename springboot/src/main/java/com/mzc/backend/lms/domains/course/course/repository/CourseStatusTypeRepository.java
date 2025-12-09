@@ -29,14 +29,4 @@ public interface CourseStatusTypeRepository extends JpaRepository<CourseStatusTy
 
     boolean existsByStatusName(String statusName);
 
-    /**
-     * 상태 카테고리로 조회
-     */
-    Optional<CourseStatusType> findByCategory(int category);
-
-    /**
-     * 상태 카테고리 존재 여부 확인
-     */
-
-    boolean existsByCategory(int category);
 }
