@@ -6,6 +6,7 @@ import com.mzc.backend.lms.domains.user.professor.entity.ProfessorDepartment;
 import com.mzc.backend.lms.domains.user.professor.repository.ProfessorDepartmentRepository;
 import com.mzc.backend.lms.domains.user.professor.repository.ProfessorRepository;
 import com.mzc.backend.lms.domains.user.profile.dto.ProfileResponseDto;
+import com.mzc.backend.lms.domains.user.profile.dto.ProfileUpdateRequestDto;
 import com.mzc.backend.lms.domains.user.profile.entity.UserPrimaryContact;
 import com.mzc.backend.lms.domains.user.profile.entity.UserProfile;
 import com.mzc.backend.lms.domains.user.profile.entity.UserProfileImage;
@@ -76,6 +77,81 @@ public class ProfileServiceImpl implements ProfileService {
         populateUserTypeInfo(userId, builder);
 
         return builder.build();
+    }
+
+    @Override
+    @Transactional
+    public void updateProfile(Long userId, ProfileUpdateRequestDto request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
+
+        // 이름 업데이트
+        if (request.getName() != null && !request.getName().isEmpty()) {
+            updateName(user, request.getName());
+        }
+
+        // 연락처 업데이트
+        if (hasContactInfo(request)) {
+            updateContact(user, request);
+        }
+    }
+
+    private void updateName(User user, String name) {
+        String encryptedName = encryptionService.encryptName(name);
+
+        Optional<UserProfile> profileOpt = userProfileRepository.findByUserId(user.getId());
+        if (profileOpt.isPresent()) {
+            UserProfile profile = profileOpt.get();
+            profile.changeName(encryptedName);
+            userProfileRepository.save(profile);
+        } else {
+            UserProfile newProfile = UserProfile.create(user, encryptedName);
+            userProfileRepository.save(newProfile);
+        }
+    }
+
+    private void updateContact(User user, ProfileUpdateRequestDto request) {
+        Optional<UserPrimaryContact> contactOpt = userPrimaryContactRepository.findByUserId(user.getId());
+
+        if (contactOpt.isPresent()) {
+            UserPrimaryContact contact = contactOpt.get();
+            updateContactFields(contact, request);
+            userPrimaryContactRepository.save(contact);
+        } else {
+            String encryptedMobile = encryptIfNotNull(request.getMobileNumber());
+            UserPrimaryContact newContact = UserPrimaryContact.builder()
+                    .user(user)
+                    .mobileNumber(encryptedMobile)
+                    .homeNumber(encryptIfNotNull(request.getHomeNumber()))
+                    .officeNumber(encryptIfNotNull(request.getOfficeNumber()))
+                    .build();
+            userPrimaryContactRepository.save(newContact);
+        }
+    }
+
+    private void updateContactFields(UserPrimaryContact contact, ProfileUpdateRequestDto request) {
+        if (request.getMobileNumber() != null) {
+            contact.updateMobileNumber(encryptionService.encryptPhoneNumber(request.getMobileNumber()));
+        }
+        if (request.getHomeNumber() != null) {
+            contact.updateHomeNumber(encryptionService.encryptPhoneNumber(request.getHomeNumber()));
+        }
+        if (request.getOfficeNumber() != null) {
+            contact.updateOfficeNumber(encryptionService.encryptPhoneNumber(request.getOfficeNumber()));
+        }
+    }
+
+    private boolean hasContactInfo(ProfileUpdateRequestDto request) {
+        return request.getMobileNumber() != null ||
+                request.getHomeNumber() != null ||
+                request.getOfficeNumber() != null;
+    }
+
+    private String encryptIfNotNull(String value) {
+        if (value == null || value.isEmpty()) {
+            return null;
+        }
+        return encryptionService.encryptPhoneNumber(value);
     }
 
     private void populateUserTypeInfo(Long userId, ProfileResponseDto.ProfileResponseDtoBuilder builder) {
