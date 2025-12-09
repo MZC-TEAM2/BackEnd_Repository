@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
 /**
@@ -120,5 +121,35 @@ public class ImageProcessor {
     public void validate(MultipartFile file) {
         validateImageType(file);
         validateFileSize(file);
+    }
+
+    /**
+     * 바이트 배열에서 WebP 변환 (비동기 처리용)
+     */
+    public byte[] convertToWebpFromBytes(byte[] imageBytes) {
+        try {
+            ImmutableImage image = ImmutableImage.loader().fromStream(new ByteArrayInputStream(imageBytes));
+
+            if (image.width > maxWidth || image.height > maxHeight) {
+                image = image.bound(maxWidth, maxHeight);
+            }
+
+            return image.bytes(WebpWriter.DEFAULT.withQ(quality));
+        } catch (IOException e) {
+            throw new ImageStorageException("이미지 변환 실패", e);
+        }
+    }
+
+    /**
+     * 바이트 배열에서 썸네일 생성 (비동기 처리용)
+     */
+    public byte[] createThumbnailFromBytes(byte[] imageBytes) {
+        try {
+            ImmutableImage image = ImmutableImage.loader().fromStream(new ByteArrayInputStream(imageBytes));
+            ImmutableImage thumbnail = image.cover(thumbnailWidth, thumbnailHeight);
+            return thumbnail.bytes(WebpWriter.DEFAULT.withQ(quality));
+        } catch (IOException e) {
+            throw new ImageStorageException("썸네일 생성 실패", e);
+        }
     }
 }
