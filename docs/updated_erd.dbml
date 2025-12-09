@@ -1,0 +1,953 @@
+// ===== 수정된 사용자 기본 테이블 =====
+
+Table users {
+  id bigint [pk, note: "사용자 고유 식별자 (학번 또는 교번)"]
+  email varchar(100) [unique, not null, note: "로그인용 이메일 주소"]
+  password varchar(255) [not null, note: "BCrypt로 암호화된 비밀번호 해시값"]
+  created_at timestamp [not null, default: `now()`, note: "계정 생성 일시"]
+  updated_at timestamp [note: "계정 정보 최종 수정 일시"]
+  deleted_at timestamp [note: "논리적 삭제 일시 (Soft Delete)"]
+
+  indexes {
+    email
+    created_at
+  }
+}
+
+// 사용자 유형 테이블
+Table user_types {
+  id int [pk, increment, note: "유형 식별자"]
+  type_code varchar(20) [unique, not null, note: "유형 코드 (STUDENT/PROFESSOR)"]
+  type_name varchar(50) [not null, note: "유형 표시명 (학생/교수)"]
+}
+
+Table user_type_mappings {
+  user_id bigint [pk, ref: - users.id, note: "사용자 ID (users 테이블 참조)"]
+  user_type_id int [not null, ref: > user_types.id, note: "사용자 유형 ID"]
+  assigned_at timestamp [default: `now()`, note: "유형 할당 일시"]
+
+  indexes {
+    user_type_id
+  }
+}
+
+// 사용자 상태 테이블
+Table user_status_types {
+  id int [pk, increment, note: "상태 식별자"]
+  status_code varchar(20) [unique, not null, note: "상태 코드 (ACTIVE/INACTIVE/SUSPENDED)"]
+  status_name varchar(50) [not null, note: "상태 표시명 (활성/비활성/정지)"]
+}
+
+Table user_status_history {
+  id bigint [pk, increment, note: "이력 식별자"]
+  user_id bigint [not null, ref: > users.id, note: "대상 사용자 ID"]
+  status_id int [not null, ref: > user_status_types.id, note: "변경된 상태 ID"]
+  changed_at timestamp [default: `now()`, note: "상태 변경 일시"]
+  changed_by bigint [ref: > users.id, note: "변경 수행자 ID (관리자)"]
+  reason text [note: "상태 변경 사유"]
+
+  indexes {
+    user_id
+    status_id
+    changed_at
+  }
+}
+
+// 개인 정보 테이블
+Table user_profiles {
+  user_id bigint [pk, ref: - users.id, note: "사용자 ID (1:1 관계)"]
+  name varchar(50) [not null, note: "사용자 실명"]
+  created_at timestamp [default: `now()`, note: "프로필 생성 일시"]
+}
+
+// ===== 수정: user_contacts → user_primary_contacts (1:1 관계) =====
+Table user_primary_contacts {
+  user_id bigint [pk, ref: - users.id, note: "사용자 ID (1:1 관계)"]
+  mobile_number varchar(50) [unique, note: "암호화된 휴대폰 번호"]
+  home_number varchar(50) [note: "암호화된 집 전화번호"]
+  office_number varchar(50) [note: "암호화된 사무실 번호"]
+  mobile_verified boolean [default: false, note: "모바일 인증 완료 여부"]
+  created_at timestamp [default: `now()`, note: "생성 일시"]
+  updated_at timestamp [note: "수정 일시"]
+
+  indexes {
+    mobile_number
+    mobile_verified
+  }
+}
+
+// 프로필 이미지 테이블
+Table user_profile_images {
+  user_id bigint [pk, ref: - users.id, note: "사용자 ID (1:1 관계)"]
+  image_url varchar(255) [not null, note: "이미지 파일 저장 경로/URL"]
+  is_current boolean [default: true, note: "현재 사용중인 프로필 사진 여부"]
+  uploaded_at timestamp [default: `now()`, note: "업로드 일시"]
+
+  indexes {
+    is_current
+  }
+}
+
+// ===== 조직 구조 =====
+
+Table colleges {
+  id bigint [pk, increment, note: "단과대학 식별자"]
+  college_code varchar(20) [unique, not null, note: "단과대학 코드 (예: ENG, BIZ)"]
+  college_name varchar(100) [not null, note: "단과대학명 (예: 공과대학, 경영대학)"]
+  created_at timestamp [default: `now()`, note: "등록 일시"]
+}
+
+Table departments {
+  id bigint [pk, increment, note: "학과 식별자"]
+  department_code varchar(20) [unique, not null, note: "학과 코드 (예: CSE, ECE)"]
+  department_name varchar(100) [not null, note: "학과명 (예: 컴퓨터공학과)"]
+  college_id bigint [not null, ref: > colleges.id, note: "소속 단과대학 ID"]
+  created_at timestamp [default: `now()`, note: "등록 일시"]
+
+  indexes {
+    department_code
+    college_id
+  }
+}
+
+// ===== 수정: 학생 관련 테이블 =====
+
+Table students {
+  student_id bigint [pk, ref: - users.id, note: "학번 (user_id와 동일)"]
+  admission_year int [not null, note: "입학년도 (예: 2024)"]
+  grade int [not null, note: "학년 (1~4)"]
+  created_at timestamp [default: `now()`, note: "학생 정보 생성 일시"]
+
+  indexes {
+    student_id
+    admission_year
+  }
+}
+
+// 학생 소속 학과 (현재 1:1로 구현됨)
+Table student_departments {
+  id bigint [pk, increment, note: "관계 식별자"]
+  student_id bigint [not null, ref: - students.student_id, note: "학생 ID"]
+  department_id bigint [not null, ref: > departments.id, note: "학과 ID"]
+  is_primary boolean [default: true, note: "주전공 여부 (true:주전공/false:복수/부전공)"]
+  enrolled_date date [not null, note: "학과 등록일"]
+
+  indexes {
+    (student_id, department_id) [unique]
+    student_id
+    department_id
+  }
+}
+
+// ===== 새로 추가: 학번 시퀀스 관리 =====
+Table student_number_sequences {
+  id bigint [pk, increment, note: "시퀀스 식별자"]
+  year int [not null, note: "년도"]
+  college_id bigint [not null, note: "단과대학 ID"]
+  department_id bigint [not null, note: "학과 ID"]
+  last_sequence int [not null, note: "마지막 순번"]
+  version bigint [note: "동시성 제어용 버전"]
+
+  indexes {
+    (year, college_id, department_id) [unique]
+  }
+}
+
+// 학생 구분
+Table student_types {
+  id int [pk, increment, note: "구분 식별자"]
+  type_code varchar(20) [unique, not null, note: "학생 구분 코드 (UNDERGRADUATE/GRADUATE)"]
+  type_name varchar(50) [not null, note: "구분명 (학부생/대학원생)"]
+}
+
+Table student_type_history {
+  id bigint [pk, increment, note: "이력 식별자"]
+  student_id bigint [not null, ref: > students.student_id, note: "학생 ID"]
+  type_id int [not null, ref: > student_types.id, note: "학생 구분 ID"]
+  start_date date [not null, note: "해당 구분 시작일"]
+  end_date date [note: "해당 구분 종료일 (null이면 현재)"]
+
+  indexes {
+    student_id
+    type_id
+    start_date
+  }
+}
+
+// 학적 상태
+Table academic_status_types {
+  id int [pk, increment, note: "상태 식별자"]
+  status_code varchar(20) [unique, not null, note: "학적 코드 (ENROLLED/LEAVE/GRADUATED/EXPELLED)"]
+  status_name varchar(50) [not null, note: "상태명 (재학/휴학/졸업/제적)"]
+}
+
+Table student_academic_status_history {
+  id bigint [pk, increment, note: "이력 식별자"]
+  student_id bigint [not null, ref: > students.student_id, note: "학생 ID"]
+  status_id int [not null, ref: > academic_status_types.id, note: "학적 상태 ID"]
+  start_date date [not null, note: "상태 시작일"]
+  end_date date [note: "상태 종료일 (null이면 현재 상태)"]
+  semester_year int [not null, note: "해당 년도"]
+  semester_term varchar(10) [not null, note: "학기 구분 (1/2/SUMMER/WINTER)"]
+  current_year int [note: "해당 시점의 학년 (1~4학년)"]
+
+  indexes {
+    student_id
+    status_id
+    start_date
+  }
+}
+
+// ===== 수정: 교수 관련 테이블 =====
+
+Table professors {
+  professor_id bigint [pk, ref: - users.id, note: "교번 (user_id와 동일)"]
+  appointment_date date [not null, note: "임용일자"]
+  created_at timestamp [default: `now()`, note: "교수 정보 생성 일시"]
+
+  indexes {
+    professor_id
+  }
+}
+
+// 교수 소속 (현재 1:1로 구현됨)
+Table professor_departments {
+  id bigint [pk, increment, note: "관계 식별자"]
+  professor_id bigint [not null, ref: - professors.professor_id, note: "교수 ID"]
+  department_id bigint [not null, ref: > departments.id, note: "학과 ID"]
+  is_primary boolean [default: true, note: "주 소속 여부"]
+  start_date date [not null, note: "소속 시작일"]
+  end_date date [note: "소속 종료일 (null이면 현재 소속)"]
+
+  indexes {
+    (professor_id, department_id, start_date) [unique]
+    professor_id
+    department_id
+  }
+}
+
+// 직위
+Table position_types {
+  id int [pk, increment, note: "직위 식별자"]
+  position_code varchar(30) [unique, not null, note: "직위 코드 (ASSISTANT/ASSOCIATE/FULL)"]
+  position_name varchar(50) [not null, note: "직위명 (조교수/부교수/정교수)"]
+  rank_order int [not null, note: "직급 순서 (1:정교수, 2:부교수, 3:조교수)"]
+}
+
+// 연구실 정보
+Table professor_offices {
+  id bigint [pk, increment, note: "연구실 정보 식별자"]
+  professor_id bigint [not null, ref: > professors.professor_id, note: "교수 ID"]
+  building_name varchar(100) [note: "건물명 (예: 공학관)"]
+  room_number varchar(20) [note: "호실 번호 (예: 401호)"]
+  phone_number varchar(20) [note: "연구실 전화번호"]
+  is_current boolean [default: true, note: "현재 사용 중인 연구실 여부"]
+
+  indexes {
+    professor_id
+    is_current
+  }
+}
+
+// 연구 분야
+Table research_areas {
+  id bigint [pk, increment, note: "연구분야 식별자"]
+  area_code varchar(30) [unique, not null, note: "분야 코드 (예: AI, DB, NETWORK)"]
+  area_name varchar(100) [not null, note: "분야명 (예: 인공지능, 데이터베이스)"]
+  parent_id bigint [ref: > research_areas.id, note: "상위 연구분야 ID (계층구조)"]
+}
+
+Table professor_research_areas {
+  id bigint [pk, increment, note: "관계 식별자"]
+  professor_id bigint [not null, ref: > professors.professor_id, note: "교수 ID"]
+  research_area_id bigint [not null, ref: > research_areas.id, note: "연구분야 ID"]
+  is_primary boolean [default: false, note: "주 연구분야 여부"]
+
+  indexes {
+    (professor_id, research_area_id) [unique]
+    professor_id
+    research_area_id
+  }
+}
+
+// ===== 새로 추가: 인증 관련 테이블 =====
+
+// JWT 리프레시 토큰
+Table refresh_tokens {
+  id bigint [pk, increment, note: "토큰 식별자"]
+  user_id bigint [not null, ref: > users.id, note: "사용자 ID"]
+  token varchar(500) [unique, not null, note: "리프레시 토큰"]
+  device_info varchar(255) [note: "디바이스 정보 (브라우저, OS 등)"]
+  ip_address varchar(45) [note: "IPv4/IPv6 주소"]
+  is_revoked boolean [default: false, note: "폐기 여부"]
+  created_at timestamp [default: `now()`, note: "생성 일시"]
+  expires_at timestamp [not null, note: "만료 일시"]
+  last_used_at timestamp [note: "마지막 사용 일시"]
+
+  indexes {
+    token
+    user_id
+    expires_at
+  }
+}
+
+// 이메일 인증
+Table email_verifications {
+  id bigint [pk, increment, note: "인증 식별자"]
+  email varchar(100) [not null, note: "인증할 이메일 주소"]
+  verification_code varchar(5) [not null, note: "인증 코드"]
+  is_verified boolean [default: false, note: "인증 완료 여부"]
+  verification_attempts int [default: 0, note: "인증 시도 횟수"]
+  created_at timestamp [default: `now()`, note: "생성 일시"]
+  expires_at timestamp [not null, note: "만료 일시"]
+  verified_at timestamp [note: "인증 완료 일시"]
+
+  indexes {
+    email
+    verification_code
+    expires_at
+  }
+}
+
+// ===== TA 관련 테이블 =====
+
+Table course_tas {
+  id bigint [pk, increment, note: "TA 배정 식별자"]
+  course_id bigint [not null, ref: > courses.id, note: "강의 ID"]
+  student_id bigint [not null, ref: > students.student_id, note: "TA 학생 ID"]
+  start_date date [not null, note: "TA 활동 시작일"]
+  end_date date [note: "TA 활동 종료일"]
+  is_active boolean [default: true, note: "현재 활동 여부"]
+  created_at timestamp [default: `now()`, note: "배정 일시"]
+
+  indexes {
+    (course_id, student_id) [unique]
+    course_id
+    student_id
+    is_active
+  }
+}
+
+// ===== 과목 관련 테이블 =====
+
+// 과목 유형
+Table course_types {
+  id int [pk, increment, note: "유형 식별자"]
+  type_code varchar(30) [unique, not null, note: "유형 코드 (MAJOR_REQ/MAJOR_ELEC/GEN_REQ/GEN_ELEC)"]
+  type_name varchar(50) [not null, note: "유형명 (전공필수/전공선택/교양필수/교양선택)"]
+  category varchar(20) [note: "상위 분류 (전공/교양)"]
+}
+
+Table subjects {
+  id bigint [pk, increment, note: "과목 식별자"]
+  subject_code varchar(20) [unique, not null, note: "과목 코드 (예: CS101)"]
+  subject_name varchar(100) [not null, note: "과목명 (예: 자료구조)"]
+  department_id bigint [not null, ref: > departments.id, note: "개설 학과 ID"]
+  course_type_id int [not null, ref: > course_types.id, note: "이수 구분 ID"]
+  credits int [not null, note: "학점 수 (1~4)"]
+  theory_hours int [default: 0, note: "이론 시수"]
+  practice_hours int [default: 0, note: "실습 시수"]
+  description text [note: "과목 개요"]
+  created_at timestamp [default: `now()`, note: "과목 등록 일시"]
+
+  indexes {
+    subject_code
+    department_id
+    course_type_id
+  }
+}
+
+// 선수과목 관계
+Table subject_prerequisites {
+  id bigint [pk, increment, note: "관계 식별자"]
+  subject_id bigint [not null, ref: > subjects.id, note: "과목 ID"]
+  prerequisite_id bigint [not null, ref: > subjects.id, note: "선수과목 ID"]
+  is_mandatory boolean [default: true, note: "필수 이수 여부"]
+
+  indexes {
+    (subject_id, prerequisite_id) [unique]
+    subject_id
+    prerequisite_id
+  }
+}
+
+// 학기
+Table academic_terms {
+  id bigint [pk, increment, note: "학기 식별자"]
+  year int [not null, note: "학년도 (예: 2024)"]
+  term_type varchar(10) [not null, note: "학기 구분 (1:봄학기/2:가을학기/SUMMER:여름학기/WINTER:겨울학기)"]
+  start_date date [not null, note: "학기 시작일"]
+  end_date date [not null, note: "학기 종료일"]
+
+  indexes {
+    (year, term_type) [unique]
+    year
+  }
+}
+
+// 강의 개설
+Table courses {
+  id bigint [pk, increment, note: "강의 식별자"]
+  subject_id bigint [not null, ref: > subjects.id, note: "과목 ID"]
+  term_id bigint [not null, ref: > academic_terms.id, note: "학기 ID"]
+  section_number varchar(10) [not null, note: "분반 번호 (01, 02, A, B 등)"]
+  professor_id bigint [not null, ref: > professors.professor_id, note: "담당 교수 ID"]
+  max_students int [not null, note: "수강 정원"]
+  created_at timestamp [default: `now()`, note: "강의 개설 일시"]
+
+  indexes {
+    (subject_id, term_id, section_number) [unique]
+    professor_id
+    term_id
+  }
+}
+
+// 강의 상태
+Table course_status_types {
+  id int [pk, increment, note: "상태 식별자"]
+  status_code varchar(20) [unique, not null, note: "상태 코드 (ONGOING/COMPLETED/PENDING)"]
+  status_name varchar(50) [not null, note: "상태명 (진행중/완료/대기)"]
+}
+
+// ===== 수강 관련 테이블 =====
+
+Table enrollments {
+  id bigint [pk, increment, note: "수강신청 식별자"]
+  course_id bigint [not null, ref: > courses.id, note: "강의 ID"]
+  student_id bigint [not null, ref: > students.student_id, note: "학생 ID"]
+  enrolled_at timestamp [default: `now()`, note: "수강신청 일시"]
+
+  indexes {
+    (course_id, student_id) [unique]
+    student_id
+    course_id
+  }
+}
+
+// 수강 상태
+Table enrollment_status_types {
+  id int [pk, increment, note: "상태 식별자"]
+  status_code varchar(20) [unique, not null, note: "상태 코드 (ENROLLED/COMPLETED)"]
+  status_name varchar(50) [not null, note: "상태명 (수강중/완강)"]
+}
+
+// ===== 출석 관련 테이블 =====
+
+Table attendance_sessions {
+  id bigint [pk, increment, note: "출석 세션 식별자"]
+  user_id bigint [not null , ref : -  users.id]
+  course_id bigint [not null, ref: > courses.id, note: "강의 ID"]
+  session_date date [not null, note: "수업 날짜"]
+  session_number int [not null, note: "수업 차시 (1차시, 2차시...)"]
+  indexes {
+    (course_id, session_date) [unique]
+    course_id
+  }
+}
+
+// 출석 상태 코드
+Table attendance_status_types {
+  id int [pk, increment, note: "상태 식별자"]
+  status_code varchar(20) [unique, not null, note: "상태 코드 (PRESENT/ABSENT/LATE/EXCUSED)"]
+  status_name varchar(50) [not null, note: "상태명 (출석/결석/지각/공결)"]
+}
+
+// 학생 콘텐츠 진행 상황
+Table student_content_progress {
+  id bigint [pk, increment, note: "진행 상황 식별자"]
+  content_id bigint [not null, ref: > week_contents.id, note: "콘텐츠 ID"]
+  student_id bigint [not null, ref: > students.student_id, note: "학생 ID"]
+  is_completed boolean [default: false, note: "완료 여부"]
+  progress_percentage int [default: 0, note: "진행률 (0-100)"]
+  last_position_seconds int [note: "마지막 시청 위치 (초) - 동영상인 경우"]
+  completed_at timestamp [note: "완료 일시"]
+  first_accessed_at timestamp [note: "최초 접근 일시"]
+  last_accessed_at timestamp [note: "마지막 접근 일시"]
+  access_count int [default: 0, note: "접근 횟수"]
+
+  indexes {
+    (content_id, student_id) [unique]
+    content_id
+    student_id
+    is_completed
+  }
+}
+
+// ===== n주차별 강의 콘텐츠 테이블 =====
+
+// 강의 주차 정보
+Table course_weeks {
+  id bigint [pk, increment, note: "주차 식별자"]
+  course_id bigint [not null, ref: > courses.id, note: "강의 ID"]
+  week_number int [not null, note: "주차 번호 (1, 2, 3...)"]
+  week_title varchar(200) [not null, note: "주차 제목 (예: 1주차: 데이터베이스 개요)"]
+  created_at timestamp [default: `now()`, note: "생성 일시"]
+
+  indexes {
+    (course_id, week_number) [unique]
+    course_id
+  }
+}
+
+// 주차별 콘텐츠
+Table week_contents {
+  id bigint [pk, increment, note: "콘텐츠 식별자"]
+  week_id bigint [not null, ref: > course_weeks.id, note: "주차 ID"]
+  content_type varchar(20) [not null, note: "콘텐츠 유형 (VIDEO/DOCUMENT/LINK)"]
+  title varchar(200) [not null, note: "콘텐츠 제목"]
+  content_url varchar(500) [not null, note: "콘텐츠 URL"]
+  duration varchar(10) [note: "동영상 길이 표시 (예: 45:23)"]
+  display_order int [not null, note: "표시 순서"]
+  created_at timestamp [default: `now()`, note: "생성 일시"]
+
+  indexes {
+    week_id
+    display_order
+  }
+}
+
+// ===== 수강신청 장바구니 테이블 =====
+
+// 수강신청 기간
+Table enrollment_periods {
+  id bigint [pk, increment, note: "수강신청 기간 식별자"]
+  term_id bigint [not null, ref: > academic_terms.id, note: "학기 ID"]
+  period_name varchar(50) [not null, note: "기간명 (예: 1차 수강신청, 정정기간)"]
+  start_datetime timestamp [not null, note: "시작 일시"]
+  end_datetime timestamp [not null, note: "종료 일시"]
+  target_year int [note: "대상 학년 (0이면 전체)"]
+  created_at timestamp [default: `now()`, note: "생성 일시"]
+
+  indexes {
+    term_id
+    start_datetime
+    end_datetime
+  }
+}
+
+// 장바구니
+Table course_carts {
+  id bigint [pk, increment, note: "장바구니 항목 식별자"]
+  student_id bigint [not null, ref: > students.student_id, note: "학생 ID"]
+  course_id bigint [not null, ref: > courses.id, note: "강의 ID"]
+  added_at timestamp [default: `now()`, note: "담은 일시"]
+
+  indexes {
+    (student_id, course_id) [unique]
+    student_id
+    course_id
+  }
+}
+
+// ===== 공지사항 테이블 =====
+
+Table course_notices {
+  id bigint [pk, increment, note: "공지 식별자"]
+  course_id bigint [not null, ref: > courses.id, note: "강의 ID"]
+  title varchar(200) [not null, note: "공지 제목"]
+  is_important boolean [default: false, note: "중요 공지 여부 (상단 고정)"]
+  view_count int [default: 0, note: "조회수"]
+  author_id bigint [not null, ref: > users.id, note: "작성자 ID (교수/TA)"]
+  created_at timestamp [default: `now()`, note: "작성 일시"]
+  updated_at timestamp [note: "수정 일시"]
+
+  indexes {
+    course_id
+    is_important
+    created_at
+  }
+}
+
+// 공지사항 내용
+Table notice_contents {
+  notice_id bigint [pk, ref: - course_notices.id, note: "공지 ID"]
+  content text [not null, note: "공지 내용"]
+}
+
+// 공지사항 첨부파일
+Table notice_attachments {
+  id bigint [pk, increment, note: "첨부파일 식별자"]
+  notice_id bigint [not null, ref: > course_notices.id, note: "공지 ID"]
+  file_name varchar(255) [not null, note: "파일명"]
+  file_path varchar(500) [not null, note: "서버 내 파일 경로"]
+  file_size bigint [note: "파일 크기 (bytes)"]
+  uploaded_at timestamp [default: `now()`, note: "업로드 일시"]
+
+  indexes {
+    notice_id
+  }
+}
+
+// ===== 강의 시간표 =====
+
+Table course_schedules {
+  id bigint [pk, increment, note: "시간표 식별자"]
+  course_id bigint [not null, ref: > courses.id, note: "강의 ID"]
+  day_of_week int [not null, note: "요일 (1:월요일 ~ 5:금요일)"]
+  start_time time [not null, note: "시작 시간 (예: 09:00)"]
+  end_time time [not null, note: "종료 시간 (예: 10:30)"]
+  classroom varchar(50) [note: "강의실 (예: 공학관 401호)"]
+
+  indexes {
+    course_id
+    (day_of_week, start_time, classroom)
+  }
+}
+
+// ===== 게시판 공통 테이블 =====
+
+// 게시판 카테고리 (게시판 유형 관리)
+Table board_categories {
+  id bigint [pk, increment, note: "카테고리 고유 ID"]
+  name varchar(50) [unique, not null, note: "카테고리 이름"]
+  description varchar(255) [note: "카테고리 설명"]
+  board_type varchar(30) [not null, note: "게시판 유형 (NOTICE/FREE/QUESTION/DISCUSSION/PROFESSOR/STUDENT/DEPARTMENT/CONTEST/CAREER/ASSIGNMENT/EXAM/QUIZ/STUDY_RECRUITMENT)"]
+  allow_comments boolean [default: true, note: "댓글 허용 여부"]
+  allow_attachments boolean [default: true, note: "첨부파일 허용 여부"]
+  allow_anonymous boolean [default: false, note: "익명 작성 허용 여부"]
+  display_order int [default: 0, note: "표시 순서"]
+  is_active boolean [default: true, note: "활성화 여부"]
+  created_at timestamp [not null, default: `now()`, note: "생성일시"]
+  updated_at timestamp [note: "수정일시"]
+  deleted_at timestamp [note: "삭제일시 (Soft Delete)"]
+
+  indexes {
+    board_type
+    display_order
+    is_active
+  }
+}
+
+// 통합 게시글 테이블
+Table posts {
+  id bigint [pk, increment, note: "게시글 고유 ID"]
+  category_id bigint [not null, ref: > board_categories.id, note: "카테고리 ID"]
+  course_id bigint [note: "강의 ID (질문 게시판용, 선택사항)"]
+  department_id bigint [note: "학과 ID (학과 게시판용, 선택사항)"]
+  author_id bigint [not null, ref: > users.id, note: "작성자 ID"]
+  title varchar(255) [not null, note: "제목"]
+  content text [not null, note: "내용"]
+  post_type varchar(30) [not null, note: "게시글 유형 (NOTICE/GENERAL/QUESTION/DISCUSSION/PROFESSOR/STUDENT/DEPARTMENT/CONTEST/CAREER/ASSIGNMENT/EXAM/QUIZ/STUDY_RECRUITMENT)"]
+  is_anonymous boolean [default: false, note: "익명 게시글 여부"]
+  created_at timestamp [not null, default: `now()`, note: "생성일시"]
+  updated_at timestamp [note: "수정일시"]
+  deleted_at timestamp [note: "삭제일시 (Soft Delete)"]
+
+  indexes {
+    (category_id, created_at) [name: 'idx_category_created']
+    (course_id, created_at) [name: 'idx_course_created']
+    (department_id, created_at) [name: 'idx_department_created']
+    (author_id, created_at) [name: 'idx_author_created']
+    post_type
+  }
+}
+
+// 관리자 전용 게시글 설정 테이블
+Table post_admin_settings {
+  id bigint [pk, increment, note: "설정 고유 ID"]
+  post_id bigint [not null, unique, ref: > posts.id, note: "게시글 ID"]
+  status varchar(20) [not null, default: 'ACTIVE', note: "상태 (ACTIVE/CLOSED/ARCHIVED)"]
+  priority varchar(20) [not null, default: 'NORMAL', note: "우선순위 (HIGH/NORMAL/LOW)"]
+  is_notice boolean [not null, default: false, note: "공지사항 여부"]
+  is_pinned boolean [not null, default: false, note: "상단 고정 여부"]
+  managed_by bigint [ref: > users.id, note: "최종 관리자 ID"]
+  managed_at timestamp [note: "최종 관리 일시"]
+
+  indexes {
+    post_id [unique]
+    status
+    priority
+    is_notice
+    is_pinned
+    managed_by
+  }
+}
+
+// 댓글 테이블
+Table comments {
+  id bigint [pk, increment, note: "댓글 고유 ID"]
+  post_id bigint [not null, ref: > posts.id, note: "게시글 ID"]
+  author_id bigint [not null, ref: > users.id, note: "작성자 ID"]
+  parent_comment_id bigint [ref: > comments.id, note: "부모 댓글 ID (대댓글용)"]
+  content text [not null, note: "댓글 내용"]
+  depth int [default: 0, note: "댓글 깊이 (0: 댓글, 1: 대댓글)"]
+  is_anonymous boolean [default: false, note: "익명 댓글 여부"]
+  created_at timestamp [not null, default: `now()`, note: "생성일시"]
+  updated_at timestamp [note: "수정일시"]
+  deleted_at timestamp [note: "삭제일시 (Soft Delete)"]
+
+  indexes {
+    (post_id, created_at) [name: 'idx_post_created']
+    (parent_comment_id, created_at) [name: 'idx_parent_created']
+    (author_id, created_at) [name: 'idx_author_created']
+    depth
+  }
+}
+
+// ===== 첨부파일 테이블 =====
+
+Table attachments {
+  id bigint [pk, increment, note: "첨부파일 고유 ID"]
+  post_id bigint [ref: > posts.id, note: "게시글 ID"]
+  comment_id bigint [ref: > comments.id, note: "댓글 ID"]
+  attachment_type varchar(30) [not null, note: "첨부 유형 (POST_CONTENT/POST_BOTTOM/COMMENT)"]
+  original_name varchar(255) [not null, note: "원본 파일명"]
+  stored_name varchar(255) [not null, note: "서버 저장 파일명 (UUID)"]
+  file_path varchar(500) [not null, note: "파일 저장 경로"]
+  file_size bigint [not null, note: "파일 크기 (bytes)"]
+  mime_type varchar(100) [not null, note: "MIME 타입"]
+  uploader_id bigint [not null, ref: > users.id, note: "업로더 ID"]
+  created_at timestamp [not null, default: `now()`, note: "업로드일시"]
+  updated_at timestamp [note: "수정일시"]
+  deleted_at timestamp [note: "삭제일시 (Soft Delete)"]
+
+  indexes {
+    post_id
+    comment_id
+    uploader_id
+    attachment_type
+    mime_type
+  }
+}
+
+// ===== 조회수/다운로드 추적 테이블 =====
+
+Table post_views {
+  id bigint [pk, increment, note: "조회 기록 고유 ID"]
+  post_id bigint [not null, ref: > posts.id, note: "게시글 ID"]
+  user_id bigint [ref: > users.id, note: "사용자 ID (비로그인 시 null)"]
+  ip_address varchar(45) [note: "IP 주소 (IPv6 지원)"]
+  user_agent text [note: "브라우저 정보"]
+  viewed_at timestamp [not null, default: `now()`, note: "조회일시"]
+
+  indexes {
+    post_id
+    user_id
+    viewed_at
+  }
+}
+
+Table attachment_downloads {
+  id bigint [pk, increment, note: "다운로드 기록 고유 ID"]
+  attachment_id bigint [not null, ref: > attachments.id, note: "첨부파일 ID"]
+  user_id bigint [ref: > users.id, note: "다운로더 ID (비로그인 시 null)"]
+  ip_address varchar(45) [note: "IP 주소"]
+  downloaded_at timestamp [not null, default: `now()`, note: "다운로드일시"]
+
+  indexes {
+    attachment_id
+    user_id
+    downloaded_at
+  }
+}
+
+// ===== 태그 시스템 =====
+
+Table hashtags {
+  id bigint [pk, increment, note: "해시태그 고유 ID"]
+  name varchar(50) [unique, not null, note: "태그 이름 (#제외, 소문자)"]
+  display_name varchar(50) [not null, note: "화면 표시용 태그명"]
+  description varchar(255) [note: "태그 설명"]
+  color varchar(7) [default: '#007bff', note: "태그 색상 (HEX)"]
+  tag_category varchar(30) [note: "태그 카테고리 (SUBJECT/DIFFICULTY/TYPE 등)"]
+  is_active boolean [default: true, note: "활성화 상태"]
+  created_by bigint [ref: > users.id, note: "태그 생성자 ID"]
+  created_at timestamp [not null, default: `now()`, note: "생성일시"]
+  updated_at timestamp [note: "수정일시"]
+  deleted_at timestamp [note: "삭제일시 (Soft Delete)"]
+
+  indexes {
+    name
+    tag_category
+    is_active
+  }
+}
+
+Table post_hashtags {
+  id bigint [pk, increment, note: "게시글-해시태그 연결 ID"]
+  post_id bigint [not null, ref: > posts.id, note: "게시글 ID"]
+  hashtag_id bigint [not null, ref: > hashtags.id, note: "해시태그 ID"]
+  created_by bigint [not null, ref: > users.id, note: "태그 추가자 ID"]
+  created_at timestamp [not null, default: `now()`, note: "연결 생성일시"]
+
+  indexes {
+    (post_id, hashtag_id) [unique, name: 'idx_post_hashtag']
+    hashtag_id
+    created_by
+  }
+}
+
+// ===== 좋아요/북마크 시스템 =====
+
+Table post_likes {
+  id bigint [pk, increment, note: "좋아요 고유 ID"]
+  user_id bigint [not null, ref: > users.id, note: "사용자 ID"]
+  post_id bigint [ref: > posts.id, note: "게시글 ID"]
+  comment_id bigint [ref: > comments.id, note: "댓글 ID"]
+  like_type varchar(20) [not null, note: "좋아요 유형 (POST/COMMENT)"]
+  created_at timestamp [not null, default: `now()`, note: "좋아요 생성일시"]
+  deleted_at timestamp [note: "좋아요 취소일시 (Soft Delete)"]
+
+  indexes {
+    (user_id, post_id) [unique, name: 'idx_user_post_like']
+    (user_id, comment_id) [unique, name: 'idx_user_comment_like']
+    like_type
+  }
+}
+
+Table post_bookmarks {
+  id bigint [pk, increment, note: "북마크 고유 ID"]
+  user_id bigint [not null, ref: > users.id, note: "사용자 ID"]
+  post_id bigint [not null, ref: > posts.id, note: "게시글 ID"]
+  bookmark_category varchar(50) [note: "북마크 카테고리"]
+  notes text [note: "개인 메모"]
+  created_at timestamp [not null, default: `now()`, note: "북마크 생성일시"]
+  updated_at timestamp [note: "수정일시"]
+  deleted_at timestamp [note: "북마크 삭제일시 (Soft Delete)"]
+
+  indexes {
+    (user_id, post_id) [unique, name: 'idx_user_post_bookmark']
+    (user_id, bookmark_category) [name: 'idx_user_category']
+  }
+}
+
+// ===== 과제 시스템 =====
+
+Table assignments {
+  id bigint [pk, increment, note: "과제 고유 ID"]
+  post_id bigint [not null, ref: > posts.id, note: "게시글 ID (제목/내용은 posts 테이블 참조)"]
+  course_id bigint [not null, note: "강의 ID"]
+  due_date timestamp [not null, note: "제출 마감일"]
+  max_score decimal(5,2) [not null, note: "만점"]
+  submission_method varchar(20) [not null, note: "제출방법 (FILE_UPLOAD/TEXT_INPUT/BOTH)"]
+  late_submission_allowed boolean [not null, default: false, note: "지각 제출 허용"]
+  late_penalty_percent decimal(3,2) [null, note: "지각 제출 감점 비율 (%)"]
+  max_file_size_mb int [default: 10, note: "최대 파일 크기 (MB)"]
+  allowed_file_types varchar(255) [note: "허용 파일 확장자 (쉼표 구분)"]
+  instructions text [null, note: "제출 지침"]
+  created_by bigint [not null, ref: > users.id, note: "생성자 ID"]
+  created_at timestamp [not null, default: `now()`, note: "생성일시"]
+  updated_at timestamp [note: "수정일시"]
+  deleted_at timestamp [note: "삭제일시 (Soft Delete)"]
+
+  indexes {
+    post_id [unique]
+    course_id
+    due_date
+    created_by
+  }
+}
+
+Table assignment_submissions {
+  id bigint [pk, increment, note: "과제 제출 고유 ID"]
+  assignment_id bigint [not null, ref: > assignments.id, note: "과제 ID"]
+  user_id bigint [not null, ref: > users.id, note: "제출자 ID"]
+  content text [null, note: "텍스트 제출 내용"]
+  submitted_at timestamp [not null, default: `now()`, note: "제출일시"]
+  status varchar(20) [not null, default: 'SUBMITTED', note: "제출 상태"]
+  score decimal(5,2) [null, note: "획득 점수"]
+  feedback text [null, note: "피드백"]
+  graded_at timestamp [null, note: "채점일시"]
+  graded_by bigint [null, ref: > users.id, note: "채점자 ID"]
+  created_at timestamp [not null, default: `now()`, note: "생성일시"]
+  updated_at timestamp [note: "수정일시"]
+  deleted_at timestamp [note: "삭제일시 (Soft Delete)"]
+
+  indexes {
+    (assignment_id, user_id) [unique, name: 'idx_assignment_user']
+    user_id
+    status
+    submitted_at
+  }
+}
+
+// ===== 시험/퀴즈 시스템 =====
+
+Table exams {
+  id bigint [pk, increment, note: "시험 고유 ID"]
+  post_id bigint [not null, ref: > posts.id, note: "게시글 ID (제목/내용은 posts 테이블 참조)"]
+  course_id bigint [not null, note: "강의 ID"]
+  exam_type varchar(20) [not null, note: "시험 유형 (MIDTERM/FINAL/QUIZ/REGULAR)"]
+  exam_date timestamp [not null, note: "시험 일시"]
+  duration_minutes int [not null, note: "시험 시간 (분)"]
+  total_score decimal(5,2) [not null, note: "총점"]
+  is_online boolean [not null, default: false, note: "온라인 시험 여부"]
+  location varchar(100) [null, note: "시험 장소"]
+  instructions text [null, note: "시험 안내사항"]
+  question_count int [null, note: "문제 수"]
+  passing_score decimal(5,2) [null, note: "합격 점수"]
+  created_by bigint [not null, ref: > users.id, note: "생성자 ID"]
+  created_at timestamp [not null, default: `now()`, note: "생성일시"]
+  updated_at timestamp [note: "수정일시"]
+  deleted_at timestamp [note: "삭제일시 (Soft Delete)"]
+
+  indexes {
+    post_id [unique]
+    course_id
+    exam_date
+    exam_type
+    created_by
+  }
+}
+
+Table exam_results {
+  id bigint [pk, increment, note: "시험 결과 고유 ID"]
+  exam_id bigint [not null, ref: > exams.id, note: "시험 ID"]
+  user_id bigint [not null, ref: > users.id, note: "응시자 ID"]
+  started_at timestamp [null, note: "시험 시작 시간"]
+  submitted_at timestamp [null, note: "제출 시간"]
+  score decimal(5,2) [null, note: "획득 점수"]
+  grade varchar(2) [null, note: "등급 (A+, A, B+ 등)"]
+  answer_data text [null, note: "답안 데이터 (JSON)"]
+  feedback text [null, note: "피드백"]
+  graded_at timestamp [null, note: "채점일시"]
+  graded_by bigint [null, ref: > users.id, note: "채점자 ID"]
+  created_at timestamp [not null, default: `now()`, note: "생성일시"]
+  updated_at timestamp [note: "수정일시"]
+  deleted_at timestamp [note: "삭제일시 (Soft Delete)"]
+
+  indexes {
+    (exam_id, user_id) [unique, name: 'idx_exam_user']
+    user_id
+    submitted_at
+    score
+    grade
+  }
+}
+
+// ===== 스터디모집 시스템 =====
+
+Table study_recruitments {
+  id bigint [pk, increment, note: "스터디모집 고유 ID"]
+  post_id bigint [not null, unique, ref: > posts.id, note: "게시글 ID (제목/내용은 posts 테이블 참조)"]
+  study_type varchar(20) [not null, note: "스터디 유형 (EXAM_PREP/PROJECT/LANGUAGE/CERTIFICATION/READING/CODING/OTHER)"]
+  max_participants int [not null, note: "최대 참여 인원"]
+  recruitment_status varchar(20) [not null, default: 'RECRUITING', note: "모집 상태 (RECRUITING/COMPLETED/CANCELLED/IN_PROGRESS/FINISHED)"]
+  recruitment_deadline timestamp [null, note: "모집 마감일"]
+  requirements text [null, note: "지원 자격/조건"]
+
+  indexes {
+    post_id [unique]
+    study_type
+    recruitment_status
+    recruitment_deadline
+  }
+}
+
+Table study_applications {
+  id bigint [pk, increment, note: "스터디 지원 고유 ID"]
+  study_recruitment_id bigint [not null, ref: > study_recruitments.id, note: "스터디모집 ID"]
+  applicant_id bigint [not null, ref: > users.id, note: "지원자 ID"]
+  application_message text [null, note: "지원 메시지"]
+  status varchar(20) [not null, default: 'PENDING', note: "지원 상태 (PENDING/APPROVED/REJECTED/WITHDRAWN)"]
+  applied_at timestamp [not null, default: `now()`, note: "지원일시"]
+  processed_at timestamp [null, note: "처리일시 (승인/거절)"]
+  process_message text [null, note: "처리 메시지 (거절 사유 등)"]
+
+  indexes {
+    (study_recruitment_id, applicant_id) [unique, name: 'idx_study_applicant']
+    applicant_id
+    status
+    applied_at
+  }
+}

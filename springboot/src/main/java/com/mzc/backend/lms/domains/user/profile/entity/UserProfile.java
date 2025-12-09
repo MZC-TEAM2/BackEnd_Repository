@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.data.domain.Persistable;
 
 import java.time.LocalDateTime;
 
@@ -18,7 +19,7 @@ import java.time.LocalDateTime;
 @Table(name = "user_profiles")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class UserProfile {
+public class UserProfile implements Persistable<Long> {
 
     @Id
     @Column(name = "user_id")
@@ -36,11 +37,30 @@ public class UserProfile {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Transient
+    private boolean isNew = true;
+
     @Builder
     private UserProfile(User user, String name) {
         this.user = user;
         this.name = name;
         this.userId = user.getId();
+    }
+
+    @Override
+    public Long getId() {
+        return userId;
+    }
+
+    @Override
+    public boolean isNew() {
+        return isNew;
+    }
+
+    @PostPersist
+    @PostLoad
+    void markNotNew() {
+        this.isNew = false;
     }
 
     /**

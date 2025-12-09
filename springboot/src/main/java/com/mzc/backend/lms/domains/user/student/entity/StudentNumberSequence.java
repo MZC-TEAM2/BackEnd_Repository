@@ -13,11 +13,11 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "student_number_sequences",
     uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"year", "college_id", "department_id"})
+        @UniqueConstraint(columnNames = {"\"year\"", "college_id", "department_id"})
     },
     indexes = {
         @Index(name = "idx_student_seq_year_college_dept",
-               columnList = "year, college_id, department_id")
+               columnList = "\"year\", college_id, department_id")
     })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -27,7 +27,7 @@ public class StudentNumberSequence {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(name = "\"year\"", nullable = false)
     private Integer year;
 
     @Column(name = "college_id", nullable = false)

@@ -46,11 +46,11 @@ class JwtTokenServiceTest {
 
         // 테스트용 Student 생성
         student = mock(Student.class);
-        when(student.getStudentNumber()).thenReturn("2024123456");
+        when(student.getStudentNumber()).thenReturn(2024123456L);
 
         // 테스트용 Professor 생성
         professor = mock(Professor.class);
-        when(professor.getProfessorNumber()).thenReturn("P2024001");
+        when(professor.getProfessorNumber()).thenReturn(1001L);
     }
 
     @Test
@@ -86,7 +86,7 @@ class JwtTokenServiceTest {
         assertThat(claims.get("userId", Long.class)).isEqualTo(1L);
         assertThat(claims.getSubject()).isEqualTo("test@example.com");
         assertThat(claims.get("userType", String.class)).isEqualTo("PROFESSOR");
-        assertThat(claims.get("userNumber", String.class)).isEqualTo("P2024001");
+        assertThat(claims.get("userNumber", String.class)).isEqualTo("1001");
     }
 
     @Test
@@ -110,7 +110,7 @@ class JwtTokenServiceTest {
     @DisplayName("토큰에서 사용자 ID 추출 테스트")
     void extractUserId() {
         // given
-        String token = jwtTokenService.generateAccessToken(user, "STUDENT", "2024123456");
+        String token = jwtTokenService.generateAccessToken(user, "STUDENT", 2024123456L);
 
         // when
         Long userId = jwtTokenService.extractUserId(token);
@@ -123,7 +123,7 @@ class JwtTokenServiceTest {
     @DisplayName("토큰에서 이메일 추출 테스트")
     void extractEmail() {
         // given
-        String token = jwtTokenService.generateAccessToken(user, "STUDENT", "2024123456");
+        String token = jwtTokenService.generateAccessToken(user, "STUDENT", 2024123456L);
 
         // when
         String email = jwtTokenService.extractEmail(token);
@@ -161,14 +161,14 @@ class JwtTokenServiceTest {
 
         // then
         assertThat(studentNumber).isEqualTo("2024123456");
-        assertThat(professorNumber).isEqualTo("P2024001");
+        assertThat(professorNumber).isEqualTo("1001");
     }
 
     @Test
     @DisplayName("토큰 유효성 검증 테스트 - 유효한 토큰")
     void validateToken_Valid() {
         // given
-        String token = jwtTokenService.generateAccessToken(user, "STUDENT", "2024123456");
+        String token = jwtTokenService.generateAccessToken(user, "STUDENT", 2024123456L);
 
         // when
         Boolean isValid = jwtTokenService.validateToken(token, user);
@@ -183,7 +183,7 @@ class JwtTokenServiceTest {
     @DisplayName("토큰 만료 여부 확인 테스트")
     void isTokenExpired() {
         // given
-        String token = jwtTokenService.generateAccessToken(user, "STUDENT", "2024123456");
+        String token = jwtTokenService.generateAccessToken(user, "STUDENT", 2024123456L);
 
         // when
         Boolean isExpired = jwtTokenService.isTokenExpired(token);

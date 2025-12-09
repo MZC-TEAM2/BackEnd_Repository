@@ -1,0 +1,88 @@
+version: '3.8'
+
+# 로컬 개발용 - MySQL, Redis 인프라만 실행
+# Spring Boot는 IDE에서 직접 실행
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: lms-mysql
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: lms_db
+      MYSQL_USER: lmsuser
+      MYSQL_PASSWORD: lmspassword
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - lms-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: lms-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    networks:
+      - lms-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # phpMyAdmin - MySQL 웹 관리 도구
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: lms-phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: lmsuser
+      PMA_PASSWORD: lmspassword
+      UPLOAD_LIMIT: 100M
+    depends_on:
+      - mysql
+    networks:
+      - lms-network
+
+  # Redis Commander - Redis 웹 관리 도구
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: lms-redis-commander
+    restart: unless-stopped
+    ports:
+      - "8082:8081"
+    environment:
+      REDIS_HOSTS: local:redis:6379
+    depends_on:
+      - redis
+    networks:
+      - lms-network
+
+networks:
+  lms-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+  redis-data:

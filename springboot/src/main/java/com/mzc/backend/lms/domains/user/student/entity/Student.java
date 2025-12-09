@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.data.domain.Persistable;
 
 import java.time.LocalDateTime;
 
@@ -21,7 +22,7 @@ import java.time.LocalDateTime;
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Student {
+public class Student implements Persistable<Long> {
 
     @Id
     @Column(name = "student_id")
@@ -45,12 +46,31 @@ public class Student {
     @OneToOne(mappedBy = "student", fetch = FetchType.LAZY)
     private StudentDepartment studentDepartment;  // 학과 관계 (1:1)
 
+    @Transient
+    private boolean isNew = true;
+
     @Builder
     private Student(Long studentId, User user, Integer admissionYear, Integer grade) {
         this.studentId = studentId;
         this.user = user;
         this.admissionYear = admissionYear;
         this.grade = grade != null ? grade : 1;  // 기본값 1학년
+    }
+
+    @Override
+    public Long getId() {
+        return studentId;
+    }
+
+    @Override
+    public boolean isNew() {
+        return isNew;
+    }
+
+    @PostPersist
+    @PostLoad
+    void markNotNew() {
+        this.isNew = false;
     }
 
     /**

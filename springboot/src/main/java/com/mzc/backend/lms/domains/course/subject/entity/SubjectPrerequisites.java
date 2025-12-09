@@ -1,0 +1,61 @@
+package com.mzc.backend.lms.domains.course.subject.entity;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Column;
+
+import java.time.LocalDateTime;
+
+import org.hibernate.annotations.CreationTimestamp;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+
+/*
+    선수과목 관계 엔티티
+    subject_prerequisites 테이블과 매핑
+*/
+
+@Entity
+@Table(name = "subject_prerequisites")
+@Getter
+@NoArgsConstructor @AllArgsConstructor
+@Builder
+public class SubjectPrerequisites {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "subject_id", nullable = false)
+    private Subject subject;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "prerequisite_id", nullable = false)
+    private Subject prerequisite; // 선수과목
+
+    @Column(name = "is_mandatory", nullable = false)
+    private Boolean isMandatory; // 필수 여부
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    // 편의 메서드
+    public void setSubject(Subject subject) {
+        this.subject = subject;
+    }
+    
+    public void setPrerequisite(Subject prerequisite) {
+        this.prerequisite = prerequisite;
+    }
+}

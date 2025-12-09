@@ -1,0 +1,130 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: lms-mysql
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: lms_db
+      MYSQL_USER: lmsuser
+      MYSQL_PASSWORD: lmspassword
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - lms-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: lms-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    networks:
+      - lms-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Spring Boot Application
+  spring-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lms-spring-app
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      # Database configuration
+      DATABASE_URL: mysql
+      DATABASE_PORT: 3306
+      DATABASE_NAME: lms_db
+      DATABASE_USER: lmsuser
+      DATABASE_PASSWORD: lmspassword
+
+      # Redis configuration
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+      # Mail configuration (Gmail example)
+      MAIL_HOST: smtp.gmail.com
+      MAIL_PORT: 587
+      MAIL_USERNAME: your-email@gmail.com
+      MAIL_PASSWORD: your-app-password
+      MAIL_FROM: your-email@gmail.com
+      MAIL_FROM_NAME: LMS System
+
+      # Security configuration
+      JWT_SECRET: your-very-long-secret-key-at-least-256-bits-long-for-hs256-algorithm
+      JWT_ACCESS_TOKEN_EXPIRATION_TIME: 3600000
+      JWT_REFRESH_TOKEN_EXPIRATION_TIME: 2592000000
+      ENCRYPTION_KEY: your-aes-256-encryption-key-32-characters-long!
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./springboot/.env:/app/.env:ro
+      - ./springboot/logs:/app/logs
+    networks:
+      - lms-network
+
+  # phpMyAdmin - MySQL 웹 관리 도구
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: lms-phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: lmsuser
+      PMA_PASSWORD: lmspassword
+      UPLOAD_LIMIT: 100M
+    depends_on:
+      - mysql
+    networks:
+      - lms-network
+
+  # Redis Commander - Redis 웹 관리 도구
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: lms-redis-commander
+    restart: unless-stopped
+    ports:
+      - "8082:8081"
+    environment:
+      REDIS_HOSTS: local:redis:6379
+    depends_on:
+      - redis
+    networks:
+      - lms-network
+
+networks:
+  lms-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+  redis-data:

@@ -30,8 +30,8 @@ public interface ProfessorDepartmentRepository extends JpaRepository<ProfessorDe
     /**
      * 교수 ID로 학과 정보 조회
      */
-    @Query("SELECT pd FROM ProfessorDepartment pd WHERE pd.professor.userId = :userId")
-    Optional<ProfessorDepartment> findByProfessorUserId(@Param("userId") Long userId);
+    @Query("SELECT pd FROM ProfessorDepartment pd WHERE pd.professor.professorId = :professorId")
+    Optional<ProfessorDepartment> findByProfessorId(@Param("professorId") Long professorId);
 
     /**
      * 활성 상태인 교수-학과 관계 조회

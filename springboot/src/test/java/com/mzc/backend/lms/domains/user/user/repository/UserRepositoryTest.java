@@ -28,7 +28,7 @@ class UserRepositoryTest {
     @BeforeEach
     void setUp() {
         // Given: 테스트용 사용자 생성
-        testUser = User.create("test@example.com", "password123");
+        testUser = User.create(1001L, "test@example.com", "password123");
     }
 
     @Test

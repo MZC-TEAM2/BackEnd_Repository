@@ -3,7 +3,7 @@ package com.mzc.backend.lms.domains.user.student.repository;
 import com.mzc.backend.lms.domains.user.student.entity.Student;
 import com.mzc.backend.lms.domains.user.user.entity.User;
 import com.mzc.backend.lms.domains.user.user.repository.UserRepository;
-import org.junit.jupiter.api.BeforeEach;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,111 +29,109 @@ class StudentRepositoryTest {
     @Autowired
     private UserRepository userRepository;
 
-    private User testUser;
-    private Student testStudent;
+    @Autowired
+    private EntityManager entityManager;
 
-    @BeforeEach
-    void setUp() {
-        // Given: 테스트용 사용자 및 학생 생성
-        testUser = User.create("student@example.com", "password123");
-        testUser = userRepository.save(testUser);
+    private User createAndPersistUser(Long id, String email) {
+        User user = User.create(id, email, "password123");
+        entityManager.persist(user);
+        entityManager.flush();
+        return user;
+    }
 
-        testStudent = Student.create(testUser, "2024123456", 2024);
+    private Student createAndPersistStudent(User user, Integer admissionYear, Integer grade) {
+        Student student = Student.create(user.getId(), user, admissionYear, grade);
+        entityManager.persist(student);
+        entityManager.flush();
+        return student;
     }
 
     @Test
     @DisplayName("학생 정보 저장 및 조회")
     void saveAndFindStudent() {
-        // Given: 학생 정보 저장
-        Student savedStudent = studentRepository.save(testStudent);
+        // Given
+        User user = createAndPersistUser(2024123456L, "student@example.com");
+        Student student = createAndPersistStudent(user, 2024, 1);
+        entityManager.clear();
 
-        // When: ID로 조회
-        Optional<Student> foundStudent = studentRepository.findById(savedStudent.getUserId());
+        // When
+        Optional<Student> foundStudent = studentRepository.findById(student.getStudentId());
 
-        // Then: 저장된 학생 정보 검증
+        // Then
         assertThat(foundStudent).isPresent();
-        assertThat(foundStudent.get().getStudentNumber()).isEqualTo("2024123456");
+        assertThat(foundStudent.get().getStudentNumber()).isEqualTo(2024123456L);
         assertThat(foundStudent.get().getAdmissionYear()).isEqualTo(2024);
     }
 
     @Test
     @DisplayName("학번으로 학생 조회")
-    void findByStudentNumber() {
-        // Given: 학생 정보 저장
-        studentRepository.save(testStudent);
+    void findByStudentId() {
+        // Given
+        User user = createAndPersistUser(2024123456L, "student@example.com");
+        createAndPersistStudent(user, 2024, 1);
+        entityManager.clear();
 
-        // When: 학번으로 조회
-        Optional<Student> foundStudent = studentRepository.findByStudentNumber("2024123456");
+        // When
+        Optional<Student> foundStudent = studentRepository.findById(2024123456L);
 
-        // Then: 조회된 학생 정보 검증
+        // Then
         assertThat(foundStudent).isPresent();
-        assertThat(foundStudent.get().getStudentNumber()).isEqualTo("2024123456");
+        assertThat(foundStudent.get().getStudentNumber()).isEqualTo(2024123456L);
     }
 
     @Test
     @DisplayName("학번 중복 확인")
-    void existsByStudentNumber() {
-        // Given: 학생 정보 저장
-        studentRepository.save(testStudent);
+    void existsByStudentId() {
+        // Given
+        User user = createAndPersistUser(2024123456L, "student@example.com");
+        createAndPersistStudent(user, 2024, 1);
+        entityManager.clear();
 
-        // When & Then: 학번 존재 여부 확인
-        assertThat(studentRepository.existsByStudentNumber("2024123456")).isTrue();
-        assertThat(studentRepository.existsByStudentNumber("2024999999")).isFalse();
+        // When & Then
+        assertThat(studentRepository.existsById(2024123456L)).isTrue();
+        assertThat(studentRepository.existsById(2024999999L)).isFalse();
     }
 
     @Test
     @DisplayName("입학년도별 학생 목록 조회")
     void findByAdmissionYear() {
-        // Given: 여러 학생 저장
-        studentRepository.save(testStudent);
+        // Given
+        User user1 = createAndPersistUser(2024123456L, "student1@example.com");
+        createAndPersistStudent(user1, 2024, 1);
 
-        User anotherUser = userRepository.save(User.create("another@example.com", "password"));
-        Student anotherStudent = Student.create(anotherUser, "2024123457", 2024);
-        studentRepository.save(anotherStudent);
+        User user2 = createAndPersistUser(2024123457L, "student2@example.com");
+        createAndPersistStudent(user2, 2024, 1);
 
-        User oldUser = userRepository.save(User.create("old@example.com", "password"));
-        Student oldStudent = Student.create(oldUser, "2023123456", 2023);
-        studentRepository.save(oldStudent);
+        User user3 = createAndPersistUser(2023123456L, "student3@example.com");
+        createAndPersistStudent(user3, 2023, 2);
+        entityManager.clear();
 
-        // When: 2024년도 입학생 조회
+        // When
         List<Student> students2024 = studentRepository.findByAdmissionYear(2024);
 
-        // Then: 2024년도 입학생만 조회됨
+        // Then
         assertThat(students2024).hasSize(2);
         assertThat(students2024).extracting(Student::getAdmissionYear)
                 .containsOnly(2024);
     }
 
     @Test
-    @DisplayName("사용자 ID로 학생 정보 조회")
-    void findByUserId() {
-        // Given: 학생 정보 저장
-        studentRepository.save(testStudent);
-
-        // When: 사용자 ID로 조회
-        Optional<Student> foundStudent = studentRepository.findByUserId(testUser.getId());
-
-        // Then: 조회된 학생 정보 검증
-        assertThat(foundStudent).isPresent();
-        assertThat(foundStudent.get().getStudentNumber()).isEqualTo("2024123456");
-    }
-
-    @Test
     @DisplayName("학번 패턴으로 학생 검색")
-    void findByStudentNumberPattern() {
-        // Given: 여러 학생 저장
-        studentRepository.save(testStudent);
+    void findByStudentIdPattern() {
+        // Given
+        User user1 = createAndPersistUser(2024123456L, "student1@example.com");
+        createAndPersistStudent(user1, 2024, 1);
 
-        User anotherUser = userRepository.save(User.create("another@example.com", "password"));
-        Student anotherStudent = Student.create(anotherUser, "2024123457", 2024);
-        studentRepository.save(anotherStudent);
+        User user2 = createAndPersistUser(2024123457L, "student2@example.com");
+        createAndPersistStudent(user2, 2024, 1);
+        entityManager.clear();
 
-        // When: 2024로 시작하는 학번 검색
-        List<Student> students = studentRepository.findByStudentNumberPattern("2024%");
+        // When
+        List<Student> students = studentRepository.findByStudentIdPattern("2024%");
 
-        // Then: 2024로 시작하는 학번을 가진 학생들만 조회
+        // Then
         assertThat(students).hasSize(2);
         assertThat(students).extracting(Student::getStudentNumber)
-                .allMatch(num -> num.startsWith("2024"));
+                .allMatch(num -> String.valueOf(num).startsWith("2024"));
     }
 }

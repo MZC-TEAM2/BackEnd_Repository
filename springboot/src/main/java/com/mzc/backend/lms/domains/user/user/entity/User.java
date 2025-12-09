@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.Where;
+import org.springframework.data.domain.Persistable;
 
 import java.time.LocalDateTime;
 
@@ -26,7 +27,7 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Where(clause = "deleted_at IS NULL")  // Soft Delete
-public class User {
+public class User implements Persistable<Long> {
 
     @Id
     @Column(name = "id")
@@ -59,11 +60,25 @@ public class User {
     @OneToOne(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private UserProfileImage profileImage;
 
+    @Transient
+    private boolean isNew = true;
+
     @Builder
     private User(Long id, String email, String password) {
         this.id = id;
         this.email = email;
         this.password = password;
+    }
+
+    @Override
+    public boolean isNew() {
+        return isNew;
+    }
+
+    @PostPersist
+    @PostLoad
+    void markNotNew() {
+        this.isNew = false;
     }
 
     /**

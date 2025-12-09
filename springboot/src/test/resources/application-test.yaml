@@ -15,9 +15,39 @@ spring:
         dialect: org.hibernate.dialect.H2Dialect
     open-in-view: false
 
+  flyway:
+    enabled: false
+
   h2:
     console:
       enabled: true
+
+  mail:
+    host: localhost
+    port: 25
+    username: test
+    password: test
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+            required: false
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+email:
+  from: test@example.com
+  from-name: Test LMS
+
+notification:
+  queue:
+    consumer:
+      enabled: false
+      poll-timeout: 1
+      thread-count: 1
 
 logging:
   level:
