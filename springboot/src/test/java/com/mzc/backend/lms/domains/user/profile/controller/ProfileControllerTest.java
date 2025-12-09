@@ -1,6 +1,7 @@
 package com.mzc.backend.lms.domains.user.profile.controller;
 
 import com.mzc.backend.lms.domains.user.profile.dto.ProfileResponseDto;
+import com.mzc.backend.lms.domains.user.profile.dto.ProfileUpdateRequestDto;
 import com.mzc.backend.lms.domains.user.profile.service.ProfileService;
 import com.mzc.backend.lms.domains.user.user.exceptions.UserErrorCode;
 import com.mzc.backend.lms.domains.user.user.exceptions.UserException;
@@ -151,6 +152,92 @@ class ProfileControllerTest {
             assertThat(response.getBody().getHomeNumber()).isEqualTo("02-1234-5678");
             assertThat(response.getBody().getOfficeNumber()).isEqualTo("02-9876-5432");
             assertThat(response.getBody().getMobileVerified()).isTrue();
+        }
+    }
+
+    @Nested
+    @DisplayName("프로필 수정 API")
+    class UpdateProfile {
+
+        @Test
+        @DisplayName("프로필 수정 성공")
+        void updateProfileSuccess() {
+            // given
+            Long userId = 100L;
+            ProfileUpdateRequestDto request = ProfileUpdateRequestDto.builder()
+                    .name("새이름")
+                    .mobileNumber("010-9999-8888")
+                    .build();
+
+            doNothing().when(profileService).updateProfile(userId, request);
+
+            // when
+            ResponseEntity<Void> response = controller.updateProfile(userId, request);
+
+            // then
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            verify(profileService).updateProfile(userId, request);
+        }
+
+        @Test
+        @DisplayName("프로필 수정 실패 - 사용자 없음")
+        void updateProfileUserNotFound() {
+            // given
+            Long userId = 9999L;
+            ProfileUpdateRequestDto request = ProfileUpdateRequestDto.builder()
+                    .name("새이름")
+                    .build();
+
+            doThrow(new UserException(UserErrorCode.USER_NOT_FOUND))
+                    .when(profileService).updateProfile(userId, request);
+
+            // when & then
+            try {
+                controller.updateProfile(userId, request);
+            } catch (UserException e) {
+                assertThat(e.getUserErrorCode()).isEqualTo(UserErrorCode.USER_NOT_FOUND);
+            }
+            verify(profileService).updateProfile(userId, request);
+        }
+
+        @Test
+        @DisplayName("이름만 수정")
+        void updateProfileNameOnly() {
+            // given
+            Long userId = 100L;
+            ProfileUpdateRequestDto request = ProfileUpdateRequestDto.builder()
+                    .name("새이름")
+                    .build();
+
+            doNothing().when(profileService).updateProfile(userId, request);
+
+            // when
+            ResponseEntity<Void> response = controller.updateProfile(userId, request);
+
+            // then
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            verify(profileService).updateProfile(userId, request);
+        }
+
+        @Test
+        @DisplayName("연락처만 수정")
+        void updateProfileContactOnly() {
+            // given
+            Long userId = 100L;
+            ProfileUpdateRequestDto request = ProfileUpdateRequestDto.builder()
+                    .mobileNumber("010-9999-8888")
+                    .homeNumber("02-1111-2222")
+                    .officeNumber("02-3333-4444")
+                    .build();
+
+            doNothing().when(profileService).updateProfile(userId, request);
+
+            // when
+            ResponseEntity<Void> response = controller.updateProfile(userId, request);
+
+            // then
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            verify(profileService).updateProfile(userId, request);
         }
     }
 
