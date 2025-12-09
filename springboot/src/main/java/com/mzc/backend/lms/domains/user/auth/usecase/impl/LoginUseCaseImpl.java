@@ -10,6 +10,8 @@ import com.mzc.backend.lms.domains.user.auth.usecase.LoginUseCase;
 import com.mzc.backend.lms.domains.user.professor.entity.Professor;
 import com.mzc.backend.lms.domains.user.professor.repository.ProfessorRepository;
 import com.mzc.backend.lms.domains.user.profile.entity.UserProfile;
+import com.mzc.backend.lms.domains.user.profile.entity.UserProfileImage;
+import com.mzc.backend.lms.domains.user.profile.repository.UserProfileImageRepository;
 import com.mzc.backend.lms.domains.user.profile.repository.UserProfileRepository;
 import com.mzc.backend.lms.domains.user.student.entity.Student;
 import com.mzc.backend.lms.domains.user.student.repository.StudentRepository;
@@ -35,6 +37,7 @@ public class LoginUseCaseImpl implements LoginUseCase {
     private final StudentRepository studentRepository;
     private final ProfessorRepository professorRepository;
     private final UserProfileRepository userProfileRepository;
+    private final UserProfileImageRepository userProfileImageRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final EncryptionService encryptionService;
     private final JwtTokenService jwtTokenService;
@@ -63,6 +66,11 @@ public class LoginUseCaseImpl implements LoginUseCase {
 
         String decryptedEmail = encryptionService.decryptEmail(user.getEmail());
 
+        // 프로필 썸네일 URL 조회
+        String thumbnailUrl = userProfileImageRepository.findByUserId(user.getId())
+                .map(UserProfileImage::getThumbnailUrl)
+                .orElse(null);
+
         log.info("로그인 성공: userId={}, userType={}", user.getId(), userInfo.userType);
 
         return LoginResponseDto.of(
@@ -72,7 +80,8 @@ public class LoginUseCaseImpl implements LoginUseCase {
             userInfo.userNumber != null ? userInfo.userNumber.toString() : null,
             userInfo.name,
             decryptedEmail,
-            user.getId().toString()
+            user.getId().toString(),
+            thumbnailUrl
         );
     }
 
