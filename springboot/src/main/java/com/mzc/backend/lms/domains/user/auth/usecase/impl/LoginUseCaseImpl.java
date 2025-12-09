@@ -121,31 +121,25 @@ public class LoginUseCaseImpl implements LoginUseCase {
         Long userNumber = null;
         String name = null;
 
-        // username이 이메일이 아닌 경우 학번/교번으로 처리
-        if (!username.contains("@")) {
-            try {
-                Long parsedNumber = Long.parseLong(username);
+        // User.id가 곧 학번/교번이므로 이를 기준으로 조회
+        Long userId = user.getId();
 
-                // 학번으로 조회 시도
-                Optional<Student> student = studentRepository.findById(parsedNumber);
-                if (student.isPresent()) {
-                    userType = "STUDENT";
-                    userNumber = parsedNumber;  // username이 곧 학번
-                } else {
-                    // 교번으로 조회 시도
-                    Optional<Professor> professor = professorRepository.findById(parsedNumber);
-                    if (professor.isPresent()) {
-                        userType = "PROFESSOR";
-                        userNumber = parsedNumber;  // username이 곧 교번
-                    }
-                }
-            } catch (NumberFormatException e) {
-                log.debug("Invalid user number format in getUserInfo: {}", username);
+        // 학생으로 조회 시도
+        Optional<Student> student = studentRepository.findById(userId);
+        if (student.isPresent()) {
+            userType = "STUDENT";
+            userNumber = userId;
+        } else {
+            // 교수로 조회 시도
+            Optional<Professor> professor = professorRepository.findById(userId);
+            if (professor.isPresent()) {
+                userType = "PROFESSOR";
+                userNumber = userId;
             }
         }
 
         // 프로필에서 이름 가져오기
-        Optional<UserProfile> profile = userProfileRepository.findByUserId(user.getId());
+        Optional<UserProfile> profile = userProfileRepository.findByUserId(userId);
         if (profile.isPresent()) {
             // 이름 복호화
             name = encryptionService.decryptName(profile.get().getName());
