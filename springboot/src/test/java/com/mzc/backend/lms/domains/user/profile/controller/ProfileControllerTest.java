@@ -2,6 +2,7 @@ package com.mzc.backend.lms.domains.user.profile.controller;
 
 import com.mzc.backend.lms.domains.user.profile.dto.ProfileResponseDto;
 import com.mzc.backend.lms.domains.user.profile.dto.ProfileUpdateRequestDto;
+import com.mzc.backend.lms.domains.user.profile.service.ProfileImageService;
 import com.mzc.backend.lms.domains.user.profile.service.ProfileService;
 import com.mzc.backend.lms.domains.user.user.exceptions.UserErrorCode;
 import com.mzc.backend.lms.domains.user.user.exceptions.UserException;
@@ -30,11 +31,14 @@ class ProfileControllerTest {
     @Mock
     private ProfileService profileService;
 
+    @Mock
+    private ProfileImageService profileImageService;
+
     private ProfileController controller;
 
     @BeforeEach
     void setUp() {
-        controller = new ProfileController(profileService);
+        controller = new ProfileController(profileService, profileImageService);
     }
 
     @Nested
