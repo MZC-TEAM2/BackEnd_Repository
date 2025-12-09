@@ -2,6 +2,7 @@ package com.mzc.backend.lms.domains.user.profile.repository;
 
 import com.mzc.backend.lms.domains.user.profile.entity.UserProfileImage;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -31,4 +32,11 @@ public interface UserProfileImageRepository extends JpaRepository<UserProfileIma
      */
     @Query("SELECT upi.userId FROM UserProfileImage upi WHERE upi.userId IN :userIds")
     List<Long> findUserIdsWithProfileImage(@Param("userIds") List<Long> userIds);
+
+    /**
+     * 사용자 ID로 프로필 이미지 삭제 (JPQL)
+     */
+    @Modifying
+    @Query("DELETE FROM UserProfileImage upi WHERE upi.userId = :userId")
+    int deleteByUserIdQuery(@Param("userId") Long userId);
 }
