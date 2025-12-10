@@ -23,16 +23,6 @@ public interface CourseTypeRepository extends JpaRepository<CourseType, Long> {
     boolean existsByTypeCode(int typeCode);
 
     /**
-     * 강의 유형 이름으로 조회
-     */
-    Optional<CourseType> findByTypeName(int typeName);
-
-    /**
-     * 강의 유형 이름 존재 여부 확인
-     */
-    boolean existsByTypeName(int typeName);
-
-    /**
      * 강의 유형 카테고리로 조회
      */
     Optional<CourseType> findByCategory(int category);

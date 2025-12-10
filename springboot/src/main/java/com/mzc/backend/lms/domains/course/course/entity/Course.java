@@ -42,11 +42,6 @@ public class Course {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // course type (1:1)
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "course_type_id", nullable = false)
-    private CourseType courseType;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "subject_id", nullable = false)
     private Subject subject;

@@ -32,13 +32,15 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
     
     /**
      * 강의 유형으로 강의 목록 조회
+     * Subject를 통해 CourseType에 접근
      */
-    List<Course> findByCourseType(CourseType courseType);
+    List<Course> findBySubjectCourseType(CourseType courseType);
     
     /**
-     * 강의 유형 코드로 검색 (예: "MAJOR_REQ", "GEN_ELEC")
+     * 강의 유형 코드로 검색 (예: 0: 전공필수, 1: 전공선택, 2: 교양필수, 3: 교양선택)
+     * Subject를 통해 CourseType에 접근
      */
-    List<Course> findByCourseTypeTypeCode(int typeCode);
+    List<Course> findBySubjectCourseTypeTypeCode(int typeCode);
 
     // ==================== 학점 필터 ====================
     
