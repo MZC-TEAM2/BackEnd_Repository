@@ -2,6 +2,8 @@ package com.mzc.backend.lms.domains.board.repository;
 
 import com.mzc.backend.lms.domains.board.entity.BoardCategory;
 import com.mzc.backend.lms.domains.board.entity.Post;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -13,4 +15,9 @@ public interface PostRepository extends JpaRepository<Post, Long> {
      * 특정 카테고리의 게시글 목록 조회
      */
     List<Post> findByCategory(BoardCategory category);
+    
+    /**
+     * 특정 카테고리의 게시글 목록 조회 (페이징)
+     */
+    Page<Post> search(BoardCategory category, Pageable pageable);
 }

@@ -1,0 +1,57 @@
+package com.mzc.backend.lms.domains.board.dto.response;
+
+import com.mzc.backend.lms.domains.board.entity.Post;
+import com.mzc.backend.lms.domains.board.enums.BoardType;
+import com.mzc.backend.lms.domains.board.enums.PostType;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+/**
+ * 게시글 상세 응답 DTO
+ */
+@Getter
+@Builder
+@AllArgsConstructor
+public class PostResponse {
+
+    private Long id;
+    private Long categoryId;
+    private BoardType boardType;
+    private String title;
+    private String content;
+    private PostType postType;
+    private boolean isAnonymous;
+    private int viewCount;
+    private int likeCount;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private List<CommentResponse> comments;
+    private List<AttachmentResponse> attachments;
+
+    public static PostResponse from(Post post) {
+        return PostResponse.builder()
+                .id(post.getId())
+                .categoryId(post.getCategory().getId())
+                .boardType(post.getCategory().getBoardType())
+                .title(post.getTitle())
+                .content(post.getContent())
+                .postType(post.getPostType())
+                .isAnonymous(post.isAnonymous())
+                .viewCount(post.getViewCount())
+                .likeCount(post.getLikeCount())
+                .createdAt(post.getCreatedAt())
+                .updatedAt(post.getUpdatedAt())
+                .comments(post.getComments().stream()
+                        .map(CommentResponse::from)
+                        .collect(Collectors.toList()))
+                .attachments(post.getAttachments().stream()
+                        .map(AttachmentResponse::from)
+                        .collect(Collectors.toList()))
+                .build();
+    }
+}
