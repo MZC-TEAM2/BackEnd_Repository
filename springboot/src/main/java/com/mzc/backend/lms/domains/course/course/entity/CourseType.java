@@ -26,12 +26,9 @@ public class CourseType {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "type_code", length = 20, unique = true, nullable = false)
-    private int typeCode; // 강의 유형 코드 (예: LEC, LAB, SEMINAR, PROJECT, etc.)
+    @Column(name = "type_code", unique = true, nullable = false)
+    private int typeCode; // 강의 유형 코드 (1: MAJOR_REQ, 2: MAJOR_ELEC, 3: GEN_REQ, 4: GEN_ELEC)
 
-    @Column(name = "type_name", length = 50, nullable = false)
-    private int typeName; // 강의 유형 이름 (예: 전공필수, 전공선택, 교양필수, 교양선택)
-
-    @Column(name = "category", length = 20, nullable = false)
-    private int category; // 강의 유형 카테고리 (예: 전공, 교양)
+    @Column(name = "category", nullable = false)
+    private int category; // 강의 유형 카테고리 (0: 전공, 1: 교양)
 }

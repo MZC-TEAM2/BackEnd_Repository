@@ -7,6 +7,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
+import java.time.DayOfWeek;
 import java.time.LocalTime;
 
 import lombok.Getter;
@@ -36,8 +37,8 @@ public class CourseSchedule {
     private Course course;
 
     @Column(name = "day_of_week", nullable = false)
-    private Integer dayOfWeek; // 1: 월요일, 2: 화요일, 3: 수요일, 4: 목요일, 5: 금요일
-
+    private DayOfWeek dayOfWeek; 
+    
     @Column(name = "start_time", nullable = false)
     private LocalTime startTime; // 시작 시간 (예: 09:00)
 
