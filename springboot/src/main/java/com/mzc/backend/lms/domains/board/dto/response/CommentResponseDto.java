@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 @Getter
 @Builder
 @AllArgsConstructor
-public class CommentResponse {
+public class CommentResponseDto {
 
     private Long id;
     private Long postId;
@@ -25,10 +25,10 @@ public class CommentResponse {
     private boolean isDeletedByAdmin;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private List<CommentResponse> childComments;
+    private List<CommentResponseDto> childComments;
 
-    public static CommentResponse from(Comment comment) {
-        return CommentResponse.builder()
+    public static CommentResponseDto from(Comment comment) {
+        return CommentResponseDto.builder()
                 .id(comment.getId())
                 .postId(comment.getPost().getId())
                 .parentCommentId(comment.getParentComment() != null ? 
@@ -39,7 +39,7 @@ public class CommentResponse {
                 .createdAt(comment.getCreatedAt())
                 .updatedAt(comment.getUpdatedAt())
                 .childComments(comment.getChildComments().stream()
-                        .map(CommentResponse::from)
+                        .map(CommentResponseDto::from)
                         .collect(Collectors.toList()))
                 .build();
     }

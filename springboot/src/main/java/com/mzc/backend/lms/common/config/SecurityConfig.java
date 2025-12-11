@@ -48,6 +48,8 @@ public class SecurityConfig {
                 .requestMatchers(
                     "/api/auth/**",
                     "/api/public/**",
+                    "/api/v1/boards/**",  // 게시판 API 허용
+                    "/api/v1/board/**",   // 댓글 API 허용
                     "/health",
                     "/error",
                     "/swagger-ui/**",

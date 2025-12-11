@@ -1,9 +1,9 @@
 package com.mzc.backend.lms.domains.board.service;
 
-import com.mzc.backend.lms.domains.board.dto.request.PostCreateRequest;
-import com.mzc.backend.lms.domains.board.dto.request.PostUpdateRequest;
-import com.mzc.backend.lms.domains.board.dto.response.PostListResponse;
-import com.mzc.backend.lms.domains.board.dto.response.PostResponse;
+import com.mzc.backend.lms.domains.board.dto.request.PostCreateRequestDto;
+import com.mzc.backend.lms.domains.board.dto.request.PostUpdateRequestDto;
+import com.mzc.backend.lms.domains.board.dto.response.PostListResponseDto;
+import com.mzc.backend.lms.domains.board.dto.response.PostResponseDto;
 import com.mzc.backend.lms.domains.board.entity.BoardCategory;
 import com.mzc.backend.lms.domains.board.entity.Post;
 import com.mzc.backend.lms.domains.board.enums.BoardType;
@@ -60,7 +60,7 @@ class PostServiceTest {
     @Rollback(false)
     void createPost_Success() {
         // given
-        PostCreateRequest request = PostCreateRequest.builder()
+        PostCreateRequestDto request = PostCreateRequestDto.builder()
                 .categoryId(testCategory.getId())
                 .title("새 게시글")
                 .content("새 게시글 내용")
@@ -69,7 +69,7 @@ class PostServiceTest {
                 .build();
 
         // when
-        PostResponse response = postService.createPost(request);
+        PostResponseDto response = postService.createPost("NOTICE", request, null);
 
         // then
         assertThat(response).isNotNull();
@@ -82,7 +82,7 @@ class PostServiceTest {
     @DisplayName("게시글 생성 실패 - 존재하지 않는 카테고리")
     void createPost_Fail_CategoryNotFound() {
         // given
-        PostCreateRequest request = PostCreateRequest.builder()
+        PostCreateRequestDto request = PostCreateRequestDto.builder()
                 .categoryId(999L)
                 .title("게시글")
                 .content("내용")
@@ -91,7 +91,7 @@ class PostServiceTest {
                 .build();
 
         // when & then
-        assertThatThrownBy(() -> postService.createPost(request))
+        assertThatThrownBy(() -> postService.createPost("NOTICE", request, null))
                 .isInstanceOf(BoardException.class);
     }
 
@@ -105,7 +105,7 @@ class PostServiceTest {
         int initialViewCount = post.getViewCount();
 
         // when
-        PostResponse response = postService.getPost(postId);
+        PostResponseDto response = postService.getPost(postId);
 
         // then
         assertThat(response).isNotNull();
@@ -124,11 +124,25 @@ class PostServiceTest {
         postRepository.save(new Post(testCategory, "게시글 3", "내용 3", PostType.NORMAL, false));
 
         // when
-        Page<PostListResponse> result = postService.getPostList(testCategory.getId(), PageRequest.of(0, 10));
+        Page<PostListResponseDto> result = postService.getPostList(testCategory.getId(), null, PageRequest.of(0, 10));
 
         // then
         assertThat(result).isNotNull();
         assertThat(result.getContent().size()).isGreaterThanOrEqualTo(3);
+    }
+
+    @Test
+    @DisplayName("게시글 검색 성공")
+    void searchPost_Success() {
+        // given
+        postRepository.save(new Post(testCategory, "검색 대상 게시글", "내용", PostType.NORMAL, false));
+        postRepository.save(new Post(testCategory, "다른 게시글", "내용", PostType.NORMAL, false));
+
+        // when
+        Page<PostListResponseDto> result = postService.getPostList(testCategory.getId(), "검색", PageRequest.of(0, 10));
+
+        // then
+        assertThat(result.getContent().get(0).getTitle()).isEqualTo("검색 대상 게시글");
     }
 
     @Test
@@ -138,13 +152,13 @@ class PostServiceTest {
         Post post = new Post(testCategory, "원본 제목", "원본 내용", PostType.NORMAL, false);
         post = postRepository.save(post);
         
-        PostUpdateRequest request = PostUpdateRequest.builder()
+        PostUpdateRequestDto request = PostUpdateRequestDto.builder()
                 .title("수정된 제목")
                 .content("수정된 내용")
                 .build();
 
         // when
-        PostResponse response = postService.updatePost(post.getId(), request);
+        PostResponseDto response = postService.updatePost(post.getId(), request, null);
 
         // then
         assertThat(response.getTitle()).isEqualTo("수정된 제목");

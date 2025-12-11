@@ -1,0 +1,103 @@
+package com.mzc.backend.lms.domains.board.controller;
+
+import com.mzc.backend.lms.domains.board.dto.request.PostCreateRequestDto;
+import com.mzc.backend.lms.domains.board.dto.request.PostUpdateRequestDto;
+import com.mzc.backend.lms.domains.board.dto.response.PostListResponseDto;
+import com.mzc.backend.lms.domains.board.dto.response.PostResponseDto;
+import com.mzc.backend.lms.domains.board.service.PostService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import org.springframework.http.MediaType;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
+
+/**
+ * 게시글 컨트롤러
+ */
+@Slf4j
+@RestController
+@RequestMapping("/api/v1/boards")
+@RequiredArgsConstructor
+public class PostController {
+
+    private final PostService postService;
+
+    // 게시글 생성
+    @PostMapping(value = "/{boardType}/posts", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<PostResponseDto> createPost(
+            @PathVariable String boardType,
+            @Valid @RequestPart("request") PostCreateRequestDto request,
+            @RequestPart(value = "files", required = false) List<MultipartFile> files
+    ) {
+        log.info("게시글 생성 API 호출: boardType={}, title={}, fileCount={}",
+                boardType, request.getTitle(), files != null ? files.size() : 0);
+        PostResponseDto response = postService.createPost(boardType, request, files);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    // 게시글 상세 조회
+    @GetMapping("/{boardType}/posts/{id}")
+    public ResponseEntity<PostResponseDto> getPost(
+            @PathVariable String boardType,
+            @PathVariable Long id) {
+        log.info("게시글 상세조회 API 호출: boardType={}, postId={}", boardType, id);
+        PostResponseDto response = postService.getPost(id);
+        return ResponseEntity.ok(response);
+    }
+    
+    // 게시글 목록 조회 (검색어 포함)
+    @GetMapping("/{boardType}/posts")
+    public ResponseEntity<Page<PostListResponseDto>> getPostList(
+            @PathVariable String boardType,
+            @RequestParam(required = false) String search,
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        log.info("게시글 목록 조회 API 호출: boardType={}, search={}, page={}", boardType, search, pageable.getPageNumber());
+        Page<PostListResponseDto> response = postService.getPostListByBoardType(boardType, search, pageable);
+        return ResponseEntity.ok(response);
+    }
+
+    // 게시글 수정
+    @PutMapping(value = "/posts/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<PostResponseDto> updatePost(
+            @PathVariable Long id,
+            @Valid @RequestPart("request") PostUpdateRequestDto request,
+            @RequestPart(value = "files", required = false) List<MultipartFile> files) {
+        log.info("게시글 수정 API 호출: postId={}, title={}, fileCount={}", 
+                id, request.getTitle(), files != null ? files.size() : 0);
+        PostResponseDto response = postService.updatePost(id, request, files);
+        return ResponseEntity.ok(response);
+    }
+
+    // 게시글 삭제
+    @DeleteMapping("/posts/{id}")
+    public ResponseEntity<Void> deletePost(@PathVariable Long id) {
+        log.info("게시글 삭제 API 호출: postId={}", id);
+        postService.deletePost(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // 게시글 좋아요
+    @PostMapping("/posts/{id}/like")
+    public ResponseEntity<Void> increaseLikeCount(@PathVariable Long id) {
+        log.info("게시글 좋아요 API 호출: postId={}", id);
+        postService.increaseLikeCount(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/posts/{id}/like")
+    public ResponseEntity<Void> decreaseLikeCount(@PathVariable Long id) {
+        log.info("게시글 좋아요 취소 API 호출: postId={}", id);
+        postService.decreaseLikeCount(id);
+        return ResponseEntity.ok().build();
+    }
+}

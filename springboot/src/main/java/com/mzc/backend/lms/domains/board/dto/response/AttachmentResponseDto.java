@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @Getter
 @Builder
 @AllArgsConstructor
-public class AttachmentResponse {
+public class AttachmentResponseDto {
 
     private Long id;
     private String originalName;
@@ -25,8 +25,8 @@ public class AttachmentResponse {
     private int downloadCount;
     private LocalDateTime createdAt;
 
-    public static AttachmentResponse from(Attachment attachment) {
-        return AttachmentResponse.builder()
+    public static AttachmentResponseDto from(Attachment attachment) {
+        return AttachmentResponseDto.builder()
                 .id(attachment.getId())
                 .originalName(attachment.getOriginalName())
                 .storedName(attachment.getStoredName())

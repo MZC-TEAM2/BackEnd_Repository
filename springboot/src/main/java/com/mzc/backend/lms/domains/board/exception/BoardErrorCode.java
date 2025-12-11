@@ -31,6 +31,12 @@ public enum BoardErrorCode {
     ATTACHMENT_UPLOAD_FAILED("ATTACHMENT_002", "첨부파일 업로드에 실패했습니다", HttpStatus.INTERNAL_SERVER_ERROR),
     ATTACHMENT_SIZE_EXCEEDED("ATTACHMENT_003", "첨부파일 크기가 제한을 초과했습니다", HttpStatus.BAD_REQUEST),
     ATTACHMENT_TYPE_NOT_ALLOWED("ATTACHMENT_004", "허용되지 않는 파일 형식입니다", HttpStatus.BAD_REQUEST),
+    
+    // File 관련 (FILE_0XX)
+    FILE_UPLOAD_FAILED("FILE_001", "파일 업로드에 실패했습니다", HttpStatus.INTERNAL_SERVER_ERROR),
+    FILE_SIZE_EXCEEDED("FILE_002", "파일 크기가 제한을 초과했습니다", HttpStatus.BAD_REQUEST),
+    INVALID_FILE_NAME("FILE_003", "유효하지 않은 파일명입니다", HttpStatus.BAD_REQUEST),
+    INVALID_FILE_EXTENSION("FILE_004", "유효하지 않은 파일 확장자입니다", HttpStatus.BAD_REQUEST),
     ;
     
     private final String code;

@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @Getter
 @Builder
 @AllArgsConstructor
-public class PostListResponse {
+public class PostListResponseDto {
 
     private Long id;
     private Long categoryId;
@@ -28,8 +28,8 @@ public class PostListResponse {
     private int commentCount;
     private LocalDateTime createdAt;
 
-    public static PostListResponse from(Post post) {
-        return PostListResponse.builder()
+    public static PostListResponseDto from(Post post) {
+        return PostListResponseDto.builder()
                 .id(post.getId())
                 .categoryId(post.getCategory().getId())
                 .boardType(post.getCategory().getBoardType())

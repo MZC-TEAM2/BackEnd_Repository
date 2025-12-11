@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 @Getter
 @Builder
 @AllArgsConstructor
-public class PostResponse {
+public class PostResponseDto {
 
     private Long id;
     private Long categoryId;
@@ -30,11 +30,11 @@ public class PostResponse {
     private int likeCount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private List<CommentResponse> comments;
-    private List<AttachmentResponse> attachments;
+    private List<CommentResponseDto> comments;
+    private List<AttachmentResponseDto> attachments;
 
-    public static PostResponse from(Post post) {
-        return PostResponse.builder()
+    public static PostResponseDto from(Post post) {
+        return PostResponseDto.builder()
                 .id(post.getId())
                 .categoryId(post.getCategory().getId())
                 .boardType(post.getCategory().getBoardType())
@@ -47,10 +47,11 @@ public class PostResponse {
                 .createdAt(post.getCreatedAt())
                 .updatedAt(post.getUpdatedAt())
                 .comments(post.getComments().stream()
-                        .map(CommentResponse::from)
+                        .filter(comment -> comment.getParentComment() == null)  // 최상위 댓글만
+                        .map(CommentResponseDto::from)
                         .collect(Collectors.toList()))
                 .attachments(post.getAttachments().stream()
-                        .map(AttachmentResponse::from)
+                        .map(AttachmentResponseDto::from)
                         .collect(Collectors.toList()))
                 .build();
     }

@@ -1,8 +1,8 @@
 package com.mzc.backend.lms.domains.board.service;
 
-import com.mzc.backend.lms.domains.board.dto.request.CommentCreateRequest;
-import com.mzc.backend.lms.domains.board.dto.request.CommentUpdateRequest;
-import com.mzc.backend.lms.domains.board.dto.response.CommentResponse;
+import com.mzc.backend.lms.domains.board.dto.request.CommentCreateRequestDto;
+import com.mzc.backend.lms.domains.board.dto.request.CommentUpdateRequestDto;
+import com.mzc.backend.lms.domains.board.dto.response.CommentResponseDto;
 import com.mzc.backend.lms.domains.board.entity.BoardCategory;
 import com.mzc.backend.lms.domains.board.entity.Comment;
 import com.mzc.backend.lms.domains.board.entity.Post;
@@ -30,13 +30,13 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
     
-    private static final int MAX_COMMENT_DEPTH = 2; // 대댓글까지만 허용
+    private static final int MAX_COMMENT_DEPTH = 1; // 대댓글까지만 허용 (depth 0, 1)
 
     /**
      * 댓글 생성
      */
     @Transactional
-    public CommentResponse createComment(CommentCreateRequest request) {
+    public CommentResponseDto createComment(CommentCreateRequestDto request) {
         log.info("댓글 생성: postId={}, parentCommentId={}", request.getPostId(), request.getParentCommentId());
 
         // 1. 게시글 조회
@@ -69,13 +69,13 @@ public class CommentService {
         Comment savedComment = commentRepository.save(comment);
         log.info("댓글 생성 완료: commentId={}, depth={}", savedComment.getId(), savedComment.getDepth());
 
-        return CommentResponse.from(savedComment);
+        return CommentResponseDto.from(savedComment);
     }
 
     /**
      * 게시글의 모든 댓글 조회
      */
-    public List<CommentResponse> getCommentsByPost(Long postId) {
+    public List<CommentResponseDto> getCommentsByPost(Long postId) {
         log.info("게시글의 댓글 조회: postId={}", postId);
 
         Post post = postRepository.findById(postId)
@@ -86,7 +86,7 @@ public class CommentService {
         // 최상위 댓글만 반환 (하위 댓글은 childComments에 포함됨)
         return comments.stream()
                 .filter(comment -> comment.getParentComment() == null)
-                .map(CommentResponse::from)
+                .map(CommentResponseDto::from)
                 .collect(Collectors.toList());
     }
 
@@ -94,7 +94,7 @@ public class CommentService {
      * 댓글 수정
      */
     @Transactional
-    public CommentResponse updateComment(Long commentId, CommentUpdateRequest request) {
+    public CommentResponseDto updateComment(Long commentId, CommentUpdateRequestDto request) {
         log.info("댓글 수정: commentId={}", commentId);
 
         Comment comment = commentRepository.findById(commentId)
@@ -107,7 +107,7 @@ public class CommentService {
         // Entity의 비즈니스 로직 사용
         comment.updateContent(request.getContent());
 
-        return CommentResponse.from(comment);
+        return CommentResponseDto.from(comment);
     }
 
     /**

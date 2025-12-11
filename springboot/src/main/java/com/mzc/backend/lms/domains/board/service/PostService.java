@@ -1,21 +1,26 @@
 package com.mzc.backend.lms.domains.board.service;
 
-import com.mzc.backend.lms.domains.board.dto.request.PostCreateRequest;
-import com.mzc.backend.lms.domains.board.dto.request.PostUpdateRequest;
-import com.mzc.backend.lms.domains.board.dto.response.PostListResponse;
-import com.mzc.backend.lms.domains.board.dto.response.PostResponse;
+import com.mzc.backend.lms.domains.board.dto.request.PostCreateRequestDto;
+import com.mzc.backend.lms.domains.board.dto.request.PostUpdateRequestDto;
+import com.mzc.backend.lms.domains.board.dto.response.PostListResponseDto;
+import com.mzc.backend.lms.domains.board.dto.response.PostResponseDto;
 import com.mzc.backend.lms.domains.board.entity.BoardCategory;
 import com.mzc.backend.lms.domains.board.entity.Post;
+import com.mzc.backend.lms.domains.board.enums.BoardType;
 import com.mzc.backend.lms.domains.board.exception.BoardErrorCode;
 import com.mzc.backend.lms.domains.board.exception.BoardException;
 import com.mzc.backend.lms.domains.board.repository.BoardCategoryRepository;
 import com.mzc.backend.lms.domains.board.repository.PostRepository;
+import com.mzc.backend.lms.util.file.FileUploadUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 /**
  * 게시글 서비스
@@ -28,22 +33,32 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final BoardCategoryRepository boardCategoryRepository;
+    private final FileUploadUtils fileStorageService;
 
     /**
-     * 게시글 생성
+     * 게시글 생성 (boardType 기반)
      */
     @Transactional
-    public PostResponse createPost(PostCreateRequest request) {
-        log.info("게시글 생성 요청: categoryId={}, title={}", request.getCategoryId(), request.getTitle());
+    public PostResponseDto createPost(String boardTypeStr, PostCreateRequestDto request, List<MultipartFile> files) {
+        log.info("게시글 생성 요청: boardType={}, title={}, fileCount={}", 
+                boardTypeStr, request.getTitle(), files != null ? files.size() : 0);
 
-        // 1. 카테고리 조회
-        BoardCategory category = boardCategoryRepository.findById(request.getCategoryId())
+        // 1. BoardType 변환
+        BoardType boardType;
+        try {
+            boardType = BoardType.valueOf(boardTypeStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new BoardException(BoardErrorCode.BOARD_CATEGORY_NOT_FOUND);
+        }
+
+        // 2. 카테고리 조회
+        BoardCategory category = boardCategoryRepository.findByBoardType(boardType)
                 .orElseThrow(() -> new BoardException(BoardErrorCode.BOARD_CATEGORY_NOT_FOUND));
 
-        // 2. 카테고리 정책 검증
+        // 3. 카테고리 정책 검증
         validateCategoryPolicy(category, request.getIsAnonymous());
 
-        // 3. 게시글 생성
+        // 4. 게시글 생성
         Post post = Post.builder()
                 .category(category)
                 .title(request.getTitle())
@@ -52,18 +67,54 @@ public class PostService {
                 .isAnonymous(request.getIsAnonymous())
                 .build();
 
-        // 4. 저장
+        // 5. 저장
         Post savedPost = postRepository.save(post);
+        
+        // 6. 파일 저장
+        if (files != null && !files.isEmpty()) {
+            fileStorageService.uploadFiles(savedPost, files);
+            log.info("첨부파일 {}개 저장 완료", files.size());
+        }
+        
         log.info("게시글 생성 완료: postId={}", savedPost.getId());
 
-        return PostResponse.from(savedPost);
+        return PostResponseDto.from(savedPost);
+    }
+
+    /**
+     * 게시글 목록 조회 (boardType 기반)
+     */
+    public Page<PostListResponseDto> getPostListByBoardType(String boardTypeStr, String search, Pageable pageable) {
+        log.info("게시글 목록 조회: boardType={}, search={}, page={}", boardTypeStr, search, pageable.getPageNumber());
+
+        // 1. BoardType 변환
+        BoardType boardType;
+        try {
+            boardType = BoardType.valueOf(boardTypeStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new BoardException(BoardErrorCode.BOARD_CATEGORY_NOT_FOUND);
+        }
+
+        // 2. 카테고리 조회
+        BoardCategory category = boardCategoryRepository.findByBoardType(boardType)
+                .orElseThrow(() -> new BoardException(BoardErrorCode.BOARD_CATEGORY_NOT_FOUND));
+
+        // 3. 검색 여부에 따라 분기
+        Page<Post> posts;
+        if (search != null && !search.isBlank()) {
+            posts = postRepository.findByCategoryAndTitleContaining(category, search, pageable);
+        } else {
+            posts = postRepository.findByCategory(category, pageable);
+        }
+
+        return posts.map(PostListResponseDto::from);
     }
 
     /**
      * 게시글 상세 조회 (조회수 증가)
      */
     @Transactional
-    public PostResponse getPost(Long postId) {
+    public PostResponseDto getPost(Long postId) {
         log.info("게시글 조회: postId={}", postId);
 
         Post post = postRepository.findById(postId)
@@ -77,35 +128,44 @@ public class PostService {
         // 조회수 증가
         post.increaseViewCount();
 
-        return PostResponse.from(post);
+        return PostResponseDto.from(post);
     }
 
     /**
-     * 게시글 목록 조회 (페이징)
+     * 게시글 목록 조회 (페이징 + 검색)
      */
-    public Page<PostListResponse> getPostList(Long categoryId, Pageable pageable) {
-        log.info("게시글 목록 조회: categoryId={}, page={}", categoryId, pageable.getPageNumber());
+    public Page<PostListResponseDto> getPostList(Long categoryId, String keyword, Pageable pageable) {
+        log.info("게시글 목록 조회: categoryId={}, keyword={}, page={}", categoryId, keyword, pageable.getPageNumber());
 
         Page<Post> posts;
         if (categoryId != null) {
             // 특정 카테고리의 게시글 조회
             BoardCategory category = boardCategoryRepository.findById(categoryId)
                     .orElseThrow(() -> new BoardException(BoardErrorCode.BOARD_CATEGORY_NOT_FOUND));
-            posts = postRepository.findByCategory(category, pageable);
+            
+            if (keyword != null && !keyword.isBlank()) {
+                posts = postRepository.findByCategoryAndTitleContaining(category, keyword, pageable);
+            } else {
+                posts = postRepository.findByCategory(category, pageable);
+            }
         } else {
             // 전체 게시글 조회
-            posts = postRepository.findAll(pageable);
+            if (keyword != null && !keyword.isBlank()) {
+                posts = postRepository.findByTitleContaining(keyword, pageable);
+            } else {
+                posts = postRepository.findAll(pageable);
+            }
         }
 
-        return posts.map(PostListResponse::from);
+        return posts.map(PostListResponseDto::from);
     }
 
     /**
      * 게시글 수정
      */
     @Transactional
-    public PostResponse updatePost(Long postId, PostUpdateRequest request) {
-        log.info("게시글 수정: postId={}", postId);
+    public PostResponseDto updatePost(Long postId, PostUpdateRequestDto request, List<MultipartFile> files) {
+        log.info("게시글 수정: postId={}, fileCount={}", postId, files != null ? files.size() : 0);
 
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new BoardException(BoardErrorCode.POST_NOT_FOUND));
@@ -114,10 +174,22 @@ public class PostService {
             throw new BoardException(BoardErrorCode.POST_ALREADY_DELETED);
         }
 
-        // Entity의 비즈니스 로직 사용
+        // 1. 텍스트 수정
         post.update(request.getTitle(), request.getContent(), post.isAnonymous());
 
-        return PostResponse.from(post);
+        // 2. 기존 첨부파일 삭제 (요청에 삭제 ID 목록이 있는 경우)
+        if (request.getDeleteAttachmentIds() != null && !request.getDeleteAttachmentIds().isEmpty()) {
+            fileStorageService.deleteAttachmentsByIds(request.getDeleteAttachmentIds());
+            log.info("첨부파일 {}개 삭제 완료", request.getDeleteAttachmentIds().size());
+        }
+
+        // 3. 새 첨부파일 추가
+        if (files != null && !files.isEmpty()) {
+            fileStorageService.uploadFiles(post, files);
+            log.info("첨부파일 {}개 추가 완료", files.size());
+        }
+
+        return PostResponseDto.from(post);
     }
 
     /**
@@ -134,6 +206,9 @@ public class PostService {
             throw new BoardException(BoardErrorCode.POST_ALREADY_DELETED);
         }
 
+        // 첨부파일 삭제
+        fileStorageService.deletePostFiles(post);
+        
         post.delete();
     }
 
