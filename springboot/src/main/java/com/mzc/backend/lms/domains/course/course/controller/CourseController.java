@@ -36,7 +36,7 @@ public class CourseController {
             @RequestParam(required = false) Long departmentId,
             @RequestParam(required = false) Integer courseType,
             @RequestParam(required = false) Integer credits,
-            @RequestParam(required = true) Long termId,
+            @RequestParam(required = true) Long enrollmentPeriodId,
             @RequestParam(required = false) String sort,
             Authentication authentication) {
         try {
@@ -47,8 +47,8 @@ public class CourseController {
             }
             
             // 디버깅: 파라미터 확인
-            log.debug("검색 파라미터: keyword={}, departmentId={}, courseType={}, credits={}, termId={}", 
-                    keyword, departmentId, courseType, credits, termId);
+            log.debug("검색 파라미터: keyword={}, departmentId={}, courseType={}, credits={}, enrollmentPeriodId={}", 
+                    keyword, departmentId, courseType, credits, enrollmentPeriodId);
             
             CourseSearchRequestDto request = CourseSearchRequestDto.builder()
                     .page(page)
@@ -57,7 +57,7 @@ public class CourseController {
                     .departmentId(departmentId)
                     .courseType(courseType)
                     .credits(credits)
-                    .termId(termId)
+                    .enrollmentPeriodId(enrollmentPeriodId)
                     .sort(sort)
                     .build();
 

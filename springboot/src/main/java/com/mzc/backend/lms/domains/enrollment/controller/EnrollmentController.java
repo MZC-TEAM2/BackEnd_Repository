@@ -2,7 +2,9 @@ package com.mzc.backend.lms.domains.enrollment.controller;
 
 import com.mzc.backend.lms.domains.enrollment.dto.CourseListResponseDto;
 import com.mzc.backend.lms.domains.enrollment.dto.CourseSearchRequestDto;
+import com.mzc.backend.lms.domains.enrollment.dto.EnrollmentPeriodResponseDto;
 import com.mzc.backend.lms.domains.enrollment.service.EnrollmentCourseService;
+import com.mzc.backend.lms.domains.enrollment.service.EnrollmentPeriodService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -14,20 +16,36 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 수강신청 강의 목록 컨트롤러
+ * 수강신청 컨트롤러
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/enrollment/courses")
+@RequestMapping("/api/v1/enrollments")
 @RequiredArgsConstructor
-public class EnrollmentCourseController {
+public class EnrollmentController {
 
     private final EnrollmentCourseService enrollmentCourseService;
+    private final EnrollmentPeriodService enrollmentPeriodService;
+
+    /**
+     * 현재 수강신청 기간 조회
+     */
+    @GetMapping("/periods/current")
+    public ResponseEntity<?> getCurrentEnrollmentPeriod() {
+        try {
+            EnrollmentPeriodResponseDto response = enrollmentPeriodService.getCurrentEnrollmentPeriod();
+            return ResponseEntity.ok(createSuccessResponse(response));
+        } catch (Exception e) {
+            log.error("수강신청 기간 조회 실패: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createErrorResponse(e.getMessage()));
+        }
+    }
 
     /**
      * 강의 목록 조회 (검색 및 필터링)
      */
-    @GetMapping
+    @GetMapping("/courses")
     public ResponseEntity<?> searchCourses(
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size,
@@ -35,7 +53,7 @@ public class EnrollmentCourseController {
             @RequestParam(required = false) Long departmentId,
             @RequestParam(required = false) Integer courseType,
             @RequestParam(required = false) Integer credits,
-            @RequestParam(required = true) Long termId,
+            @RequestParam(required = true) Long enrollmentPeriodId,
             @RequestParam(required = false) String sort,
             Authentication authentication) {
         try {
@@ -47,8 +65,8 @@ public class EnrollmentCourseController {
             }
             
             // 디버깅: 파라미터 확인
-            log.debug("검색 파라미터: keyword={}, departmentId={}, courseType={}, credits={}, termId={}", 
-                    keyword, departmentId, courseType, credits, termId);
+            log.debug("검색 파라미터: keyword={}, departmentId={}, courseType={}, credits={}, enrollmentPeriodId={}", 
+                    keyword, departmentId, courseType, credits, enrollmentPeriodId);
             
             CourseSearchRequestDto request = CourseSearchRequestDto.builder()
                     .page(page)
@@ -57,7 +75,7 @@ public class EnrollmentCourseController {
                     .departmentId(departmentId)
                     .courseType(courseType)
                     .credits(credits)
-                    .termId(termId)
+                    .enrollmentPeriodId(enrollmentPeriodId)
                     .sort(sort)
                     .build();
 

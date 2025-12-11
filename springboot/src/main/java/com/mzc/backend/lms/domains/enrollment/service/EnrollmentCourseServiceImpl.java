@@ -1,5 +1,8 @@
 package com.mzc.backend.lms.domains.enrollment.service;
 
+import com.mzc.backend.lms.domains.academy.entity.EnrollmentPeriod;
+import com.mzc.backend.lms.domains.academy.repository.EnrollmentPeriodRepository;
+import com.mzc.backend.lms.domains.course.constants.CourseConstants;
 import com.mzc.backend.lms.domains.course.course.entity.Course;
 import com.mzc.backend.lms.domains.course.course.entity.CourseSchedule;
 import com.mzc.backend.lms.domains.course.course.entity.CourseType;
@@ -34,30 +37,8 @@ public class EnrollmentCourseServiceImpl implements EnrollmentCourseService {
     private final CourseRepository courseRepository;
     private final EnrollmentRepository enrollmentRepository;
     private final CourseCartRepository courseCartRepository;
+    private final EnrollmentPeriodRepository enrollmentPeriodRepository;
     private final UserViewService userViewService;
-
-    private static final Map<Integer, String> COURSE_TYPE_CODE_MAP = Map.of(
-            0, "MAJOR_REQ",
-            1, "MAJOR_ELEC",
-            2, "GEN_REQ",
-            3, "GEN_ELEC"
-    );
-
-    private static final Map<Integer, String> COURSE_TYPE_NAME_MAP = Map.of(
-            0, "전공필수",
-            1, "전공선택",
-            2, "교양필수",
-            3, "교양선택"
-    );
-
-    // DAY_NAME_MAP을 DayOfWeek를 키로 사용하도록 변경
-    private static final Map<DayOfWeek, String> DAY_NAME_MAP = Map.of(
-            DayOfWeek.MONDAY, "월",
-            DayOfWeek.TUESDAY, "화",
-            DayOfWeek.WEDNESDAY, "수",
-            DayOfWeek.THURSDAY, "목",
-            DayOfWeek.FRIDAY, "금"
-    );
 
     @Override
     public CourseListResponseDto searchCourses(CourseSearchRequestDto request, String studentId) {
@@ -96,16 +77,22 @@ public class EnrollmentCourseServiceImpl implements EnrollmentCourseService {
     }
 
     private List<Course> filterCourses(CourseSearchRequestDto request) {
-        // termId 필수 체크
-        if (request.getTermId() == null) {
-            throw new IllegalArgumentException("termId는 필수입니다.");
+        // enrollmentPeriodId 필수 체크
+        if (request.getEnrollmentPeriodId() == null) {
+            throw new IllegalArgumentException("enrollmentPeriodId는 필수입니다.");
         }
 
-        // 학기로 필터링
-        List<Course> courses = courseRepository.findByAcademicTermId(request.getTermId());
+        // EnrollmentPeriod 조회
+        EnrollmentPeriod enrollmentPeriod = enrollmentPeriodRepository.findById(request.getEnrollmentPeriodId())
+                .orElseThrow(() -> new IllegalArgumentException("수강신청 기간을 찾을 수 없습니다: " + request.getEnrollmentPeriodId()));
+
+        // EnrollmentPeriod의 AcademicTerm으로 강의 조회
+        Long academicTermId = enrollmentPeriod.getAcademicTerm().getId();
+        List<Course> courses = courseRepository.findByAcademicTermId(academicTermId);
         
         // 디버깅: 초기 강의 수 확인
-        log.debug("termId={}로 조회된 강의 수: {}", request.getTermId(), courses.size());
+        log.debug("enrollmentPeriodId={}, academicTermId={}로 조회된 강의 수: {}", 
+                request.getEnrollmentPeriodId(), academicTermId, courses.size());
 
         // 학과 필터
         if (request.getDepartmentId() != null) {
@@ -242,7 +229,7 @@ public class EnrollmentCourseServiceImpl implements EnrollmentCourseService {
         DayOfWeek dayOfWeek = schedule.getDayOfWeek();
         return ScheduleDto.builder()
                 .dayOfWeek(dayOfWeek.getValue()) // DayOfWeek를 int로 변환
-                .dayName(DAY_NAME_MAP.get(dayOfWeek))
+                .dayName(CourseConstants.DAY_NAME_MAP.get(dayOfWeek))
                 .startTime(schedule.getStartTime().format(DateTimeFormatter.ofPattern("HH:mm")))
                 .endTime(schedule.getEndTime().format(DateTimeFormatter.ofPattern("HH:mm")))
                 .classroom(schedule.getScheduleRoom())
@@ -272,25 +259,15 @@ public class EnrollmentCourseServiceImpl implements EnrollmentCourseService {
     }
 
     private CourseTypeDto convertToCourseTypeDto(CourseType courseType) {
-        String code = COURSE_TYPE_CODE_MAP.get(courseType.getTypeCode());
-        String name = COURSE_TYPE_NAME_MAP.get(courseType.getTypeCode());
-        String color = getCourseTypeColor(code);
+        String code = CourseConstants.COURSE_TYPE_CODE_MAP.get(courseType.getTypeCode());
+        String name = CourseConstants.COURSE_TYPE_NAME_MAP.get(courseType.getTypeCode());
+        String color = CourseConstants.getCourseTypeColor(code);
 
         return CourseTypeDto.builder()
                 .code(code)
                 .name(name)
                 .color(color)
                 .build();
-    }
-
-    private String getCourseTypeColor(String code) {
-        return switch (code) {
-            case "MAJOR_REQ" -> "#FFB4C8";
-            case "MAJOR_ELEC" -> "#FFD4E5";
-            case "GEN_REQ" -> "#B4E5FF";
-            case "GEN_ELEC" -> "#D4F0FF";
-            default -> "#CCCCCC";
-        };
     }
 
     private Sort parseSort(String sort) {

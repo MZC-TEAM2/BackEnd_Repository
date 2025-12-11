@@ -15,6 +15,6 @@ public class CourseSearchRequestDto {
     private Long departmentId;
     private Integer courseType; // MAJOR_REQ, MAJOR_ELEC, GEN_REQ, GEN_ELEC
     private Integer credits;
-    private Long termId; // 필수
+    private Long enrollmentPeriodId; // 필수 (enrollment_periods.id)
     private String sort; // 기본값: courseCode,asc
 }
