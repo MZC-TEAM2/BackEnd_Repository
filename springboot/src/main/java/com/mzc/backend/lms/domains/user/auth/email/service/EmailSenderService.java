@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.UnsupportedEncodingException;
@@ -30,10 +31,11 @@ public class EmailSenderService {
     private String fromName;
 
     /**
-     * 이메일 전송
+     * 이메일 비동기 전송
      *
      * @param emailMessage 이메일 메시지
      */
+    @Async("emailExecutor")
     public void sendEmail(EmailMessage emailMessage) {
         try {
             MimeMessage mimeMessage = createMimeMessage(emailMessage);
