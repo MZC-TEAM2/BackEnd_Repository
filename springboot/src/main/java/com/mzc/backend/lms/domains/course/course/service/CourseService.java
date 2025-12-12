@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -215,11 +216,14 @@ public class CourseService {
 
     private ScheduleDto convertToScheduleDto(CourseSchedule schedule) {
         DayOfWeek dayOfWeek = schedule.getDayOfWeek();
+        // MySQL Connector/J가 TIME 타입을 읽을 때 시간대 변환을 적용하므로 9시간을 빼서 복원
+        LocalTime startTime = schedule.getStartTime().minusHours(9);
+        LocalTime endTime = schedule.getEndTime().minusHours(9);
         return ScheduleDto.builder()
                 .dayOfWeek(dayOfWeek.getValue()) // DayOfWeek를 int로 변환 (MONDAY=1, TUESDAY=2, ...)
                 .dayName(CourseConstants.DAY_NAME_MAP.get(dayOfWeek))
-                .startTime(schedule.getStartTime().format(DateTimeFormatter.ofPattern("HH:mm")))
-                .endTime(schedule.getEndTime().format(DateTimeFormatter.ofPattern("HH:mm")))
+                .startTime(startTime.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
+                .endTime(endTime.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
                 .classroom(schedule.getScheduleRoom())
                 .build();
     }

@@ -7,17 +7,15 @@ import com.mzc.backend.lms.domains.course.course.entity.Course;
 import com.mzc.backend.lms.domains.course.course.entity.CourseSchedule;
 import com.mzc.backend.lms.domains.course.course.entity.CourseType;
 import com.mzc.backend.lms.domains.course.course.repository.CourseRepository;
+import com.mzc.backend.lms.domains.course.subject.entity.SubjectPrerequisites;
+import com.mzc.backend.lms.domains.course.subject.repository.SubjectPrerequisitesRepository;
 import com.mzc.backend.lms.domains.enrollment.dto.*;
-import com.mzc.backend.lms.domains.enrollment.entity.CourseCart;
 import com.mzc.backend.lms.domains.enrollment.entity.Enrollment;
 import com.mzc.backend.lms.domains.enrollment.repository.CourseCartRepository;
 import com.mzc.backend.lms.domains.enrollment.repository.EnrollmentRepository;
 import com.mzc.backend.lms.views.UserViewService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +36,7 @@ public class EnrollmentCourseServiceImpl implements EnrollmentCourseService {
     private final EnrollmentRepository enrollmentRepository;
     private final CourseCartRepository courseCartRepository;
     private final EnrollmentPeriodRepository enrollmentPeriodRepository;
+    private final SubjectPrerequisitesRepository subjectPrerequisitesRepository;
     private final UserViewService userViewService;
 
     @Override
@@ -192,12 +191,17 @@ public class EnrollmentCourseServiceImpl implements EnrollmentCourseService {
         // 장바구니/수강신청 여부 확인
         boolean isInCart = false;
         boolean isEnrolled = false;
+        boolean hasPrerequisites = true; // 선수과목 이수 여부
+        
         if (studentId != null) {
             Long studentIdLong = Long.parseLong(studentId);
             isInCart = courseCartRepository.existsByStudentIdAndCourseId(
                     studentIdLong, course.getId());
             isEnrolled = enrollmentRepository.existsByStudentIdAndCourseId(
                     studentIdLong, course.getId());
+            
+            // 선수과목 이수 여부 확인
+            hasPrerequisites = checkPrerequisites(course, studentIdLong);
         }
 
         return CourseItemDto.builder()
@@ -220,18 +224,20 @@ public class EnrollmentCourseServiceImpl implements EnrollmentCourseService {
                 .enrollment(enrollmentDto)
                 .isInCart(isInCart)
                 .isEnrolled(isEnrolled)
-                .canEnroll(!isEnrolled && !enrollmentDto.getIsFull())
+                .canEnroll(!isEnrolled && !enrollmentDto.getIsFull() && hasPrerequisites)
                 .warnings(new ArrayList<>())
                 .build();
     }
 
     private ScheduleDto convertToScheduleDto(CourseSchedule schedule) {
         DayOfWeek dayOfWeek = schedule.getDayOfWeek();
+        LocalTime startTime = schedule.getStartTime().minusHours(9);
+        LocalTime endTime = schedule.getEndTime().minusHours(9);
         return ScheduleDto.builder()
                 .dayOfWeek(dayOfWeek.getValue()) // DayOfWeek를 int로 변환
                 .dayName(CourseConstants.DAY_NAME_MAP.get(dayOfWeek))
-                .startTime(schedule.getStartTime().format(DateTimeFormatter.ofPattern("HH:mm")))
-                .endTime(schedule.getEndTime().format(DateTimeFormatter.ofPattern("HH:mm")))
+                .startTime(startTime.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
+                .endTime(endTime.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
                 .classroom(schedule.getScheduleRoom())
                 .build();
     }
@@ -339,5 +345,43 @@ public class EnrollmentCourseServiceImpl implements EnrollmentCourseService {
         return order.getDirection() == Sort.Direction.DESC 
                 ? comparator.reversed() 
                 : comparator;
+    }
+
+    /**
+     * 선수과목 이수 여부 확인
+     */
+    private boolean checkPrerequisites(Course course, Long studentId) {
+        Long subjectId = course.getSubject().getId();
+        List<SubjectPrerequisites> prerequisites = subjectPrerequisitesRepository.findBySubjectId(subjectId);
+        
+        log.debug("과목 ID: {}, 선수과목 개수: {}", subjectId, prerequisites.size());
+        
+        if (prerequisites.isEmpty()) {
+            log.debug("선수과목이 없으므로 true 반환");
+            return true; // 선수과목이 없으면 true
+        }
+
+        // 학생이 수강신청한 강의 목록 조회
+        List<Enrollment> studentEnrollments = enrollmentRepository.findByStudentId(studentId);
+        Set<Long> enrolledSubjectIds = studentEnrollments.stream()
+                .map(enrollment -> enrollment.getCourse().getSubject().getId())
+                .collect(Collectors.toSet());
+
+        log.debug("학생 ID: {}, 수강신청한 과목 수: {}, 과목 IDs: {}", studentId, enrolledSubjectIds.size(), enrolledSubjectIds);
+
+        // 필수 선수과목이 모두 이수되었는지 확인
+        for (SubjectPrerequisites prerequisite : prerequisites) {
+            if (prerequisite.getIsMandatory()) {
+                Long prerequisiteSubjectId = prerequisite.getPrerequisite().getId();
+                log.debug("필수 선수과목 ID: {}, 이수 여부: {}", prerequisiteSubjectId, enrolledSubjectIds.contains(prerequisiteSubjectId));
+                if (!enrolledSubjectIds.contains(prerequisiteSubjectId)) {
+                    log.debug("필수 선수과목을 이수하지 않아 false 반환");
+                    return false; // 필수 선수과목을 이수하지 않음
+                }
+            }
+        }
+
+        log.debug("모든 필수 선수과목을 이수하여 true 반환");
+        return true; // 모든 필수 선수과목을 이수함
     }
 }

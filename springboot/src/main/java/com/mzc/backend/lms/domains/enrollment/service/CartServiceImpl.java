@@ -130,11 +130,13 @@ public class CartServiceImpl implements CartService {
 
     private ScheduleDto convertToScheduleDto(CourseSchedule schedule) {
         DayOfWeek dayOfWeek = schedule.getDayOfWeek();
+        LocalTime startTime = schedule.getStartTime().minusHours(9);
+        LocalTime endTime = schedule.getEndTime().minusHours(9);
         return ScheduleDto.builder()
                 .dayOfWeek(dayOfWeek.getValue())
                 .dayName(CourseConstants.DAY_NAME_MAP.get(dayOfWeek))
-                .startTime(schedule.getStartTime().format(DateTimeFormatter.ofPattern("HH:mm")))
-                .endTime(schedule.getEndTime().format(DateTimeFormatter.ofPattern("HH:mm")))
+                .startTime(startTime.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
+                .endTime(endTime.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
                 .classroom(schedule.getScheduleRoom())
                 .build();
     }
@@ -364,10 +366,10 @@ public class CartServiceImpl implements CartService {
             return false;
         }
 
-        LocalTime start1 = schedule1.getStartTime();
-        LocalTime end1 = schedule1.getEndTime();
-        LocalTime start2 = schedule2.getStartTime();
-        LocalTime end2 = schedule2.getEndTime();
+        LocalTime start1 = schedule1.getStartTime().minusHours(9);
+        LocalTime end1 = schedule1.getEndTime().minusHours(9);
+        LocalTime start2 = schedule2.getStartTime().minusHours(9);
+        LocalTime end2 = schedule2.getEndTime().minusHours(9);
 
         // 시간 겹침 확인
         return start1.isBefore(end2) && start2.isBefore(end1);
