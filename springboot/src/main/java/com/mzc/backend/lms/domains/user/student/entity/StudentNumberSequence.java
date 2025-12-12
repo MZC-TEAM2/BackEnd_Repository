@@ -63,6 +63,19 @@ public class StudentNumberSequence {
     }
 
     /**
+     * 초기 시퀀스 값을 지정하여 생성 (기존 데이터 고려)
+     */
+    public static StudentNumberSequence createWithInitialSequence(
+            Integer year, Long collegeId, Long departmentId, Integer initialSequence) {
+        return StudentNumberSequence.builder()
+                .year(year)
+                .collegeId(collegeId)
+                .departmentId(departmentId)
+                .lastSequence(initialSequence)
+                .build();
+    }
+
+    /**
      * 다음 시퀀스 번호 반환 및 증가
      */
     public Integer getNextSequence() {

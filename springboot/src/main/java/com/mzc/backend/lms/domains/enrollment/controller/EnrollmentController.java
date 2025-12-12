@@ -1,9 +1,13 @@
-package com.mzc.backend.lms.domains.course.course.controller;
+package com.mzc.backend.lms.domains.enrollment.controller;
 
-import com.mzc.backend.lms.domains.course.course.dto.CourseResponseDto;
-import com.mzc.backend.lms.domains.course.course.dto.CourseSearchRequestDto;
-import com.mzc.backend.lms.domains.course.course.dto.CourseDetailDto;
-import com.mzc.backend.lms.domains.course.course.service.CourseService;
+import com.mzc.backend.lms.domains.enrollment.dto.CourseListResponseDto;
+import com.mzc.backend.lms.domains.enrollment.dto.CourseSearchRequestDto;
+import com.mzc.backend.lms.domains.enrollment.dto.EnrollmentBulkRequestDto;
+import com.mzc.backend.lms.domains.enrollment.dto.EnrollmentBulkResponseDto;
+import com.mzc.backend.lms.domains.enrollment.dto.EnrollmentPeriodResponseDto;
+import com.mzc.backend.lms.domains.enrollment.service.EnrollmentCourseService;
+import com.mzc.backend.lms.domains.enrollment.service.EnrollmentPeriodService;
+import com.mzc.backend.lms.domains.enrollment.service.EnrollmentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -13,22 +17,39 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
+
 /**
- * 강의 목록 컨트롤러 (개설된 강의 조회)
+ * 수강신청 컨트롤러
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/courses")
+@RequestMapping("/api/v1/enrollments")
 @RequiredArgsConstructor
-public class CourseController {
+public class EnrollmentController {
 
-    private final CourseService courseService;
+    private final EnrollmentCourseService enrollmentCourseService;
+    private final EnrollmentPeriodService enrollmentPeriodService;
+    private final EnrollmentService enrollmentService;
+
+    /**
+     * 현재 수강신청 기간 조회
+     */
+    @GetMapping("/periods/current")
+    public ResponseEntity<?> getCurrentEnrollmentPeriod() {
+        try {
+            EnrollmentPeriodResponseDto response = enrollmentPeriodService.getCurrentEnrollmentPeriod();
+            return ResponseEntity.ok(createSuccessResponse(response));
+        } catch (Exception e) {
+            log.error("수강신청 기간 조회 실패: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createErrorResponse(e.getMessage()));
+        }
+    }
 
     /**
      * 강의 목록 조회 (검색 및 필터링)
-     * 인증된 사용자만 접근 가능
      */
-    @GetMapping
+    @GetMapping("/courses")
     public ResponseEntity<?> searchCourses(
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size,
@@ -40,8 +61,9 @@ public class CourseController {
             @RequestParam(required = false) String sort,
             Authentication authentication) {
         try {
-            // 인증 확인
-            if (authentication == null || authentication.getName() == null) {
+            String studentId = authentication != null ? authentication.getName() : null;
+
+            if (studentId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(createErrorResponse("로그인이 필요합니다."));
             }
@@ -61,7 +83,7 @@ public class CourseController {
                     .sort(sort)
                     .build();
 
-            CourseResponseDto response = courseService.searchCourses(request);
+            CourseListResponseDto response = enrollmentCourseService.searchCourses(request, studentId);
             return ResponseEntity.ok(createSuccessResponse(response));
         } catch (Exception e) {
             log.error("강의 목록 조회 실패: {}", e.getMessage(), e);
@@ -70,29 +92,40 @@ public class CourseController {
         }
     }
 
-    /*
-    * 강의 하나에 대한 정보 상세조회
-    */
-
-    @GetMapping("/{courseId}")
-    public ResponseEntity<?> getSpecificCourseInfo(@PathVariable Long courseId, Authentication authentication) {
+    /**
+     * 일괄 수강신청
+     */
+    @PostMapping("/bulk")
+    public ResponseEntity<?> enrollBulk(
+            @RequestBody EnrollmentBulkRequestDto request,
+            Authentication authentication) {
         try {
             // 인증 확인
             if (authentication == null || authentication.getName() == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(createErrorResponse("로그인이 필요합니다."));
             }
+
+            String studentId = authentication.getName();
+            log.debug("일괄 수강신청: studentId={}, courseIds={}", studentId, request.getCourseIds());
+
+            EnrollmentBulkResponseDto response = enrollmentService.enrollBulk(request, studentId);
             
-            log.debug("강의 상세 조회: courseId={}", courseId);
-            
-            CourseDetailDto courseDetail = courseService.getCourseDetailById(courseId);
-            return ResponseEntity.ok(createSuccessResponse(courseDetail));
+            // 메시지 생성
+            String message = String.format("%d개 과목 수강신청 완료", response.getSummary().getSuccessCount());
+            if (response.getSummary().getFailedCount() > 0) {
+                message += String.format(", %d개 과목 실패", response.getSummary().getFailedCount());
+            }
+
+            Map<String, Object> successResponse = createSuccessResponse(response);
+            successResponse.put("message", message);
+            return ResponseEntity.ok(successResponse);
         } catch (IllegalArgumentException e) {
-            log.warn("강의 상세 조회 실패: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            log.warn("일괄 수강신청 실패: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(createErrorResponse(e.getMessage()));
         } catch (Exception e) {
-            log.error("강의 상세 조회 실패: {}", e.getMessage(), e);
+            log.error("일괄 수강신청 실패: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(createErrorResponse(e.getMessage()));
         }

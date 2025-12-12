@@ -35,4 +35,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
      */
     @Query("SELECT u FROM User u WHERE u.email = :email AND u.deletedAt IS NULL")
     Optional<User> findActiveByEmail(@Param("email") String email);
+
+    /**
+     * 특정 년도/단과대학/학과 조합의 최대 학번 순번 조회
+     * 학번 형식: YYYYCCDDNNN (년도4 + 단과대학2 + 학과2 + 순번3)
+     */
+    @Query("SELECT MAX(CAST(SUBSTRING(CAST(u.id AS string), 9, 3) AS int)) " +
+           "FROM User u " +
+           "WHERE CAST(u.id AS string) LIKE CONCAT(:prefix, '%')")
+    Optional<Integer> findMaxSequenceByPrefix(@Param("prefix") String prefix);
 }

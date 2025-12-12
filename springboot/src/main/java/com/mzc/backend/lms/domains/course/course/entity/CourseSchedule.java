@@ -6,6 +6,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Convert;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
@@ -17,6 +18,7 @@ import jakarta.persistence.Table;
 import lombok.Builder;
 import lombok.AllArgsConstructor;
 import lombok.Setter;
+import com.mzc.backend.lms.domains.course.course.converter.DayOfWeekConverter;
 
 /*
   강의 스케줄 엔티티
@@ -37,6 +39,7 @@ public class CourseSchedule {
     private Course course;
 
     @Column(name = "day_of_week", nullable = false)
+    @Convert(converter = DayOfWeekConverter.class)
     private DayOfWeek dayOfWeek; 
     
     @Column(name = "start_time", nullable = false)

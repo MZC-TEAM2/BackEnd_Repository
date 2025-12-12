@@ -31,4 +31,9 @@ public interface CourseCartRepository extends JpaRepository<CourseCart, Long> {
      * 강의 ID로 코스 카트 목록 조회
      */
     List<CourseCart> findByCourseId(Long courseId);
+
+    /**
+     * 학생 ID로 코스 카트 전체 지우기
+     */
+    void deleteByStudentId(Long studentId);
 }
