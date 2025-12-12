@@ -15,6 +15,6 @@ public class CourseSearchRequestDto {
     private Long departmentId;
     private Integer courseType;
     private Integer credits;
-    private Long termId;
+    private Long enrollmentPeriodId; // 필수 (enrollment_periods.id)
     private String sort;
 }
