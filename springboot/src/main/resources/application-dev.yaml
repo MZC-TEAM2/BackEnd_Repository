@@ -8,8 +8,9 @@ spring:
 
   servlet:
     multipart:
-      max-request-size: 10MB  # 클라이언트가 여러 파일을 어보드할때 요청의 총 크기가 10MB 초과 안됨
-      max-file-size: 10MB     # 개별 업로드 파일의 최대 크기
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 50MB
       location: /tmp/upload   # 임시 디렉토리
       
   jpa:
@@ -57,6 +58,10 @@ spring:
     enabled: true
     baseline-on-migrate: true
 
+app:
+  file:
+    upload-dir: ${user.dir}/uploads
+
 file:
   upload:
     dir: ${FILE_UPLOAD_DIR:./uploads}
@@ -84,6 +89,3 @@ logging:
 email:
   from: ${MAIL_FROM:${MAIL_USERNAME}}
   from-name: ${MAIL_FROM_NAME:LMS System}
-
-
-

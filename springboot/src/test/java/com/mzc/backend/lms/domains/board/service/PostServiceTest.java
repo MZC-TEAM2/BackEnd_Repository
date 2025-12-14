@@ -86,7 +86,7 @@ class PostServiceTest {
                 .build();
 
         // when
-        PostResponseDto response = postService.createPost("NOTICE", request, null);
+        PostResponseDto response = postService.createPost("NOTICE", request);
 
         // then
         assertThat(response).isNotNull();
@@ -108,7 +108,7 @@ class PostServiceTest {
                 .build();
 
         // when & then
-        assertThatThrownBy(() -> postService.createPost("NOTICE", request, null))
+        assertThatThrownBy(() -> postService.createPost("NOTICE", request))
                 .isInstanceOf(BoardException.class);
     }
 
@@ -116,7 +116,7 @@ class PostServiceTest {
     @DisplayName("게시글 조회 성공 - 조회수 증가")
     void getPost_Success() {
         // given
-        Post post = new Post(testCategory, "조회 테스트", "내용", PostType.NORMAL, false);
+        Post post = new Post(testCategory, "조회 테스트", "내용", PostType.NORMAL, false, 1L);
         post = postRepository.save(post);
         Long postId = post.getId();
         int initialViewCount = post.getViewCount();
@@ -136,9 +136,9 @@ class PostServiceTest {
     @DisplayName("게시글 목록 조회 - 페이징")
     void getPostList_Success() {
         // given
-        postRepository.save(new Post(testCategory, "게시글 1", "내용 1", PostType.NORMAL, false));
-        postRepository.save(new Post(testCategory, "게시글 2", "내용 2", PostType.NORMAL, false));
-        postRepository.save(new Post(testCategory, "게시글 3", "내용 3", PostType.NORMAL, false));
+        postRepository.save(new Post(testCategory, "게시글 1", "내용 1", PostType.NORMAL, false, 1L));
+        postRepository.save(new Post(testCategory, "게시글 2", "내용 2", PostType.NORMAL, false, 1L));
+        postRepository.save(new Post(testCategory, "게시글 3", "내용 3", PostType.NORMAL, false, 1L));
 
         // when
         Page<PostListResponseDto> result = postService.getPostList(testCategory.getId(), null, PageRequest.of(0, 10));
@@ -152,8 +152,8 @@ class PostServiceTest {
     @DisplayName("게시글 검색 성공")
     void searchPost_Success() {
         // given
-        postRepository.save(new Post(testCategory, "검색 대상 게시글", "내용", PostType.NORMAL, false));
-        postRepository.save(new Post(testCategory, "다른 게시글", "내용", PostType.NORMAL, false));
+        postRepository.save(new Post(testCategory, "검색 대상 게시글", "내용", PostType.NORMAL, false, 1L));
+        postRepository.save(new Post(testCategory, "다른 게시글", "내용", PostType.NORMAL, false, 1L));
 
         // when
         Page<PostListResponseDto> result = postService.getPostList(testCategory.getId(), "검색", PageRequest.of(0, 10));
@@ -166,7 +166,7 @@ class PostServiceTest {
     @DisplayName("게시글 수정 성공")
     void updatePost_Success() {
         // given
-        Post post = new Post(testCategory, "원본 제목", "원본 내용", PostType.NORMAL, false);
+        Post post = new Post(testCategory, "원본 제목", "원본 내용", PostType.NORMAL, false, 1L);
         post = postRepository.save(post);
         
         PostUpdateRequestDto request = PostUpdateRequestDto.builder()
@@ -186,7 +186,7 @@ class PostServiceTest {
     @DisplayName("게시글 수정 시 첨부파일 삭제 성공")
     void updatePost_WithDeleteAttachments_Success() {
         // given
-        Post post = new Post(testCategory, "원본 제목", "원본 내용", PostType.NORMAL, false);
+        Post post = new Post(testCategory, "원본 제목", "원본 내용", PostType.NORMAL, false, 1L);
         Post savedPost = postRepository.save(post);
         
         // 첨부파일은 실제 파일 업로드가 필요하므로, deleteAttachmentIds만 테스트
@@ -205,7 +205,7 @@ class PostServiceTest {
     @DisplayName("게시글 삭제 성공 - Soft Delete")
     void deletePost_Success() {
         // given
-        Post post = new Post(testCategory, "삭제할 게시글", "내용", PostType.NORMAL, false);
+        Post post = new Post(testCategory, "삭제할 게시글", "내용", PostType.NORMAL, false, 1L);
         post = postRepository.save(post);
         Long postId = post.getId();
 
@@ -221,7 +221,7 @@ class PostServiceTest {
     @DisplayName("좋아요 토글 - 추가")
     void toggleLike_Add_Success() {
         // given
-        Post post = new Post(testCategory, "게시글", "내용", PostType.NORMAL, false);
+        Post post = new Post(testCategory, "게시글", "내용", PostType.NORMAL, false, 1L);
         post = postRepository.save(post);
         Long postId = post.getId();
         Long userId = testUser.getId();
@@ -240,7 +240,7 @@ class PostServiceTest {
     @DisplayName("좋아요 토글 - 취소")
     void toggleLike_Remove_Success() {
         // given
-        Post post = new Post(testCategory, "게시글", "내용", PostType.NORMAL, false);
+        Post post = new Post(testCategory, "게시글", "내용", PostType.NORMAL, false, 1L);
         post = postRepository.save(post);
         Long postId = post.getId();
         Long userId = testUser.getId();
@@ -262,7 +262,7 @@ class PostServiceTest {
     @DisplayName("좋아요 여부 조회")
     void isLikedByUser_Success() {
         // given
-        Post post = new Post(testCategory, "게시글", "내용", PostType.NORMAL, false);
+        Post post = new Post(testCategory, "게시글", "내용", PostType.NORMAL, false, 1L);
         post = postRepository.save(post);
         Long postId = post.getId();
         Long userId = testUser.getId();

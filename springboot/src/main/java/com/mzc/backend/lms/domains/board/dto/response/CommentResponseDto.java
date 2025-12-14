@@ -26,6 +26,7 @@ public class CommentResponseDto {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<CommentResponseDto> childComments;
+    private List<AttachmentResponseDto> attachments;
 
     public static CommentResponseDto from(Comment comment) {
         return CommentResponseDto.builder()
@@ -41,6 +42,10 @@ public class CommentResponseDto {
                 .childComments(comment.getChildComments().stream()
                         .map(CommentResponseDto::from)
                         .collect(Collectors.toList()))
+                .attachments(comment.getAttachments() != null ? 
+                        comment.getAttachments().stream()
+                                .map(AttachmentResponseDto::from)
+                                .collect(Collectors.toList()) : List.of())
                 .build();
     }
 }

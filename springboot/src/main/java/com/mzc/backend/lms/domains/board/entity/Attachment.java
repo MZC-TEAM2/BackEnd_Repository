@@ -23,8 +23,12 @@ public class Attachment extends BaseEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id", nullable = false)
+    @JoinColumn(name = "post_id")
     private Post post;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "comment_id")
+    private Comment comment;
 
     @Column(name = "original_name", nullable = false)
     private String originalName;
@@ -46,8 +50,9 @@ public class Attachment extends BaseEntity {
     private int downloadCount = 0;
 
     @Builder
-    public Attachment(Post post, String originalName, String storedName, String filePath, Long fileSize, AttachmentType attachmentType) {
+    public Attachment(Post post, Comment comment, String originalName, String storedName, String filePath, Long fileSize, AttachmentType attachmentType) {
         this.post = post;
+        this.comment = comment;
         this.originalName = originalName;
         this.storedName = storedName;
         this.filePath = filePath;
@@ -59,5 +64,19 @@ public class Attachment extends BaseEntity {
 
     public void increaseDownloadCount() {
         this.downloadCount++;
+    }
+    
+    /**
+     * 댓글에 첨부파일 연결
+     */
+    public void attachToComment(Comment comment) {
+        this.comment = comment;
+    }
+    
+    /**
+     * 게시글에 첨부파일 연결
+     */
+    public void attachToPost(Post post) {
+        this.post = post;
     }
 }

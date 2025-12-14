@@ -74,18 +74,16 @@ Table posts {
   content text [not null, note: "내용"]
   post_type varchar(30) [not null, note: "게시글 유형 (NOTICE/GENERAL/QUESTION/DISCUSSION/PROFESSOR/STUDENT/DEPARTMENT/CONTEST/CAREER/ASSIGNMENT/EXAM/QUIZ/STUDY_RECRUITMENT)"]
   is_anonymous boolean [default: false, note: "익명 게시글 여부"]
-  is_deleted boolean [default: false, note: "삭제 여부 (성능 최적화용, 초고빈도 조회)"]
   created_at timestamp [not null, default: `now()`, note: "생성일시"]
   updated_at timestamp [note: "수정일시"]
   deleted_at timestamp [note: "삭제일시 (Soft Delete)"]
 
   indexes {
-    (category_id, is_deleted, created_at) [name: 'idx_category_active_created']
-    (course_id, is_deleted, created_at) [name: 'idx_course_active_created']
-    (department_id, is_deleted, created_at) [name: 'idx_department_active_created']
+    (category_id, created_at) [name: 'idx_category_created']
+    (course_id, created_at) [name: 'idx_course_created']
+    (department_id, created_at) [name: 'idx_department_created']
     (author_id, created_at) [name: 'idx_author_created']
     post_type
-    is_deleted
   }
 }
 
@@ -119,17 +117,15 @@ Table comments {
   content text [not null, note: "댓글 내용"]
   depth int [default: 0, note: "댓글 깊이 (0: 댓글, 1: 대댓글)"]
   is_anonymous boolean [default: false, note: "익명 댓글 여부"]
-  is_deleted boolean [default: false, note: "삭제 여부 (성능 최적화용)"]
   created_at timestamp [not null, default: `now()`, note: "생성일시"]
   updated_at timestamp [note: "수정일시"]
   deleted_at timestamp [note: "삭제일시 (Soft Delete)"]
 
   indexes {
-    (post_id, is_deleted, created_at) [name: 'idx_post_active_created']
-    (parent_comment_id, is_deleted, created_at) [name: 'idx_parent_active_created']
+    (post_id, created_at) [name: 'idx_post_created']
+    (parent_comment_id, created_at) [name: 'idx_parent_created']
     (author_id, created_at) [name: 'idx_author_created']
     depth
-    is_deleted
   }
 }
 
@@ -153,8 +149,8 @@ Table attachments {
   deleted_at timestamp [note: "삭제일시 (Soft Delete)"]
 
   indexes {
-    (post_id, deleted_at) [name: 'idx_post_active_attachments']
-    (comment_id, deleted_at) [name: 'idx_comment_active_attachments']
+    post_id
+    comment_id
     uploader_id
     attachment_type
     mime_type

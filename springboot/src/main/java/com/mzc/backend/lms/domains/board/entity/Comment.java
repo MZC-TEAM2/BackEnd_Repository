@@ -28,6 +28,9 @@ public class Comment extends AuditableEntity {
     @JoinColumn(name = "post_id", nullable = false)
     private Post post;
 
+    @Column(name = "author_id", nullable = false)
+    private Long authorId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_comment_id")
     private Comment parentComment;
@@ -45,9 +48,14 @@ public class Comment extends AuditableEntity {
     @OneToMany(mappedBy = "parentComment", cascade = CascadeType.ALL)
     private List<Comment> childComments = new ArrayList<>();
 
+    @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Attachment> attachments = new ArrayList<>();
+
     @Builder
-    public Comment(Post post, Comment parentComment, String content) {
+    public Comment(Post post, Comment parentComment, String content, Long authorId) {
+        super(authorId); // AuditableEntity의 생성자 호출
         this.post = post;
+        this.authorId = authorId;
         this.parentComment = parentComment;
         this.content = content;
         this.depth = (parentComment != null) ? parentComment.getDepth() + 1 : 0;

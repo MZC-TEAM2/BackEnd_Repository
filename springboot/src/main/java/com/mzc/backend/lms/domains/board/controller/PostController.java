@@ -34,16 +34,15 @@ public class PostController {
 
     private final PostService postService;
 
-    // 게시글 생성
-    @PostMapping(value = "/{boardType}/posts", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    // 게시글 생성 (2단계 업로드: 파일은 별도로 업로드하고 attachmentIds 전달)
+    @PostMapping("/{boardType}/posts")
     public ResponseEntity<PostResponseDto> createPost(
             @PathVariable String boardType,
-            @Valid @RequestPart("request") PostCreateRequestDto request,
-            @RequestPart(value = "files", required = false) List<MultipartFile> files
+            @Valid @RequestBody PostCreateRequestDto request
     ) {
-        log.info("게시글 생성 API 호출: boardType={}, title={}, fileCount={}",
-                boardType, request.getTitle(), files != null ? files.size() : 0);
-        PostResponseDto response = postService.createPost(boardType, request, files);
+        log.info("게시글 생성 API 호출: boardType={}, title={}, attachmentIds={}",
+                boardType, request.getTitle(), request.getAttachmentIds());
+        PostResponseDto response = postService.createPost(boardType, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -68,15 +67,26 @@ public class PostController {
         return ResponseEntity.ok(response);
     }
 
-    // 게시글 수정
+    // 게시글 수정 (Multipart - 파일 포함)
     @PutMapping(value = "/posts/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<PostResponseDto> updatePost(
             @PathVariable Long id,
             @Valid @RequestPart("request") PostUpdateRequestDto request,
             @RequestPart(value = "files", required = false) List<MultipartFile> files) {
-        log.info("게시글 수정 API 호출: postId={}, title={}, fileCount={}, deleteAttachmentIds={}", 
+        log.info("게시글 수정 API 호출 (Multipart): postId={}, title={}, fileCount={}, deleteAttachmentIds={}", 
                 id, request.getTitle(), files != null ? files.size() : 0, request.getDeleteAttachmentIds());
         PostResponseDto response = postService.updatePost(id, request, files);
+        return ResponseEntity.ok(response);
+    }
+
+    // 게시글 수정 (JSON - 첨부파일 ID만 포함)
+    @PutMapping(value = "/posts/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<PostResponseDto> updatePostJson(
+            @PathVariable Long id,
+            @Valid @RequestBody PostUpdateRequestDto request) {
+        log.info("게시글 수정 API 호출 (JSON): postId={}, title={}, attachmentIds={}, deleteAttachmentIds={}", 
+                id, request.getTitle(), request.getAttachmentIds(), request.getDeleteAttachmentIds());
+        PostResponseDto response = postService.updatePost(id, request, null);
         return ResponseEntity.ok(response);
     }
 

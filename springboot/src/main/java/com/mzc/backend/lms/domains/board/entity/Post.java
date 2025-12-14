@@ -57,8 +57,13 @@ public class Post extends AuditableEntity {
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL)
     private List<Attachment> attachments = new ArrayList<>();
 
+    @Column(name = "author_id", nullable = false)
+    private Long authorId;
+
     @Builder
-    public Post(BoardCategory category, String title, String content, PostType postType, boolean isAnonymous) {
+    public Post(BoardCategory category, String title, String content, PostType postType, boolean isAnonymous, Long authorId) {
+        super(authorId); // AuditableEntity의 생성자 호출
+        this.authorId = authorId;
         this.category = category;
         this.title = title;
         this.content = content;

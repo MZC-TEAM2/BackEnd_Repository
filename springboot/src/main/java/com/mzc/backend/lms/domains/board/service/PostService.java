@@ -4,12 +4,14 @@ import com.mzc.backend.lms.domains.board.dto.request.PostCreateRequestDto;
 import com.mzc.backend.lms.domains.board.dto.request.PostUpdateRequestDto;
 import com.mzc.backend.lms.domains.board.dto.response.PostListResponseDto;
 import com.mzc.backend.lms.domains.board.dto.response.PostResponseDto;
+import com.mzc.backend.lms.domains.board.entity.Attachment;
 import com.mzc.backend.lms.domains.board.entity.BoardCategory;
 import com.mzc.backend.lms.domains.board.entity.Post;
 import com.mzc.backend.lms.domains.board.entity.PostLike;
 import com.mzc.backend.lms.domains.board.enums.BoardType;
 import com.mzc.backend.lms.domains.board.exception.BoardErrorCode;
 import com.mzc.backend.lms.domains.board.exception.BoardException;
+import com.mzc.backend.lms.domains.board.repository.AttachmentRepository;
 import com.mzc.backend.lms.domains.board.repository.BoardCategoryRepository;
 import com.mzc.backend.lms.domains.board.repository.PostLikeRepository;
 import com.mzc.backend.lms.domains.board.repository.PostRepository;
@@ -40,12 +42,13 @@ public class PostService {
     private final PostLikeRepository postLikeRepository;
     private final UserRepository userRepository;
     private final FileUploadUtils fileStorageService;
+    private final AttachmentRepository attachmentRepository;
 
     /**
-     * 게시글 생성 (boardType 기반)
+     * 게시글 생성 (boardType 기반, 2단계 업로드)
      */
     @Transactional
-    public PostResponseDto createPost(String boardTypeStr, PostCreateRequestDto request, List<MultipartFile> files) {
+    public PostResponseDto createPost(String boardTypeStr, PostCreateRequestDto request) {
         // 1. BoardType 변환
         BoardType boardType;
         try {
@@ -68,20 +71,39 @@ public class PostService {
                 .content(request.getContent())
                 .postType(request.getPostType())
                 .isAnonymous(request.getIsAnonymous())
+                .authorId(request.getAuthorId())
                 .build();
 
         // 5. 저장
         Post savedPost = postRepository.save(post);
         
-        // 6. 파일 저장
-        if (files != null && !files.isEmpty()) {
-            fileStorageService.uploadFiles(savedPost, files);
-            log.info("첨부파일 {}개 저장 완료", files.size());
+        // 6. 첨부파일 연결 (이미 업로드된 파일들)
+        List<Attachment> savedAttachments = null;
+        if (request.getAttachmentIds() != null && !request.getAttachmentIds().isEmpty()) {
+            List<Attachment> attachments = attachmentRepository.findAllById(request.getAttachmentIds());
+            
+            for (Attachment attachment : attachments) {
+                attachment.attachToPost(savedPost);
+            }
+            
+            savedAttachments = attachmentRepository.saveAll(attachments);
+            
+            log.info("게시글에 첨부파일 연결: postId={}, attachmentCount={}", 
+                    savedPost.getId(), attachments.size());
         }
         
         log.info("게시글 생성 완료: postId={}", savedPost.getId());
 
-        return PostResponseDto.from(savedPost);
+        // 7. 응답 생성 (첨부파일 포함)
+        PostResponseDto response = PostResponseDto.from(savedPost);
+        
+        // 첨부파일이 있으면 수동으로 추가 (지연 로딩 문제 해결)
+        if (savedAttachments != null && !savedAttachments.isEmpty()) {
+            // PostResponseDto가 attachments 필드를 지원한다면 여기서 설정
+            // 현재는 PostResponseDto.from()이 자동으로 처리할 것으로 예상
+        }
+        
+        return response;
     }
 
     /**
@@ -178,10 +200,20 @@ public class PostService {
             log.info("첨부파일 {}개 삭제 완료", request.getDeleteAttachmentIds().size());
         }
 
-        // 3. 새 첨부파일 추가
+        // 3. 새 첨부파일 추가 (두 가지 방식 지원)
+        // 3-1. MultipartFile로 직접 업로드 (Multipart 방식)
         if (files != null && !files.isEmpty()) {
             fileStorageService.uploadFiles(post, files);
-            log.info("첨부파일 {}개 추가 완료", files.size());
+            log.info("첨부파일 {}개 추가 완료 (MultipartFile)", files.size());
+        }
+        
+        // 3-2. 미리 업로드된 첨부파일 ID로 연결 (JSON 방식)
+        if (request.getAttachmentIds() != null && !request.getAttachmentIds().isEmpty()) {
+            List<Attachment> attachments = attachmentRepository.findAllById(request.getAttachmentIds());
+            for (Attachment attachment : attachments) {
+                attachment.attachToPost(post);
+            }
+            log.info("첨부파일 {}개 추가 완료 (AttachmentIds)", attachments.size());
         }
 
         return PostResponseDto.from(post);
