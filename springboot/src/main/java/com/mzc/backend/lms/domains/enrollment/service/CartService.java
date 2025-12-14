@@ -1,6 +1,6 @@
 package com.mzc.backend.lms.domains.enrollment.service;
 
-import com.mzc.backend.lms.domains.enrollment.dto.CartBulkAddRequestDto;
+import com.mzc.backend.lms.domains.enrollment.dto.CourseIdsRequestDto;
 import com.mzc.backend.lms.domains.enrollment.dto.CartBulkAddResponseDto;
 import com.mzc.backend.lms.domains.enrollment.dto.CartBulkDeleteRequestDto;
 import com.mzc.backend.lms.domains.enrollment.dto.CartBulkDeleteResponseDto;
@@ -23,7 +23,7 @@ public interface CartService {
      * @param studentId 학생 ID
      * @return 일괄 추가 응답 DTO
      */
-    CartBulkAddResponseDto addToCartBulk(CartBulkAddRequestDto request, String studentId);
+    CartBulkAddResponseDto addToCartBulk(CourseIdsRequestDto request, String studentId);
 
     /**
      * 장바구니에서 강의 일괄 삭제

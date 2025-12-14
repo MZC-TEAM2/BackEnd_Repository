@@ -22,6 +22,8 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.MySQL8Dialect
+        jdbc:
+          time_zone: Asia/Seoul
 
 
   data:
@@ -81,6 +83,8 @@ security:
 logging:
   level:
     root: INFO
+    com.mzc.backend.lms.domains.enrollment: DEBUG
+    com.mzc.backend.lms.domains.course.course: DEBUG
 
 email:
   from: ${MAIL_FROM:${MAIL_USERNAME}}

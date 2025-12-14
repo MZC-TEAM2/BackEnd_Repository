@@ -1,10 +1,13 @@
 package com.mzc.backend.lms.domains.enrollment.controller;
 
+import com.mzc.backend.lms.domains.enrollment.dto.CourseIdsRequestDto;
 import com.mzc.backend.lms.domains.enrollment.dto.CourseListResponseDto;
 import com.mzc.backend.lms.domains.enrollment.dto.CourseSearchRequestDto;
-import com.mzc.backend.lms.domains.enrollment.dto.EnrollmentBulkRequestDto;
+import com.mzc.backend.lms.domains.enrollment.dto.EnrollmentBulkCancelRequestDto;
+import com.mzc.backend.lms.domains.enrollment.dto.EnrollmentBulkCancelResponseDto;
 import com.mzc.backend.lms.domains.enrollment.dto.EnrollmentBulkResponseDto;
 import com.mzc.backend.lms.domains.enrollment.dto.EnrollmentPeriodResponseDto;
+import com.mzc.backend.lms.domains.enrollment.dto.MyEnrollmentsResponseDto;
 import com.mzc.backend.lms.domains.enrollment.service.EnrollmentCourseService;
 import com.mzc.backend.lms.domains.enrollment.service.EnrollmentPeriodService;
 import com.mzc.backend.lms.domains.enrollment.service.EnrollmentService;
@@ -97,7 +100,7 @@ public class EnrollmentController {
      */
     @PostMapping("/bulk")
     public ResponseEntity<?> enrollBulk(
-            @RequestBody EnrollmentBulkRequestDto request,
+            @RequestBody CourseIdsRequestDto request,
             Authentication authentication) {
         try {
             // 인증 확인
@@ -111,7 +114,7 @@ public class EnrollmentController {
 
             EnrollmentBulkResponseDto response = enrollmentService.enrollBulk(request, studentId);
             
-            // 메시지 생성
+            // 메시지 생성 - totalAttempted 포함
             String message = String.format("%d개 과목 수강신청 완료", response.getSummary().getSuccessCount());
             if (response.getSummary().getFailedCount() > 0) {
                 message += String.format(", %d개 과목 실패", response.getSummary().getFailedCount());
@@ -126,6 +129,75 @@ public class EnrollmentController {
                     .body(createErrorResponse(e.getMessage()));
         } catch (Exception e) {
             log.error("일괄 수강신청 실패: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createErrorResponse(e.getMessage()));
+        }
+    }
+
+    /**
+     * 일괄 수강신청 취소
+     */
+    @DeleteMapping("/bulk")
+    public ResponseEntity<?> cancelBulk(
+            @RequestBody EnrollmentBulkCancelRequestDto request,
+            Authentication authentication) {
+        try {
+            // 인증 확인
+            if (authentication == null || authentication.getName() == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(createErrorResponse("로그인이 필요합니다."));
+            }
+
+            String studentId = authentication.getName();
+            log.debug("일괄 수강신청 취소: studentId={}, enrollmentIds={}", studentId, request.getEnrollmentIds());
+
+            EnrollmentBulkCancelResponseDto response = enrollmentService.cancelBulk(request, studentId);
+            
+            // 메시지 생성
+            String message = String.format("%d개 과목 취소 완료", response.getSummary().getSuccessCount());
+            if (response.getSummary().getFailedCount() > 0) {
+                message += String.format(", %d개 과목 실패", response.getSummary().getFailedCount());
+            }
+
+            Map<String, Object> successResponse = createSuccessResponse(response);
+            successResponse.put("message", message);
+            return ResponseEntity.ok(successResponse);
+        } catch (IllegalArgumentException e) {
+            log.warn("일괄 수강신청 취소 실패: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(createErrorResponse(e.getMessage()));
+        } catch (Exception e) {
+            log.error("일괄 수강신청 취소 실패: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createErrorResponse(e.getMessage()));
+        }
+    }
+
+    /**
+     * 내 수강신청 목록 조회
+     */
+    @GetMapping("/my")
+    public ResponseEntity<?> getMyEnrollments(
+            @RequestParam(required = false) Long enrollmentPeriodId,
+            Authentication authentication) {
+        try {
+            // 인증 확인
+            if (authentication == null || authentication.getName() == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(createErrorResponse("로그인이 필요합니다."));
+            }
+
+            String studentId = authentication.getName();
+            log.debug("내 수강신청 목록 조회: studentId={}, enrollmentPeriodId={}", studentId, enrollmentPeriodId);
+
+            MyEnrollmentsResponseDto response = enrollmentService.getMyEnrollments(studentId, enrollmentPeriodId);
+            return ResponseEntity.ok(createSuccessResponse(response));
+        } catch (IllegalArgumentException e) {
+            log.warn("내 수강신청 목록 조회 실패: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(createErrorResponse(e.getMessage()));
+        } catch (Exception e) {
+            log.error("내 수강신청 목록 조회 실패: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(createErrorResponse(e.getMessage()));
         }

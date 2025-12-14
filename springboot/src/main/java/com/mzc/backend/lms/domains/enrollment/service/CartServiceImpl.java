@@ -102,6 +102,8 @@ public class CartServiceImpl implements CartService {
                 .section(course.getSectionNumber())
                 .credits(course.getSubject().getCredits())
                 .courseType(courseTypeName)
+                .currentStudents(course.getCurrentStudents())  // 수강인원 추가
+                .maxStudents(course.getMaxStudents())          // 전체 인원 추가
                 .build();
 
         // 교수 정보 DTO
@@ -115,7 +117,6 @@ public class CartServiceImpl implements CartService {
                 .current(course.getCurrentStudents())
                 .max(course.getMaxStudents())
                 .isFull(course.getCurrentStudents() >= course.getMaxStudents())
-                .availableSeats(course.getMaxStudents() - course.getCurrentStudents())
                 .build();
 
         return CartItemDto.builder()
@@ -130,8 +131,9 @@ public class CartServiceImpl implements CartService {
 
     private ScheduleDto convertToScheduleDto(CourseSchedule schedule) {
         DayOfWeek dayOfWeek = schedule.getDayOfWeek();
-        LocalTime startTime = schedule.getStartTime().minusHours(9);
-        LocalTime endTime = schedule.getEndTime().minusHours(9);
+        
+        LocalTime startTime = schedule.getStartTime();
+        LocalTime endTime = schedule.getEndTime();
         return ScheduleDto.builder()
                 .dayOfWeek(dayOfWeek.getValue())
                 .dayName(CourseConstants.DAY_NAME_MAP.get(dayOfWeek))
@@ -142,7 +144,7 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public CartBulkAddResponseDto addToCartBulk(CartBulkAddRequestDto request, String studentId) {
+    public CartBulkAddResponseDto addToCartBulk(CourseIdsRequestDto request, String studentId) {
         
         // 1. 수강신청 기간 체크
         if (!isEnrollmentPeriodActive()) {
@@ -366,10 +368,10 @@ public class CartServiceImpl implements CartService {
             return false;
         }
 
-        LocalTime start1 = schedule1.getStartTime().minusHours(9);
-        LocalTime end1 = schedule1.getEndTime().minusHours(9);
-        LocalTime start2 = schedule2.getStartTime().minusHours(9);
-        LocalTime end2 = schedule2.getEndTime().minusHours(9);
+        LocalTime start1 = schedule1.getStartTime();
+        LocalTime end1 = schedule1.getEndTime();
+        LocalTime start2 = schedule2.getStartTime();
+        LocalTime end2 = schedule2.getEndTime();
 
         // 시간 겹침 확인
         return start1.isBefore(end2) && start2.isBefore(end1);
