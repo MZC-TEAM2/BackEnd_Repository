@@ -17,6 +17,7 @@ public class LoginResponseDto {
     private String name;
     private String email;
     private String userId;        // 학번 또는 교번 (User의 PK)
+    private String thumbnailUrl;  // 프로필 썸네일 이미지 URL
 
     /**
      * 토큰 정보만 포함한 응답 생성
@@ -33,7 +34,8 @@ public class LoginResponseDto {
      */
     public static LoginResponseDto of(String accessToken, String refreshToken,
                                      String userType, String userNumber,
-                                     String name, String email, String userId) {
+                                     String name, String email, String userId,
+                                     String thumbnailUrl) {
         return LoginResponseDto.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
@@ -42,6 +44,7 @@ public class LoginResponseDto {
                 .name(name)
                 .email(email)
                 .userId(userId)
+                .thumbnailUrl(thumbnailUrl)
                 .build();
     }
 }

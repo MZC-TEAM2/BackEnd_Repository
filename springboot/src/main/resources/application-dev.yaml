@@ -6,6 +6,12 @@ spring:
     password: ${DATABASE_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
+  servlet:
+    multipart:
+      max-request-size: 10MB  # 클라이언트가 여러 파일을 어보드할때 요청의 총 크기가 10MB 초과 안됨
+      max-file-size: 10MB     # 개별 업로드 파일의 최대 크기
+      location: /tmp/upload   # 임시 디렉토리
+      
   jpa:
     show-sql: true
     hibernate:
@@ -47,13 +53,14 @@ spring:
     init:
       mode: never
 
-  
-
   flyway:
     enabled: true
-    validate-on-migrate: false  # 체크섬 검증 비활성화
-    clean-disabled: false       # 필요시 clean 허용
-    repair-on-migrate: true  # 이 줄 추가 - 마이그레이션 시 자동 repair
+    baseline-on-migrate: true
+
+file:
+  upload:
+    dir: ${FILE_UPLOAD_DIR:./uploads}
+    max-size: 10485760  # 10MB
 
 regex:
   email: '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'
