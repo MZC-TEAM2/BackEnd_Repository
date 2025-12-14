@@ -30,5 +30,7 @@ public class CartItemDto {
         private String section;
         private Integer credits;
         private String courseType; // "전공필수", "전공선택", "교양필수", "교양선택"
+        private Integer currentStudents;  // 수강인원 추가
+        private Integer maxStudents;       // 전체 인원 추가
     }
 }

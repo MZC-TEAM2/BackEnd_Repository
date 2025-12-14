@@ -185,7 +185,6 @@ public class EnrollmentCourseServiceImpl implements EnrollmentCourseService {
                 .current(course.getCurrentStudents())
                 .max(course.getMaxStudents())
                 .isFull(course.getCurrentStudents() >= course.getMaxStudents())
-                .availableSeats(course.getMaxStudents() - course.getCurrentStudents())
                 .build();
 
         // 장바구니/수강신청 여부 확인
@@ -231,8 +230,8 @@ public class EnrollmentCourseServiceImpl implements EnrollmentCourseService {
 
     private ScheduleDto convertToScheduleDto(CourseSchedule schedule) {
         DayOfWeek dayOfWeek = schedule.getDayOfWeek();
-        LocalTime startTime = schedule.getStartTime().minusHours(9);
-        LocalTime endTime = schedule.getEndTime().minusHours(9);
+        LocalTime startTime = schedule.getStartTime();
+        LocalTime endTime = schedule.getEndTime();
         return ScheduleDto.builder()
                 .dayOfWeek(dayOfWeek.getValue()) // DayOfWeek를 int로 변환
                 .dayName(CourseConstants.DAY_NAME_MAP.get(dayOfWeek))

@@ -7,12 +7,12 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 /**
- * 수강신청 일괄 요청 DTO
+ * 수강신청 일괄 취소 요청 DTO
  */
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class EnrollmentBulkRequestDto {
-    private List<Long> courseIds;
+public class EnrollmentBulkCancelRequestDto {
+    private List<Long> enrollmentIds;
 }

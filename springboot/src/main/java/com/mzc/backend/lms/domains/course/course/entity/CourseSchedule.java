@@ -42,10 +42,10 @@ public class CourseSchedule {
     @Convert(converter = DayOfWeekConverter.class)
     private DayOfWeek dayOfWeek; 
     
-    @Column(name = "start_time", nullable = false)
+    @Column(name = "start_time", nullable = false, columnDefinition = "TIME")
     private LocalTime startTime; // 시작 시간 (예: 09:00)
 
-    @Column(name = "end_time", nullable = false)
+    @Column(name = "end_time", nullable = false, columnDefinition = "TIME")
     private LocalTime endTime; // 종료 시간 (예: 10:30)
 
     @Column(name = "schedule_room", length = 50, nullable = false)

@@ -6,14 +6,15 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * 수강신청 일괄 응답 DTO
+ * 수강신청 일괄 취소 응답 DTO
  */
 @Getter
 @Builder
-public class EnrollmentBulkResponseDto {
+public class EnrollmentBulkCancelResponseDto {
     private SummaryDto summary;
-    private List<SucceededEnrollmentDto> succeeded;
-    private List<FailedEnrollmentDto> failed;
+    private List<CancelledEnrollmentDto> cancelled;
+    private List<FailedCancelDto> failed;
+    private EnrollmentSummaryDto enrollmentSummary;
 
     @Getter
     @Builder
@@ -21,31 +22,32 @@ public class EnrollmentBulkResponseDto {
         private Integer totalAttempted;
         private Integer successCount;
         private Integer failedCount;
-        private Integer enrolledCredits;
-        private Integer totalCredits;
     }
 
     @Getter
     @Builder
-    public static class SucceededEnrollmentDto {
+    public static class CancelledEnrollmentDto {
         private Long enrollmentId;
         private Long courseId;
         private String courseCode;
         private String courseName;
-        private String section;
         private Integer credits;
-        private LocalDateTime enrolledAt;
+        private LocalDateTime cancelledAt;
     }
 
     @Getter
     @Builder
-    public static class FailedEnrollmentDto {
+    public static class FailedCancelDto {
+        private Long enrollmentId;
         private Long courseId;
-        private String courseCode;
-        private String courseName;
-        private String section;
         private String errorCode;
         private String message;
-        // enrollment 필드 제거
+    }
+
+    @Getter
+    @Builder
+    public static class EnrollmentSummaryDto {
+        private Integer totalCourses;
+        private Integer totalCredits;
     }
 }

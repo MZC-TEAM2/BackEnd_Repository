@@ -1,6 +1,6 @@
 package com.mzc.backend.lms.domains.enrollment.controller;
 
-import com.mzc.backend.lms.domains.enrollment.dto.CartBulkAddRequestDto;
+import com.mzc.backend.lms.domains.enrollment.dto.CourseIdsRequestDto;
 import com.mzc.backend.lms.domains.enrollment.dto.CartBulkAddResponseDto;
 import com.mzc.backend.lms.domains.enrollment.dto.CartBulkDeleteRequestDto;
 import com.mzc.backend.lms.domains.enrollment.dto.CartBulkDeleteResponseDto;
@@ -56,7 +56,7 @@ public class CartController {
      */
     @PostMapping("/bulk")
     public ResponseEntity<?> addToCartBulk(
-            @RequestBody CartBulkAddRequestDto request,
+            @RequestBody CourseIdsRequestDto request,
             Authentication authentication) {
         try {
             // 인증 확인
