@@ -43,6 +43,7 @@ public class PostService {
     private final UserRepository userRepository;
     private final FileUploadUtils fileStorageService;
     private final AttachmentRepository attachmentRepository;
+    private final HashtagService hashtagService;
 
     /**
      * 게시글 생성 (boardType 기반, 2단계 업로드)
@@ -61,6 +62,9 @@ public class PostService {
         BoardCategory category = boardCategoryRepository.findByBoardType(boardType)
                 .orElseThrow(() -> new BoardException(BoardErrorCode.BOARD_CATEGORY_NOT_FOUND));
 
+        // 2-1. 역할 기반 접근 제어 (RBAC)
+        validateBoardAccess(boardType, request.getAuthorId());
+
         // 3. 카테고리 정책 검증
         validateCategoryPolicy(category, request.getIsAnonymous());
 
@@ -77,7 +81,14 @@ public class PostService {
         // 5. 저장
         Post savedPost = postRepository.save(post);
         
-        // 6. 첨부파일 연결 (이미 업로드된 파일들)
+        // 6. 해시태그 처리
+        if (request.getHashtags() != null && !request.getHashtags().isEmpty()) {
+            hashtagService.attachHashtagsToPost(savedPost, request.getHashtags(), request.getAuthorId());
+            log.info("게시글에 해시태그 연결: postId={}, hashtagCount={}", 
+                    savedPost.getId(), request.getHashtags().size());
+        }
+        
+        // 7. 첨부파일 연결 (이미 업로드된 파일들)
         List<Attachment> savedAttachments = null;
         if (request.getAttachmentIds() != null && !request.getAttachmentIds().isEmpty()) {
             List<Attachment> attachments = attachmentRepository.findAllById(request.getAttachmentIds());
@@ -94,7 +105,7 @@ public class PostService {
         
         log.info("게시글 생성 완료: postId={}", savedPost.getId());
 
-        // 7. 응답 생성 (첨부파일 포함)
+        // 8. 응답 생성 (첨부파일 포함)
         PostResponseDto response = PostResponseDto.from(savedPost);
         
         // 첨부파일이 있으면 수동으로 추가 (지연 로딩 문제 해결)
@@ -107,9 +118,9 @@ public class PostService {
     }
 
     /**
-     * 게시글 목록 조회 (boardType 기반)
+     * 게시글 목록 조회 (boardType 기반, 해시태그 필터링 지원)
      */
-    public Page<PostListResponseDto> getPostListByBoardType(String boardTypeStr, String search, Pageable pageable) {
+    public Page<PostListResponseDto> getPostListByBoardType(String boardTypeStr, String search, String hashtag, Pageable pageable) {
         // 1. BoardType 변환
         BoardType boardType;
         try {
@@ -122,12 +133,28 @@ public class PostService {
         BoardCategory category = boardCategoryRepository.findByBoardType(boardType)
                 .orElseThrow(() -> new BoardException(BoardErrorCode.BOARD_CATEGORY_NOT_FOUND));
 
-        // 3. 검색 여부에 따라 분기
+        // 3. 해시태그 필터링 여부에 따라 분기
         Page<Post> posts;
-        if (search != null && !search.isBlank()) {
-            posts = postRepository.findByCategoryAndTitleContaining(category, search, pageable);
+        
+        if (hashtag != null && !hashtag.isBlank()) {
+            // 해시태그 + 검색어 조합
+            if (search != null && !search.isBlank()) {
+                posts = postRepository.findByCategoryAndTitleContainingAndHashtagName(category, search, hashtag, pageable);
+                log.info("게시글 목록 조회 (해시태그+검색): boardType={}, hashtag={}, search={}, resultCount={}", 
+                        boardType, hashtag, search, posts.getTotalElements());
+            } else {
+                // 해시태그만
+                posts = postRepository.findByCategoryAndHashtagName(category, hashtag, pageable);
+                log.info("게시글 목록 조회 (해시태그): boardType={}, hashtag={}, resultCount={}", 
+                        boardType, hashtag, posts.getTotalElements());
+            }
         } else {
-            posts = postRepository.findByCategory(category, pageable);
+            // 기존 로직 (검색어만 또는 전체)
+            if (search != null && !search.isBlank()) {
+                posts = postRepository.findByCategoryAndTitleContaining(category, search, pageable);
+            } else {
+                posts = postRepository.findByCategory(category, pageable);
+            }
         }
 
         return posts.map(PostListResponseDto::from);
@@ -216,6 +243,13 @@ public class PostService {
             log.info("첨부파일 {}개 추가 완료 (AttachmentIds)", attachments.size());
         }
 
+        // 4. 해시태그 업데이트
+        if (request.getHashtags() != null) {
+            hashtagService.updatePostHashtags(post, request.getHashtags(), post.getAuthorId());
+            log.info("게시글 해시태그 업데이트: postId={}, hashtagCount={}", 
+                    post.getId(), request.getHashtags().size());
+        }
+
         return PostResponseDto.from(post);
     }
 
@@ -286,5 +320,70 @@ public class PostService {
         if (isAnonymous && !category.isAllowAnonymous()) {
             throw new BoardException(BoardErrorCode.POST_ANONYMOUS_NOT_ALLOWED);
         }
+    }
+    
+    /**
+     * 역할 기반 게시판 접근 권한 검증 (RBAC)
+     * 
+     * TODO: 향후 개선 사항
+     * 1. UserTypeMapping 리포지토리 주입하여 정확한 사용자 역할 조회
+     * 2. Spring Security @PreAuthorize 어노테이션과 통합
+     * 3. ADMIN 역할은 모든 게시판 접근 가능하도록 확장
+     * 4. JWT 토큰에서 역할 정보 추출하여 사용 (현재는 userId로만 판별)
+     */
+    private void validateBoardAccess(BoardType boardType, Long userId) {
+        // 역할 제한이 없는 게시판은 모두 접근 가능
+        if (!boardType.isRoleRestrictedBoard()) {
+            return;
+        }
+        
+        // 사용자 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다"));
+        
+        // TODO: 임시 구현 - determineUserType()을 UserTypeMapping 서비스로 대체 필요
+        String userType = determineUserType(userId);
+        
+        // 교수 게시판 접근 제어
+        if (boardType == BoardType.PROFESSOR && !"PROFESSOR".equals(userType)) {
+            log.warn("교수 게시판 접근 거부: userId={}, userType={}", userId, userType);
+            throw new BoardException(BoardErrorCode.PROFESSOR_ONLY_BOARD);
+        }
+        
+        // 학생 게시판 접근 제어
+        if (boardType == BoardType.STUDENT && !"STUDENT".equals(userType)) {
+            log.warn("학생 게시판 접근 거부: userId={}, userType={}", userId, userType);
+            throw new BoardException(BoardErrorCode.STUDENT_ONLY_BOARD);
+        }
+        
+        log.debug("게시판 접근 권한 확인 완료: boardType={}, userId={}, userType={}", boardType, userId, userType);
+    }
+    
+    /**
+     * 사용자 타입 판별 (STUDENT 또는 PROFESSOR)
+     * 
+     * TODO: 임시 구현 - 반드시 개선 필요
+     * 현재 방식: userId 범위로 임시 구분
+     * 개선 방안:
+     * 1. UserTypeMapping 테이블 조회
+     *    SELECT utm.user_type_id FROM user_type_mappings utm WHERE utm.user_id = ?
+     * 2. UserType 테이블과 조인하여 type_code 확인
+     * 3. 캐싱 적용 (Redis 또는 로컬 캐시)
+     * 
+     * 예시 코드:
+     * userTypeMappingRepository.findByUserId(userId)
+     *     .map(mapping -> mapping.getUserType().getTypeCode())
+     *     .orElse("STUDENT");
+     */
+    private String determineUserType(Long userId) {
+        // 임시 구현: ID 범위로 구분 (20241xxx = 학생, 20242xxx = 교수)
+        if (userId >= 20241000 && userId < 20242000) {
+            return "STUDENT";
+        } else if (userId >= 20242000 && userId < 20243000) {
+            return "PROFESSOR";
+        }
+        
+        // 기본값은 학생으로 처리
+        return "STUDENT";
     }
 }

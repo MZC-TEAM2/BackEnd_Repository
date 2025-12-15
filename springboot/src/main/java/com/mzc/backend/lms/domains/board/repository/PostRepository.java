@@ -24,4 +24,30 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     @Query("SELECT p FROM Post p WHERE p.category = :category AND p.title LIKE %:title% AND p.isDeleted = false")
     Page<Post> findByCategoryAndTitleContaining(@Param("category") BoardCategory category, @Param("title") String title, Pageable pageable);
+
+    @Query("SELECT DISTINCT p FROM Post p " +
+           "JOIN p.postHashtags ph " +
+           "JOIN ph.hashtag h " +
+           "WHERE p.category = :category " +
+           "AND LOWER(h.name) = LOWER(:hashtagName) " +
+           "AND h.isActive = true " +
+           "AND p.isDeleted = false " +
+           "AND ph.isDeleted = false")
+    Page<Post> findByCategoryAndHashtagName(@Param("category") BoardCategory category, 
+                                             @Param("hashtagName") String hashtagName, 
+                                             Pageable pageable);
+
+    @Query("SELECT DISTINCT p FROM Post p " +
+           "JOIN p.postHashtags ph " +
+           "JOIN ph.hashtag h " +
+           "WHERE p.category = :category " +
+           "AND p.title LIKE %:title% " +
+           "AND LOWER(h.name) = LOWER(:hashtagName) " +
+           "AND h.isActive = true " +
+           "AND p.isDeleted = false " +
+           "AND ph.isDeleted = false")
+    Page<Post> findByCategoryAndTitleContainingAndHashtagName(@Param("category") BoardCategory category, 
+                                                                @Param("title") String title, 
+                                                                @Param("hashtagName") String hashtagName, 
+                                                                Pageable pageable);
 }

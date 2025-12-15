@@ -56,14 +56,16 @@ public class PostController {
         return ResponseEntity.ok(response);
     }
     
-    // 게시글 목록 조회 (검색어 포함)
+    // 게시글 목록 조회 (검색어 + 해시태그 필터링 지원)
     @GetMapping("/{boardType}/posts")
     public ResponseEntity<Page<PostListResponseDto>> getPostList(
             @PathVariable String boardType,
             @RequestParam(required = false) String search,
+            @RequestParam(required = false) String hashtag,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        log.info("게시글 목록 조회 API 호출: boardType={}, search={}, page={}", boardType, search, pageable.getPageNumber());
-        Page<PostListResponseDto> response = postService.getPostListByBoardType(boardType, search, pageable);
+        log.info("게시글 목록 조회 API 호출: boardType={}, search={}, hashtag={}, page={}", 
+                boardType, search, hashtag, pageable.getPageNumber());
+        Page<PostListResponseDto> response = postService.getPostListByBoardType(boardType, search, hashtag, pageable);
         return ResponseEntity.ok(response);
     }
 

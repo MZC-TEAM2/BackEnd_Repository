@@ -57,6 +57,9 @@ public class Post extends AuditableEntity {
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL)
     private List<Attachment> attachments = new ArrayList<>();
 
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PostHashtag> postHashtags = new ArrayList<>();
+
     @Column(name = "author_id", nullable = false)
     private Long authorId;
 
@@ -91,5 +94,36 @@ public class Post extends AuditableEntity {
         this.title = title;
         this.content = content;
         this.isAnonymous = isAnonymous;
+    }
+
+    // --- 해시태그 관리 메서드 ---
+
+    /**
+     * 해시태그 추가
+     */
+    public void addHashtag(Hashtag hashtag, Long userId) {
+        PostHashtag postHashtag = PostHashtag.builder()
+                .post(this)
+                .hashtag(hashtag)
+                .createdBy(userId)
+                .build();
+        this.postHashtags.add(postHashtag);
+    }
+
+    /**
+     * 모든 해시태그 제거
+     */
+    public void clearHashtags() {
+        this.postHashtags.clear();
+    }
+
+    /**
+     * 해시태그 목록으로 교체
+     */
+    public void updateHashtags(List<Hashtag> hashtags, Long userId) {
+        clearHashtags();
+        for (Hashtag hashtag : hashtags) {
+            addHashtag(hashtag, userId);
+        }
     }
 }

@@ -32,6 +32,7 @@ public class PostResponseDto {
     private LocalDateTime updatedAt;
     private List<CommentResponseDto> comments;
     private List<AttachmentResponseDto> attachments;
+    private List<HashtagDto> hashtags;
 
     public static PostResponseDto from(Post post) {
         return PostResponseDto.builder()
@@ -52,6 +53,9 @@ public class PostResponseDto {
                         .collect(Collectors.toList()))
                 .attachments(post.getAttachments().stream()
                         .map(AttachmentResponseDto::from)
+                        .collect(Collectors.toList()))
+                .hashtags(post.getPostHashtags().stream()
+                        .map(postHashtag -> HashtagDto.from(postHashtag.getHashtag()))
                         .collect(Collectors.toList()))
                 .build();
     }
