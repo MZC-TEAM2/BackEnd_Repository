@@ -61,6 +61,13 @@ spring:
 app:
   file:
     upload-dir: ${user.dir}/uploads
+  image:
+    storage:
+      local:
+        base-path: ${user.dir}/uploads
+        url-prefix: /static/profile
+  server:
+    url: ${APP_SERVER_URL:http://localhost}
 
 file:
   upload:
