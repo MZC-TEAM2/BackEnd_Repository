@@ -3,6 +3,7 @@ package com.mzc.backend.lms.domains.message.message.service;
 import com.mzc.backend.lms.domains.message.conversation.entity.Conversation;
 import com.mzc.backend.lms.domains.message.conversation.repository.ConversationRepository;
 import com.mzc.backend.lms.domains.message.message.dto.MessageBulkSendRequestDto;
+import com.mzc.backend.lms.domains.message.message.dto.MessageCursorResponseDto;
 import com.mzc.backend.lms.domains.message.message.dto.MessageResponseDto;
 import com.mzc.backend.lms.domains.message.message.dto.MessageSendRequestDto;
 import com.mzc.backend.lms.domains.message.message.entity.Message;
@@ -14,6 +15,7 @@ import com.mzc.backend.lms.domains.user.user.entity.User;
 import com.mzc.backend.lms.domains.user.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -113,23 +115,37 @@ public class MessageService {
     }
 
     /**
-     * 대화방 메시지 목록 조회
+     * 대화방 메시지 목록 조회 (커서 기반 페이징)
      */
-    public List<MessageResponseDto> getMessages(Long conversationId, Long userId) {
+    public MessageCursorResponseDto getMessages(Long conversationId, Long userId, Long cursor, Integer size) {
         Conversation conversation = conversationRepository.findById(conversationId)
                 .orElseThrow(() -> new IllegalArgumentException("대화방을 찾을 수 없습니다: " + conversationId));
 
         validateParticipant(conversation, userId);
 
-        List<Message> messages = messageRepository.findByConversationIdOrderByCreatedAtDesc(conversationId);
+        int requestedSize = size != null ? size : 20;
+        int fetchSize = requestedSize + 1; // hasMore 판단용
 
-        return messages.stream()
+        List<Message> messages;
+        if (cursor == null) {
+            // 첫 페이지
+            messages = messageRepository.findByConversationIdWithLimit(
+                    conversationId, PageRequest.of(0, fetchSize));
+        } else {
+            // 커서 이후 페이지
+            messages = messageRepository.findByConversationIdWithCursor(
+                    conversationId, cursor, PageRequest.of(0, fetchSize));
+        }
+
+        List<MessageResponseDto> responseDtos = messages.stream()
                 .filter(message -> message.isVisibleTo(userId))
                 .map(message -> {
                     String senderName = getSenderName(message.getSender());
                     return MessageResponseDto.from(message, userId, senderName);
                 })
                 .toList();
+
+        return MessageCursorResponseDto.of(responseDtos, requestedSize);
     }
 
     /**

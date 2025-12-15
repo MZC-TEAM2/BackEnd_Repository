@@ -1,6 +1,7 @@
 package com.mzc.backend.lms.domains.message.message.swagger;
 
 import com.mzc.backend.lms.domains.message.message.dto.MessageBulkSendRequestDto;
+import com.mzc.backend.lms.domains.message.message.dto.MessageCursorResponseDto;
 import com.mzc.backend.lms.domains.message.message.dto.MessageResponseDto;
 import com.mzc.backend.lms.domains.message.message.dto.MessageSendRequestDto;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,10 +24,13 @@ public interface MessageControllerSwagger {
             @Parameter(hidden = true) Long userId,
             MessageBulkSendRequestDto request);
 
-    @Operation(summary = "대화방 메시지 목록 조회", description = "대화방의 메시지 목록을 조회합니다. (최신순)")
-    ResponseEntity<List<MessageResponseDto>> getMessages(
+    @Operation(summary = "대화방 메시지 목록 조회",
+            description = "대화방의 메시지 목록을 커서 기반으로 조회합니다. (최신순, 무한스크롤)")
+    ResponseEntity<MessageCursorResponseDto> getMessages(
             @Parameter(hidden = true) Long userId,
-            @Parameter(description = "대화방 ID") Long conversationId);
+            @Parameter(description = "대화방 ID") Long conversationId,
+            @Parameter(description = "커서 (마지막 메시지 ID, 첫 페이지는 생략)") Long cursor,
+            @Parameter(description = "조회 개수 (기본값: 20)") Integer size);
 
     @Operation(summary = "메시지 삭제", description = "메시지를 삭제합니다. (소프트 삭제, 양쪽 모두 삭제 시 완전 삭제)")
     ResponseEntity<Void> deleteMessage(

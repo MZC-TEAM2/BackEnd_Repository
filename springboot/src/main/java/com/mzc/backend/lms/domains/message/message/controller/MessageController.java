@@ -1,6 +1,7 @@
 package com.mzc.backend.lms.domains.message.message.controller;
 
 import com.mzc.backend.lms.domains.message.message.dto.MessageBulkSendRequestDto;
+import com.mzc.backend.lms.domains.message.message.dto.MessageCursorResponseDto;
 import com.mzc.backend.lms.domains.message.message.dto.MessageResponseDto;
 import com.mzc.backend.lms.domains.message.message.dto.MessageSendRequestDto;
 import com.mzc.backend.lms.domains.message.message.service.MessageService;
@@ -45,12 +46,14 @@ public class MessageController implements MessageControllerSwagger {
 
     @Override
     @GetMapping("/conversations/{conversationId}")
-    public ResponseEntity<List<MessageResponseDto>> getMessages(
+    public ResponseEntity<MessageCursorResponseDto> getMessages(
             @AuthenticationPrincipal Long userId,
-            @PathVariable Long conversationId
+            @PathVariable Long conversationId,
+            @RequestParam(required = false) Long cursor,
+            @RequestParam(required = false, defaultValue = "20") Integer size
     ) {
-        List<MessageResponseDto> results = messageService.getMessages(conversationId, userId);
-        return ResponseEntity.ok(results);
+        MessageCursorResponseDto result = messageService.getMessages(conversationId, userId, cursor, size);
+        return ResponseEntity.ok(result);
     }
 
     @Override

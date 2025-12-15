@@ -24,6 +24,28 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     List<Message> findByConversationIdOrderByCreatedAtDesc(@Param("conversationId") Long conversationId);
 
     /**
+     * 대화방의 메시지 목록 커서 기반 조회 (최신순, 첫 페이지)
+     */
+    @Query("SELECT m FROM Message m " +
+           "WHERE m.conversation.id = :conversationId " +
+           "ORDER BY m.id DESC")
+    List<Message> findByConversationIdWithLimit(
+            @Param("conversationId") Long conversationId,
+            org.springframework.data.domain.Pageable pageable);
+
+    /**
+     * 대화방의 메시지 목록 커서 기반 조회 (최신순, 커서 이후)
+     */
+    @Query("SELECT m FROM Message m " +
+           "WHERE m.conversation.id = :conversationId " +
+           "AND m.id < :cursor " +
+           "ORDER BY m.id DESC")
+    List<Message> findByConversationIdWithCursor(
+            @Param("conversationId") Long conversationId,
+            @Param("cursor") Long cursor,
+            org.springframework.data.domain.Pageable pageable);
+
+    /**
      * 대화방의 안읽은 메시지 읽음 처리 (수신자 기준)
      */
     @Modifying
