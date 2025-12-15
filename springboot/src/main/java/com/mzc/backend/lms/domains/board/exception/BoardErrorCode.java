@@ -37,6 +37,11 @@ public enum BoardErrorCode {
     FILE_SIZE_EXCEEDED("FILE_002", "파일 크기가 제한을 초과했습니다", HttpStatus.BAD_REQUEST),
     INVALID_FILE_NAME("FILE_003", "유효하지 않은 파일명입니다", HttpStatus.BAD_REQUEST),
     INVALID_FILE_EXTENSION("FILE_004", "유효하지 않은 파일 확장자입니다", HttpStatus.BAD_REQUEST),
+    
+    // Access Control 관련 (ACCESS_0XX)
+    BOARD_ACCESS_DENIED("ACCESS_001", "해당 게시판에 접근할 권한이 없습니다", HttpStatus.FORBIDDEN),
+    PROFESSOR_ONLY_BOARD("ACCESS_002", "교수만 접근 가능한 게시판입니다", HttpStatus.FORBIDDEN),
+    STUDENT_ONLY_BOARD("ACCESS_003", "학생만 접근 가능한 게시판입니다", HttpStatus.FORBIDDEN),
     ;
     
     private final String code;

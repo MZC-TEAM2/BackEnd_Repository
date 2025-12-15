@@ -8,6 +8,8 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 게시글 목록 응답 DTO (간단한 정보만)
@@ -27,6 +29,7 @@ public class PostListResponseDto {
     private int likeCount;
     private int commentCount;
     private LocalDateTime createdAt;
+    private List<HashtagDto> hashtags;
 
     public static PostListResponseDto from(Post post) {
         return PostListResponseDto.builder()
@@ -40,6 +43,9 @@ public class PostListResponseDto {
                 .likeCount(post.getLikeCount())
                 .commentCount(post.getComments().size())
                 .createdAt(post.getCreatedAt())
+                .hashtags(post.getPostHashtags().stream()
+                        .map(postHashtag -> HashtagDto.from(postHashtag.getHashtag()))
+                        .collect(Collectors.toList()))
                 .build();
     }
 }

@@ -203,12 +203,16 @@ CREATE TABLE IF NOT EXISTS hashtags (
     created_by BIGINT DEFAULT NULL COMMENT '태그 생성자 ID',
     created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) COMMENT '생성일시',
     updated_at DATETIME(6) DEFAULT NULL COMMENT '수정일시',
+    updated_by BIGINT DEFAULT NULL COMMENT '수정자 ID',
     deleted_at DATETIME(6) DEFAULT NULL COMMENT '삭제일시 (Soft Delete)',
+    is_deleted BIT(1) DEFAULT b'0' COMMENT '삭제 여부',
     PRIMARY KEY (id),
     KEY idx_name (name),
     KEY idx_tag_category (tag_category),
     KEY idx_is_active (is_active),
-    CONSTRAINT fk_hashtags_creator FOREIGN KEY (created_by) REFERENCES users (id)
+    KEY idx_updated_by (updated_by),
+    CONSTRAINT fk_hashtags_creator FOREIGN KEY (created_by) REFERENCES users (id),
+    CONSTRAINT fk_hashtags_updater FOREIGN KEY (updated_by) REFERENCES users (id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='해시태그';
 
 -- -----------------------------------------------------
@@ -221,13 +225,19 @@ CREATE TABLE IF NOT EXISTS post_hashtags (
     hashtag_id BIGINT NOT NULL COMMENT '해시태그 ID',
     created_by BIGINT NOT NULL COMMENT '태그 추가자 ID',
     created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) COMMENT '연결 생성일시',
+    updated_at DATETIME(6) DEFAULT NULL COMMENT '수정일시',
+    updated_by BIGINT DEFAULT NULL COMMENT '수정자 ID',
+    deleted_at DATETIME(6) DEFAULT NULL COMMENT '삭제일시 (Soft Delete)',
+    is_deleted BIT(1) DEFAULT b'0' COMMENT '삭제 여부',
     PRIMARY KEY (id),
     UNIQUE KEY idx_post_hashtag (post_id, hashtag_id),
     KEY idx_hashtag_id (hashtag_id),
     KEY idx_created_by (created_by),
+    KEY idx_updated_by (updated_by),
     CONSTRAINT fk_post_hashtags_post FOREIGN KEY (post_id) REFERENCES posts (id),
     CONSTRAINT fk_post_hashtags_hashtag FOREIGN KEY (hashtag_id) REFERENCES hashtags (id),
-    CONSTRAINT fk_post_hashtags_creator FOREIGN KEY (created_by) REFERENCES users (id)
+    CONSTRAINT fk_post_hashtags_creator FOREIGN KEY (created_by) REFERENCES users (id),
+    CONSTRAINT fk_post_hashtags_updater FOREIGN KEY (updated_by) REFERENCES users (id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='게시글-해시태그 연결';
 
 -- -----------------------------------------------------

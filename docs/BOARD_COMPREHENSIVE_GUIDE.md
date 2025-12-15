@@ -273,8 +273,34 @@ public void applyForStudy(Long studyId, ApplicationRequest request, User applica
 - 1NF, 2NF, 3NF 모두 만족
 - 인덱스 최적화로 성능 향상
 
-**4️⃣ Soft Delete 정책**
-- `deleted_at` 필드로 논리 삭제
-- 관리자만 물리 삭제 권한
+**4️⃣ 하이브리드 삭제 정책**
+
+**Soft Delete (논리적 삭제)**: 복구 가능한 핵심 콘텐츠
+- **게시글, 댓글, 카테고리, 해시태그**
+- `is_deleted = true` + `deleted_at = NOW()`
+- 관리자가 복구 가능
+
+**Hard Delete (물리적 삭제)**: 복구 불필요한 부속 데이터
+- **첨부파일, 좋아요, 북마크**
+- DB + 파일 시스템에서 완전 삭제
+- 저장 공간 절약 목적
+
+| 엔티티 | 삭제 방식 | 복구 | 비고 |
+|--------|-----------|------|------|
+| 게시글/댓글 | Soft Delete | ✅ | 이력 추적 필요 |
+| 첨부파일 | Hard Delete | ❌ | 파일+DB 모두 삭제 |
+| 좋아요/북마크 | Hard Delete | ❌ | 토글 기능 |
+
+**구현**:
+```java
+// Soft Delete
+post.delete();  // is_deleted = true, deleted_at = NOW()
+
+// Hard Delete
+attachmentRepository.delete(attachment);  // DB 완전 삭제
+Files.deleteIfExists(filePath);           // 파일 시스템 삭제
+```
+
+**관리자 권한**: Soft Delete 데이터 복구 가능, 30일 경과 후 자동 Hard Delete
 
 **이 350줄 완전 가이드로 LMS 게시판 시스템 완벽 구축!** 🎯

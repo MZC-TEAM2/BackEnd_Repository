@@ -22,5 +22,5 @@ public class PostUpdateRequestDto {
     private Boolean isAnonymous;
     private List<Long> attachmentIds; // 새로 추가할 첨부파일 ID 목록
     private List<Long> deleteAttachmentIds; // 삭제할 첨부파일 ID 목록
-
+    private List<String> hashtags;
 }
