@@ -7,6 +7,8 @@ import com.mzc.backend.lms.domains.message.message.dto.MessageResponseDto;
 import com.mzc.backend.lms.domains.message.message.dto.MessageSendRequestDto;
 import com.mzc.backend.lms.domains.message.message.entity.Message;
 import com.mzc.backend.lms.domains.message.message.repository.MessageRepository;
+import com.mzc.backend.lms.domains.message.sse.dto.MessageNotificationDto;
+import com.mzc.backend.lms.domains.message.sse.service.SseService;
 import com.mzc.backend.lms.domains.user.profile.entity.UserProfile;
 import com.mzc.backend.lms.domains.user.user.entity.User;
 import com.mzc.backend.lms.domains.user.user.repository.UserRepository;
@@ -30,6 +32,7 @@ public class MessageService {
     private final MessageRepository messageRepository;
     private final ConversationRepository conversationRepository;
     private final UserRepository userRepository;
+    private final SseService sseService;
 
     /**
      * 메시지 전송
@@ -51,6 +54,11 @@ public class MessageService {
         conversation.updateLastMessage(request.getContent(), senderId);
 
         String senderName = getSenderName(sender);
+
+        // SSE 알림 전송
+        Long receiverId = message.getReceiverId();
+        sendNotification(receiverId, conversation.getId(), message.getId(), senderId, senderName, request.getContent());
+
         return MessageResponseDto.from(message, senderId, senderName);
     }
 
@@ -94,6 +102,9 @@ public class MessageService {
 
             // 대화방 마지막 메시지 업데이트
             conversation.updateLastMessage(request.getContent(), senderId);
+
+            // SSE 알림 전송
+            sendNotification(receiverId, conversation.getId(), message.getId(), senderId, senderName, request.getContent());
 
             results.add(MessageResponseDto.from(message, senderId, senderName));
         }
@@ -179,5 +190,15 @@ public class MessageService {
     private String getSenderName(User sender) {
         UserProfile profile = sender.getUserProfile();
         return profile != null ? profile.getName() : null;
+    }
+
+    /**
+     * SSE 알림 전송
+     */
+    private void sendNotification(Long receiverId, Long conversationId, Long messageId,
+                                  Long senderId, String senderName, String content) {
+        MessageNotificationDto notification = MessageNotificationDto.newMessage(
+                conversationId, messageId, senderId, senderName, content);
+        sseService.sendNewMessageNotification(receiverId, notification);
     }
 }
