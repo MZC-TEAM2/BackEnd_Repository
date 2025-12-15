@@ -1,4 +1,4 @@
-gmt-- 더미 관리자 사용자 생성 (게시글 작성자용)
+-- 더미 관리자 사용자 생성 (게시글 작성자용)
 INSERT INTO users (id, email, password, created_at) VALUES
 (20241001, 'admin@lms.ac.kr', '$2a$10$dummyHashedPassword123456789012345678901234567890', NOW());
 
