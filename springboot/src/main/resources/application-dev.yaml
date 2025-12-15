@@ -74,6 +74,7 @@ security:
     refresh-token-expire-time: ${JWT_REFRESH_TOKEN_EXPIRATION_TIME}
   aes:
     encryption-key: ${ENCRYPTION_KEY}
+    iv: ${ENCRYPTION_IV:defaultIvParam456}
 
 logging:
   level:

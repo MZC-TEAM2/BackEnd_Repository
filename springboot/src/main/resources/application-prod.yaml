@@ -40,7 +40,8 @@ security:
     access-token-expire-time: ${JWT_ACCESS_TOKEN_EXPIRATION_TIME}
     refresh-token-expire-time: ${JWT_REFRESH_TOKEN_EXPIRATION_TIME}
   aes:
-    encryption-key: default-aes-encryption-key-change-in-production
+    encryption-key: ${ENCRYPTION_KEY:default-aes-encryption-key-change-in-production}
+    iv: ${ENCRYPTION_IV:defaultIvParam456}
 
 logging:
   level:

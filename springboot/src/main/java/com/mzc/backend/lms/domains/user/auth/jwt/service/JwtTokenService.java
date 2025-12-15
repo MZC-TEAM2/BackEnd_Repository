@@ -25,13 +25,13 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class JwtTokenService {
 
-    @Value("${jwt.secret:defaultJwtSecretKeyForDevelopment123456789012345678901234567890}")
+    @Value("${security.jwt.secret:defaultJwtSecretKeyForDevelopment123456789012345678901234567890}")
     private String secretKey;
 
-    @Value("${jwt.access-token.expiration:1800000}") // 30분 (밀리초)
+    @Value("${security.jwt.access-token-expire-time:1800000}") // 30분 (밀리초)
     private Long accessTokenExpiration;
 
-    @Value("${jwt.refresh-token.expiration:604800000}") // 7일 (밀리초)
+    @Value("${security.jwt.refresh-token-expire-time:604800000}") // 7일 (밀리초)
     private Long refreshTokenExpiration;
 
     /**
