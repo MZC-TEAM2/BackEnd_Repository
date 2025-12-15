@@ -58,6 +58,8 @@ public class SecurityConfig {
                     "/health",
                     "/error",
                     "/swagger-ui/**",
+                    "/swagger-ui.html",
+                    "/swagger-resources/**",
                     "/v3/api-docs/**"
                 ).permitAll()
 
