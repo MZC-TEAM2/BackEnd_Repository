@@ -3,6 +3,7 @@ package com.mzc.backend.lms.domains.user.auth.controller;
 import com.mzc.backend.lms.domains.user.auth.dto.*;
 import com.mzc.backend.lms.domains.user.auth.email.service.EmailVerificationService;
 import com.mzc.backend.lms.domains.user.auth.service.AuthService;
+import com.mzc.backend.lms.domains.user.auth.swagger.AuthControllerSwagger;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,14 +22,12 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-public class AuthController {
+public class AuthController implements AuthControllerSwagger {
 
     private final AuthService authService;
     private final EmailVerificationService emailVerificationService;
 
-    /**
-     * 이메일 인증 코드 발송
-     */
+    @Override
     @PostMapping("/signup/email-verification")
     public ResponseEntity<?> sendVerificationCode(@Valid @RequestBody EmailVerificationRequestDto dto) {
         try {
@@ -48,9 +47,7 @@ public class AuthController {
         }
     }
 
-    /**
-     * 인증 코드 확인
-     */
+    @Override
     @PostMapping("/signup/verify-code")
     public ResponseEntity<?> verifyCode(@Valid @RequestBody VerifyCodeRequestDto dto) {
         try {
@@ -69,9 +66,7 @@ public class AuthController {
         }
     }
 
-    /**
-     * 회원가입
-     */
+    @Override
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@Valid @RequestBody SignupRequestDto dto) {
         try {
@@ -93,9 +88,7 @@ public class AuthController {
         }
     }
 
-    /**
-     * 로그인
-     */
+    @Override
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequestDto dto,
                                   HttpServletRequest request) {
@@ -117,9 +110,7 @@ public class AuthController {
         }
     }
 
-    /**
-     * 토큰 갱신
-     */
+    @Override
     @PostMapping("/refresh")
     public ResponseEntity<?> refreshToken(@Valid @RequestBody RefreshTokenRequestDto dto) {
         try {
@@ -136,9 +127,7 @@ public class AuthController {
         }
     }
 
-    /**
-     * 로그아웃
-     */
+    @Override
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@RequestHeader(value = "Refresh-Token", required = false) String refreshToken) {
         try {
@@ -154,9 +143,7 @@ public class AuthController {
         }
     }
 
-    /**
-     * 이메일 중복 확인
-     */
+    @Override
     @GetMapping("/check-email")
     public ResponseEntity<?> checkEmailAvailability(@RequestParam String email) {
         try {

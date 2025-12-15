@@ -4,6 +4,7 @@ import com.mzc.backend.lms.domains.user.profile.dto.ProfileResponseDto;
 import com.mzc.backend.lms.domains.user.profile.dto.ProfileUpdateRequestDto;
 import com.mzc.backend.lms.domains.user.profile.service.ProfileImageService;
 import com.mzc.backend.lms.domains.user.profile.service.ProfileService;
+import com.mzc.backend.lms.domains.user.profile.swagger.ProfileControllerSwagger;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -26,15 +27,12 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/api/v1/profile")
 @RequiredArgsConstructor
-public class ProfileController {
+public class ProfileController implements ProfileControllerSwagger {
 
     private final ProfileService profileService;
     private final ProfileImageService profileImageService;
 
-    /**
-     * 내 프로필 조회
-     * GET /api/v1/profile/me
-     */
+    @Override
     @GetMapping("/me")
     public ResponseEntity<ProfileResponseDto> getMyProfile(@AuthenticationPrincipal Long userId) {
         log.debug("프로필 조회 요청: userId={}", userId);
@@ -44,10 +42,7 @@ public class ProfileController {
         return ResponseEntity.ok(profile);
     }
 
-    /**
-     * 프로필 수정
-     * PATCH /api/v1/profile/me
-     */
+    @Override
     @PatchMapping("/me")
     public ResponseEntity<ProfileResponseDto> updateProfile(
             @AuthenticationPrincipal Long userId,
@@ -59,10 +54,7 @@ public class ProfileController {
         return ResponseEntity.ok(updatedProfile);
     }
 
-    /**
-     * 프로필 이미지 업로드
-     * POST /api/v1/profile/me/image
-     */
+    @Override
     @PostMapping(value = "/me/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> uploadProfileImage(
             @AuthenticationPrincipal Long userId,
@@ -74,10 +66,7 @@ public class ProfileController {
         return ResponseEntity.accepted().build();
     }
 
-    /**
-     * 프로필 이미지 삭제
-     * DELETE /api/v1/profile/me/image
-     */
+    @Override
     @DeleteMapping("/me/image")
     public ResponseEntity<Void> deleteProfileImage(@AuthenticationPrincipal Long userId) {
         log.debug("프로필 이미지 삭제 요청: userId={}", userId);
