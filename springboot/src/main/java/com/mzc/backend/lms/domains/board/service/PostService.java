@@ -9,12 +9,14 @@ import com.mzc.backend.lms.domains.board.entity.BoardCategory;
 import com.mzc.backend.lms.domains.board.entity.Post;
 import com.mzc.backend.lms.domains.board.entity.PostLike;
 import com.mzc.backend.lms.domains.board.enums.BoardType;
+import com.mzc.backend.lms.domains.board.enums.PostType;
 import com.mzc.backend.lms.domains.board.exception.BoardErrorCode;
 import com.mzc.backend.lms.domains.board.exception.BoardException;
 import com.mzc.backend.lms.domains.board.repository.AttachmentRepository;
 import com.mzc.backend.lms.domains.board.repository.BoardCategoryRepository;
 import com.mzc.backend.lms.domains.board.repository.PostLikeRepository;
 import com.mzc.backend.lms.domains.board.repository.PostRepository;
+import com.mzc.backend.lms.domains.board.repository.UserTypeQueryRepository;
 import com.mzc.backend.lms.domains.user.user.entity.User;
 import com.mzc.backend.lms.domains.user.user.repository.UserRepository;
 import com.mzc.backend.lms.util.file.FileUploadUtils;
@@ -41,6 +43,7 @@ public class PostService {
     private final BoardCategoryRepository boardCategoryRepository;
     private final PostLikeRepository postLikeRepository;
     private final UserRepository userRepository;
+    private final UserTypeQueryRepository userTypeQueryRepository;
     private final FileUploadUtils fileStorageService;
     private final AttachmentRepository attachmentRepository;
     private final HashtagService hashtagService;
@@ -64,6 +67,11 @@ public class PostService {
 
         // 2-1. 역할 기반 접근 제어 (RBAC)
         validateBoardAccess(boardType, request.getAuthorId());
+
+        // 2-2. 게시글 유형 검증 (BoardType과 PostType 조합 확인)
+        if (!boardType.isPostTypeAllowed(request.getPostType())) {
+            throw new BoardException(BoardErrorCode.INVALID_POST_TYPE_FOR_BOARD);
+        }
 
         // 3. 카테고리 정책 검증
         validateCategoryPolicy(category, request.getIsAnonymous());
@@ -162,10 +170,52 @@ public class PostService {
 
     /**
      * 게시글 상세 조회 (조회수 증가)
+     * 
+     * 접근 제어는 SecurityConfig에서 URL 패턴 기반으로 처리됩니다:
+     * - /api/v1/boards/PROFESSOR/** → 교수만 접근 가능 (hasAuthority("PROFESSOR"))
+     * - /api/v1/boards/STUDENT/** → 학생만 접근 가능 (hasAuthority("STUDENT"))
+     * 
+     * @param boardTypeStr 게시판 타입 문자열 (예: "PROFESSOR", "STUDENT")
+     * @param postId 게시글 ID
+     * @return 게시글 상세 정보
      */
     @Transactional
+    public PostResponseDto getPost(String boardTypeStr, Long postId) {
+        Post post = postRepository.findByIdWithHashtags(postId)
+                .orElseThrow(() -> new BoardException(BoardErrorCode.POST_NOT_FOUND));
+
+        // soft delete 체크
+        if (post.isDeleted()) {
+            throw new BoardException(BoardErrorCode.POST_ALREADY_DELETED);
+        }
+
+        // 게시판 타입 검증
+        BoardType boardType;
+        try {
+            boardType = BoardType.valueOf(boardTypeStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new BoardException(BoardErrorCode.BOARD_NOT_FOUND);
+        }
+
+        // 게시글이 해당 게시판에 속하는지 확인
+        if (post.getCategory().getBoardType() != boardType) {
+            throw new BoardException(BoardErrorCode.POST_NOT_FOUND);
+        }
+
+        // 조회수 증가
+        post.increaseViewCount();
+
+        return PostResponseDto.from(post);
+    }
+
+    /**
+     * 게시글 상세 조회 (조회수 증가) - 레거시 메서드
+     * @deprecated boardType을 받는 getPost(String, Long) 사용 권장
+     */
+    @Deprecated
+    @Transactional
     public PostResponseDto getPost(Long postId) {
-        Post post = postRepository.findById(postId)
+        Post post = postRepository.findByIdWithHashtags(postId)
                 .orElseThrow(() -> new BoardException(BoardErrorCode.POST_NOT_FOUND));
 
         // soft delete 체크
@@ -218,6 +268,19 @@ public class PostService {
             throw new BoardException(BoardErrorCode.POST_ALREADY_DELETED);
         }
 
+        // 0. 게시글 유형 검증 (수정 시에도 BoardType과 PostType 조합 확인)
+        BoardType boardType = post.getCategory().getBoardType();
+        if (request.getPostType() != null) {
+            try {
+                PostType newPostType = PostType.valueOf(request.getPostType());
+                if (!boardType.isPostTypeAllowed(newPostType)) {
+                    throw new BoardException(BoardErrorCode.INVALID_POST_TYPE_FOR_BOARD);
+                }
+            } catch (IllegalArgumentException e) {
+                throw new BoardException(BoardErrorCode.INVALID_POST_TYPE_FOR_BOARD);
+            }
+        }
+
         // 1. 텍스트 수정
         post.update(request.getTitle(), request.getContent(), post.isAnonymous());
 
@@ -243,12 +306,10 @@ public class PostService {
             log.info("첨부파일 {}개 추가 완료 (AttachmentIds)", attachments.size());
         }
 
-        // 4. 해시태그 업데이트
-        if (request.getHashtags() != null) {
-            hashtagService.updatePostHashtags(post, request.getHashtags(), post.getAuthorId());
-            log.info("게시글 해시태그 업데이트: postId={}, hashtagCount={}", 
-                    post.getId(), request.getHashtags().size());
-        }
+        // 4. 해시태그 업데이트 (항상 실행 - 빈 배열이면 모든 해시태그 삭제)
+        hashtagService.updatePostHashtags(post, request.getHashtags(), post.getAuthorId());
+        log.info("게시글 해시태그 업데이트: postId={}, hashtagCount={}", 
+                post.getId(), request.getHashtags() != null ? request.getHashtags().size() : 0);
 
         return PostResponseDto.from(post);
     }
@@ -325,11 +386,12 @@ public class PostService {
     /**
      * 역할 기반 게시판 접근 권한 검증 (RBAC)
      * 
-     * TODO: 향후 개선 사항
-     * 1. UserTypeMapping 리포지토리 주입하여 정확한 사용자 역할 조회
-     * 2. Spring Security @PreAuthorize 어노테이션과 통합
-     * 3. ADMIN 역할은 모든 게시판 접근 가능하도록 확장
-     * 4. JWT 토큰에서 역할 정보 추출하여 사용 (현재는 userId로만 판별)
+     * 향후 개선 고려사항:
+     * - ADMIN 역할 추가 시 모든 게시판 접근 가능하도록 확장
+     * - JWT 토큰에서 역할 정보 직접 추출 (DB 조회 최소화)
+     * 
+     * 참고: SecurityConfig에서 이미 URL 기반 접근 제어가 작동하므로,
+     *       이 메서드는 게시글 작성 시에만 사용됩니다.
      */
     private void validateBoardAccess(BoardType boardType, Long userId) {
         // 역할 제한이 없는 게시판은 모두 접근 가능
@@ -337,11 +399,6 @@ public class PostService {
             return;
         }
         
-        // 사용자 조회
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다"));
-        
-        // TODO: 임시 구현 - determineUserType()을 UserTypeMapping 서비스로 대체 필요
         String userType = determineUserType(userId);
         
         // 교수 게시판 접근 제어
@@ -362,28 +419,14 @@ public class PostService {
     /**
      * 사용자 타입 판별 (STUDENT 또는 PROFESSOR)
      * 
-     * TODO: 임시 구현 - 반드시 개선 필요
-     * 현재 방식: userId 범위로 임시 구분
-     * 개선 방안:
-     * 1. UserTypeMapping 테이블 조회
-     *    SELECT utm.user_type_id FROM user_type_mappings utm WHERE utm.user_id = ?
-     * 2. UserType 테이블과 조인하여 type_code 확인
-     * 3. 캐싱 적용 (Redis 또는 로컬 캐시)
-     * 
-     * 예시 코드:
-     * userTypeMappingRepository.findByUserId(userId)
-     *     .map(mapping -> mapping.getUserType().getTypeCode())
-     *     .orElse("STUDENT");
+     * UserTypeQueryRepository를 통해 user_type_mappings 테이블을 조회합니다.
+     * board 도메인 내에서 사용자 타입 확인을 처리하여 도메인 간 결합도를 낮춥니다.
      */
     private String determineUserType(Long userId) {
-        // 임시 구현: ID 범위로 구분 (20241xxx = 학생, 20242xxx = 교수)
-        if (userId >= 20241000 && userId < 20242000) {
-            return "STUDENT";
-        } else if (userId >= 20242000 && userId < 20243000) {
-            return "PROFESSOR";
-        }
-        
-        // 기본값은 학생으로 처리
-        return "STUDENT";
+        return userTypeQueryRepository.findUserTypeCodeByUserId(userId)
+                .orElseGet(() -> {
+                    log.warn("사용자 타입 매핑이 없습니다. 기본값(STUDENT) 반환: userId={}", userId);
+                    return "STUDENT";
+                });
     }
 }

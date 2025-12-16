@@ -52,7 +52,7 @@ public class PostController {
             @PathVariable String boardType,
             @PathVariable Long id) {
         log.info("게시글 상세조회 API 호출: boardType={}, postId={}", boardType, id);
-        PostResponseDto response = postService.getPost(id);
+        PostResponseDto response = postService.getPost(boardType, id);
         return ResponseEntity.ok(response);
     }
     

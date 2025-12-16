@@ -12,12 +12,14 @@ public enum BoardErrorCode {
     // Board Category 관련 (BOARD_CATEGORY_0XX)
     BOARD_CATEGORY_NOT_FOUND("BOARD_CATEGORY_001", "게시판 카테고리를 찾을 수 없습니다", HttpStatus.NOT_FOUND),
     BOARD_CATEGORY_ALREADY_EXISTS("BOARD_CATEGORY_002", "이미 존재하는 게시판 카테고리입니다", HttpStatus.CONFLICT),
+    BOARD_NOT_FOUND("BOARD_CATEGORY_003", "존재하지 않는 게시판 타입입니다", HttpStatus.NOT_FOUND),
     
     // Post 관련 (POST_0XX)
     POST_NOT_FOUND("POST_001", "게시글을 찾을 수 없습니다", HttpStatus.NOT_FOUND),
     POST_ALREADY_DELETED("POST_002", "이미 삭제된 게시글입니다", HttpStatus.BAD_REQUEST),
     POST_ATTACHMENT_NOT_ALLOWED("POST_003", "해당 게시판은 첨부파일을 허용하지 않습니다", HttpStatus.BAD_REQUEST),
     POST_ANONYMOUS_NOT_ALLOWED("POST_004", "해당 게시판은 익명을 허용하지 않습니다", HttpStatus.BAD_REQUEST),
+    INVALID_POST_TYPE_FOR_BOARD("POST_005", "해당 게시판에서 허용되지 않는 게시글 유형입니다", HttpStatus.BAD_REQUEST),
     
     // Comment 관련 (COMMENT_0XX)
     COMMENT_NOT_FOUND("COMMENT_001", "댓글을 찾을 수 없습니다", HttpStatus.NOT_FOUND),

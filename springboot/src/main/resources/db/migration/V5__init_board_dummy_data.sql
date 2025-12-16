@@ -343,3 +343,101 @@ SELECT p.id, h.id, 20241001, NOW()
 FROM posts p
 JOIN hashtags h ON h.name IN ('사회적가치')
 WHERE p.title LIKE '%사회적 가치%';
+
+-- =====================================================
+-- 학과 게시판 더미데이터
+-- =====================================================
+
+-- 학과 게시판 해시태그
+INSERT INTO hashtags (name, display_name, color, tag_category, is_active, created_by, created_at) VALUES
+('학과공지', '학과공지', '#1976d2', 'DEPARTMENT', 1, 20241001, NOW()),
+('전공수업', '전공수업', '#9c27b0', 'DEPARTMENT', 1, 20241001, NOW()),
+('졸업요건', '졸업요건', '#0288d1', 'DEPARTMENT', 1, 20241001, NOW()),
+('학과행사', '학과행사', '#f57c00', 'DEPARTMENT', 1, 20241001, NOW()),
+('교수님공지', '교수님공지', '#d32f2f', 'DEPARTMENT', 1, 20241001, NOW()),
+('학과세미나', '학과세미나', '#388e3c', 'DEPARTMENT', 1, 20241001, NOW()),
+('졸업논문', '졸업논문', '#1976d2', 'DEPARTMENT', 1, 20241001, NOW()),
+('학과동아리', '학과동아리', '#9c27b0', 'DEPARTMENT', 1, 20241001, NOW());
+
+SET @department_category_id = (SELECT id FROM board_categories WHERE board_type = 'DEPARTMENT' LIMIT 1);
+
+INSERT INTO posts (category_id, author_id, title, content, post_type, is_anonymous, view_count, like_count, is_deleted, created_at, updated_at, created_by, updated_by) VALUES
+-- 컴퓨터공학과 관련 게시글
+(@department_category_id, 20241001, '[컴공] 2025-1학기 전공 수강신청 안내', '컴퓨터공학과 2025학년도 1학기 전공 수강신청 안내입니다.\n\n필수 이수 과목:\n- 자료구조 및 실습\n- 알고리즘\n- 데이터베이스\n\n선이수 과목을 꼭 확인하시기 바랍니다.', 'URGENT', false, 342, 45, false, NOW() - INTERVAL 2 DAY, NOW() - INTERVAL 2 DAY, 20241001, 20241001),
+
+(@department_category_id, 20241001, '[컴공] 캡스톤디자인 팀 구성 안내', '2024학년도 2학기 캡스톤디자인 프로젝트 팀 구성 안내\n\n팀 구성: 3~4명\n주제 제출: 2025년 1월 20일까지\n중간발표: 2025년 5월 중순\n최종발표: 2025년 6월 초\n\n학과 사무실로 팀 명단을 제출해주세요.', 'NOTICE', false, 289, 38, false, NOW() - INTERVAL 5 DAY, NOW() - INTERVAL 5 DAY, 20241001, 20241001),
+
+(@department_category_id, 20241001, '[컴공] 졸업논문 심사 일정 공지', '컴퓨터공학과 2024학년도 졸업논문 심사 일정입니다.\n\n논문 제출: 2025년 1월 31일\n예비 심사: 2025년 2월 10일\n본 심사: 2025년 2월 20일\n\n지도교수님과 충분히 상담하시기 바랍니다.', 'URGENT', false, 267, 34, false, NOW() - INTERVAL 7 DAY, NOW() - INTERVAL 7 DAY, 20241001, 20241001),
+
+(@department_category_id, 20241001, '[컴공] AI 특강 개최 안내', '인공지능 분야 특강을 개최합니다.\n\n주제: 딥러닝과 컴퓨터 비전의 최신 동향\n강사: 김AI 교수님 (서울대학교)\n일시: 2025년 1월 25일 14:00\n장소: 공학관 301호\n\n컴퓨터공학 전공자라면 누구나 참석 가능합니다.', 'NORMAL', false, 198, 27, false, NOW() - INTERVAL 10 DAY, NOW() - INTERVAL 10 DAY, 20241001, 20241001),
+
+(@department_category_id, 20241001, '[컴공] 학과 MT 참가 신청', '컴퓨터공학과 신입생 환영 MT를 개최합니다!\n\n일시: 2025년 2월 15일 ~ 16일 (1박 2일)\n장소: 강원도 평창\n참가비: 5만원\n신청: 학과 사무실 또는 온라인 신청\n\n많은 참여 부탁드립니다!', 'NORMAL', false, 423, 56, false, NOW() - INTERVAL 12 DAY, NOW() - INTERVAL 12 DAY, 20241001, 20241001),
+
+-- 경영학과 관련 게시글
+(@department_category_id, 20241001, '[경영] 마케팅 전략 특강 안내', '경영학과 마케팅 전략 특강을 개최합니다.\n\n주제: 디지털 마케팅의 이해와 실전 전략\n강사: 박마케팅 대표 (네이버 출신)\n일시: 2025년 1월 28일 15:00\n장소: 경영관 대강당\n\n경영학 전공자 필수 참석 권장합니다.', 'NOTICE', false, 312, 41, false, NOW() - INTERVAL 8 DAY, NOW() - INTERVAL 8 DAY, 20241001, 20241001),
+
+(@department_category_id, 20241001, '[경영] 2025 취업 박람회 참가 안내', '경영대학 취업 박람회가 개최됩니다.\n\n일시: 2025년 2월 5일 10:00 ~ 17:00\n장소: 학생회관 대강당\n참가 기업: 삼성, LG, 현대 등 30개사\n\n이력서 지참 필수입니다.', 'URGENT', false, 467, 62, false, NOW() - INTERVAL 6 DAY, NOW() - INTERVAL 6 DAY, 20241001, 20241001),
+
+(@department_category_id, 20241001, '[경영] 경영학과 학술제 개최', '제10회 경영학과 학술제를 개최합니다.\n\n주제: ESG 경영과 지속가능한 성장\n일시: 2025년 2월 3일\n발표 신청: 1월 25일까지\n\n우수 발표자에게는 장학금이 수여됩니다.', 'NORMAL', false, 234, 32, false, NOW() - INTERVAL 14 DAY, NOW() - INTERVAL 14 DAY, 20241001, 20241001),
+
+-- 기계공학과 관련 게시글
+(@department_category_id, 20241001, '[기계] 공작기계 실습 안전교육 필수 이수', '기계공학과 전공 실습을 위한 안전교육 이수 안내\n\n대상: 기계공학 전공자 전원\n교육 일시: 2025년 1월 22일 ~ 24일\n장소: 공학관 실습실\n\n미이수 시 실습 참여 불가합니다.', 'URGENT', false, 278, 36, false, NOW() - INTERVAL 4 DAY, NOW() - INTERVAL 4 DAY, 20241001, 20241001),
+
+(@department_category_id, 20241001, '[기계] 로봇공학 특강 개최', '로봇공학 최신 기술 동향 특강\n\n주제: 협동로봇의 현재와 미래\n강사: 이로봇 박사 (KAIST)\n일시: 2025년 1월 30일 14:00\n장소: 기계관 세미나실\n\n관심있는 학생들의 참석 바랍니다.', 'NORMAL', false, 189, 25, false, NOW() - INTERVAL 11 DAY, NOW() - INTERVAL 11 DAY, 20241001, 20241001),
+
+-- 전자공학과 관련 게시글
+(@department_category_id, 20241001, '[전자] 임베디드 시스템 경진대회', '전자공학과 임베디드 시스템 경진대회 개최\n\n신청 기간: 2025년 1월 15일 ~ 30일\n대회 일시: 2025년 2월 20일\n참가 자격: 전자공학 전공자\n시상: 대상 100만원, 금상 50만원\n\n많은 관심과 참여 부탁드립니다.', 'NOTICE', false, 356, 48, false, NOW() - INTERVAL 9 DAY, NOW() - INTERVAL 9 DAY, 20241001, 20241001),
+
+(@department_category_id, 20241001, '[전자] 반도체 공정 견학 안내', '삼성전자 반도체 공장 견학 프로그램\n\n일시: 2025년 2월 8일\n장소: 삼성전자 화성사업장\n인원: 30명 (선착순)\n신청: 학과 사무실\n\n실무 경험의 좋은 기회입니다!', 'NORMAL', false, 412, 54, false, NOW() - INTERVAL 13 DAY, NOW() - INTERVAL 13 DAY, 20241001, 20241001),
+
+-- 화학과 관련 게시글
+(@department_category_id, 20241001, '[화학] 실험실 안전교육 필수 이수', '화학과 실험실 안전교육 이수 안내\n\n교육 일시: 2025년 1월 20일\n장소: 화학관 강의실\n대상: 실험 수업 수강자 전원\n\n미이수 시 실험 참여가 제한됩니다.', 'URGENT', false, 245, 31, false, NOW() - INTERVAL 15 DAY, NOW() - INTERVAL 15 DAY, 20241001, 20241001),
+
+(@department_category_id, 20241001, '[화학] 신소재 화학 세미나', '신소재 화학 최신 연구 동향 세미나\n\n주제: 나노 소재의 응용\n강사: 최화학 교수님 (서울대)\n일시: 2025년 1월 27일 15:00\n장소: 자연과학관 세미나실', 'NORMAL', false, 167, 22, false, NOW() - INTERVAL 16 DAY, NOW() - INTERVAL 16 DAY, 20241001, 20241001),
+
+-- 영어영문학과 관련 게시글
+(@department_category_id, 20241001, '[영문] 영미문학 독서 토론회', '영미문학 고전 작품 독서 토론회를 개최합니다.\n\n작품: "위대한 개츠비"\n일시: 2025년 1월 29일 16:00\n장소: 인문관 세미나실\n\n작품을 미리 읽고 오시면 더욱 좋습니다.', 'NORMAL', false, 134, 18, false, NOW() - INTERVAL 17 DAY, NOW() - INTERVAL 17 DAY, 20241001, 20241001),
+
+(@department_category_id, 20241001, '[영문] TOEIC Speaking 특강', '영어영문학과 토익스피킹 특강\n\n강사: 원어민 교수\n일시: 매주 목요일 18:00\n장소: 어학관 301호\n신청: 학과 사무실\n\n무료로 진행되니 많이 참여해주세요!', 'NOTICE', false, 298, 39, false, NOW() - INTERVAL 18 DAY, NOW() - INTERVAL 18 DAY, 20241001, 20241001),
+
+-- 수학과 관련 게시글
+(@department_category_id, 20241001, '[수학] 해석학 스터디 모집', '해석학 심화 스터디 그룹을 모집합니다.\n\n교재: Rudin의 해석학 원론\n일시: 매주 화, 목 19:00\n장소: 자연과학관 스터디룸\n모집 인원: 6명\n\n관심있으신 분은 댓글 남겨주세요!', 'NORMAL', false, 89, 12, false, NOW() - INTERVAL 19 DAY, NOW() - INTERVAL 19 DAY, 20241001, 20241001),
+
+(@department_category_id, 20241001, '[수학] 수학 경시대회 안내', '전국 대학생 수학 경시대회 참가자 모집\n\n신청 기간: 2025년 1월 25일까지\n대회 일시: 2025년 2월 15일\n시상: 대상 200만원\n\n수학과의 명예를 위해 많은 참여 부탁드립니다.', 'NOTICE', false, 201, 28, false, NOW() - INTERVAL 20 DAY, NOW() - INTERVAL 20 DAY, 20241001, 20241001);
+
+-- 학과 게시판 게시글-해시태그 연결
+INSERT INTO post_hashtags (post_id, hashtag_id, created_by, created_at) 
+SELECT p.id, h.id, 20241001, NOW()
+FROM posts p
+JOIN hashtags h ON h.name IN ('학과공지', '전공수업')
+WHERE p.title LIKE '[컴공] 2025-1학기 전공 수강신청 안내';
+
+INSERT INTO post_hashtags (post_id, hashtag_id, created_by, created_at) 
+SELECT p.id, h.id, 20241001, NOW()
+FROM posts p
+JOIN hashtags h ON h.name IN ('학과행사')
+WHERE p.title LIKE '%캡스톤디자인%' OR p.title LIKE '%MT 참가%' OR p.title LIKE '%학술제%';
+
+INSERT INTO post_hashtags (post_id, hashtag_id, created_by, created_at) 
+SELECT p.id, h.id, 20241001, NOW()
+FROM posts p
+JOIN hashtags h ON h.name IN ('졸업논문', '졸업요건')
+WHERE p.title LIKE '%졸업논문%';
+
+INSERT INTO post_hashtags (post_id, hashtag_id, created_by, created_at) 
+SELECT p.id, h.id, 20241001, NOW()
+FROM posts p
+JOIN hashtags h ON h.name IN ('학과세미나', '교수님공지')
+WHERE p.title LIKE '%특강%' OR p.title LIKE '%세미나%';
+
+INSERT INTO post_hashtags (post_id, hashtag_id, created_by, created_at) 
+SELECT p.id, h.id, 20241001, NOW()
+FROM posts p
+JOIN hashtags h ON h.name IN ('학과공지')
+WHERE p.title LIKE '[경영] 2025 취업 박람회%' OR p.title LIKE '%안전교육%' OR p.title LIKE '%경진대회%';
+
+INSERT INTO post_hashtags (post_id, hashtag_id, created_by, created_at) 
+SELECT p.id, h.id, 20241001, NOW()
+FROM posts p
+JOIN hashtags h ON h.name IN ('학과동아리')
+WHERE p.title LIKE '%독서 토론회%' OR p.title LIKE '%스터디 모집%';

@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -53,8 +54,6 @@ public class SecurityConfig {
                 .requestMatchers(
                     "/api/auth/**",
                     "/api/public/**",
-                    "/api/v1/boards/**",  // 게시판 API 허용
-                    "/api/v1/board/**",   // 댓글 API 허용
                     "/health",
                     "/error",
                     "/swagger-ui/**",
@@ -63,10 +62,20 @@ public class SecurityConfig {
                     "/v3/api-docs/**"
                 ).permitAll()
 
-                // 학생만 접근 가능
+                // 학생 게시판 - 학생만 접근 가능 (조회, 작성, 수정, 삭제)
+                .requestMatchers("/api/v1/boards/STUDENT/**").hasAuthority("STUDENT")
+
+                // 교수 게시판 - 교수만 접근 가능 (조회, 작성, 수정, 삭제)
+                .requestMatchers("/api/v1/boards/PROFESSOR/**").hasAuthority("PROFESSOR")
+
+                // 나머지 게시판 API - 인증된 사용자 접근 가능
+                .requestMatchers("/api/v1/boards/**").authenticated()
+                .requestMatchers("/api/v1/board/**").authenticated()  // 댓글 API
+
+                // 학생 전용 API
                 .requestMatchers("/api/student/**").hasAuthority("STUDENT")
 
-                // 교수만 접근 가능
+                // 교수 전용 API
                 .requestMatchers("/api/professor/**").hasAuthority("PROFESSOR")
 
                 // 나머지 요청은 인증 필요

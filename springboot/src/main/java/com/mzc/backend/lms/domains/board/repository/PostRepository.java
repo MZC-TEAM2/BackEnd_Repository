@@ -50,4 +50,14 @@ public interface PostRepository extends JpaRepository<Post, Long> {
                                                                 @Param("title") String title, 
                                                                 @Param("hashtagName") String hashtagName, 
                                                                 Pageable pageable);
+
+    /**
+     * 게시글 상세 조회 (해시태그 포함, fetch join 사용)
+     * attachments와 comments는 트랜잭션 내에서 자동 로드됨
+     */
+    @Query("SELECT DISTINCT p FROM Post p " +
+           "LEFT JOIN FETCH p.postHashtags ph " +
+           "LEFT JOIN FETCH ph.hashtag h " +
+           "WHERE p.id = :postId AND p.isDeleted = false")
+    java.util.Optional<Post> findByIdWithHashtags(@Param("postId") Long postId);
 }

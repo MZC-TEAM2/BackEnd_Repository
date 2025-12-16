@@ -3,6 +3,7 @@ package com.mzc.backend.lms.domains.board.service;
 import com.mzc.backend.lms.domains.board.entity.Hashtag;
 import com.mzc.backend.lms.domains.board.entity.Post;
 import com.mzc.backend.lms.domains.board.repository.HashtagRepository;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 public class HashtagService {
 
     private final HashtagRepository hashtagRepository;
+    private final EntityManager entityManager;
 
     /**
      * 해시태그 이름으로 조회 또는 생성
@@ -113,6 +115,9 @@ public class HashtagService {
 
         // 기존 해시태그 제거
         post.clearHashtags();
+        
+        // 변경사항을 데이터베이스에 즉시 반영 (orphanRemoval 작동)
+        entityManager.flush();
 
         // 새 해시태그 추가
         if (tagNames != null && !tagNames.isEmpty()) {
