@@ -273,16 +273,11 @@ INSERT INTO `subject_prerequisites` (`id`, `subject_id`, `prerequisite_id`, `is_
 --
 
 INSERT INTO `users` (`id`, `email`, `password`, `created_at`, `updated_at`, `deleted_at`) VALUES
-(20241001, 'admin@lms.ac.kr', '$2a$10$dummyHashedPassword123456789012345678901234567890', '2025-12-15 02:37:06.000000', NULL, NULL),
 (20250101001, 'm1vXyelY5laXJeb2SWNtpsik/TigvmbVzcp/qld1P+E=', '$2a$12$gmd6my6CSNM9mmXD9kT3h.yYUuBxpAA7vwRsYj2cUt2XXCKqvl5IO', '2025-12-10 02:19:04.239502', '2025-12-10 02:19:04.239534', NULL),
 (20250101002, '7xZQt8XCv72ArZRLQAyroTeSb4zxg8Wqs8ZfsRpgDO8=', '$2a$12$78jtlU.CMCmx5/aXAB8AHOZVXaBObkf/zbPkNYIC9y8LyMxGIXji2', '2025-12-10 02:21:27.336597', '2025-12-10 02:21:27.336611', NULL),
 (20250101003, 'HhQXq5CFjEeyhPWHZSohXXQzaytQRQjhz+6TqY/Dyc0=', '$2a$12$OkDJm4o50kM58UFlaRkiF.fkuYvgKmS5zW7SCR9hew6fB8KwbiUxe', '2025-12-16 05:41:11.010237', '2025-12-16 05:41:11.010440', NULL);
 
 -- --------------------------------------------------------
-
--- --------------------------------------------------------
-
-
 
 INSERT INTO `user_profiles` (`user_id`, `name`, `created_at`) VALUES
 (20250101001, 'GTVzcP/WI5I21T4mj/0Nsw==', '2025-12-10 02:19:04.243547'),
@@ -291,18 +286,6 @@ INSERT INTO `user_profiles` (`user_id`, `name`, `created_at`) VALUES
 
 -- --------------------------------------------------------
 
-
---
--- Dumping data for table `user_type_mappings`
---
-
--- INSERT INTO `user_type_mappings` (`user_id`, `user_type_id`, `assigned_at`) VALUES
--- (20241001, 2, '2025-12-15 02:37:06.000000');
-
--- --------------------------------------------------------
---
--- Dumping data for table `week_contents`
---
 
 INSERT INTO `week_contents` (`id`, `week_id`, `content_type`, `title`, `content_url`, `duration`, `display_order`, `created_at`) VALUES
 (1, 18, 'VIDEO', 'a', 'a', '1', 1, '2025-12-16 14:56:02');
