@@ -51,6 +51,7 @@ public class Post extends AuditableEntity {
     @ColumnDefault("0")
     private int likeCount = 0;
 
+    @org.hibernate.annotations.BatchSize(size = 100)
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL)
     private List<Comment> comments = new ArrayList<>();
 

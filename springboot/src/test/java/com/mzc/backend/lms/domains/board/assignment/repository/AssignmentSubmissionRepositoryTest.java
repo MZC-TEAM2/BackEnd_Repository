@@ -3,10 +3,13 @@ package com.mzc.backend.lms.domains.board.assignment.repository;
 import com.mzc.backend.lms.common.config.JpaConfig;
 import com.mzc.backend.lms.domains.board.assignment.entity.Assignment;
 import com.mzc.backend.lms.domains.board.assignment.entity.AssignmentSubmission;
+import com.mzc.backend.lms.domains.board.entity.Attachment;
 import com.mzc.backend.lms.domains.board.entity.BoardCategory;
 import com.mzc.backend.lms.domains.board.entity.Post;
+import com.mzc.backend.lms.domains.board.enums.AttachmentType;
 import com.mzc.backend.lms.domains.board.enums.BoardType;
 import com.mzc.backend.lms.domains.board.enums.PostType;
+import com.mzc.backend.lms.domains.board.repository.AttachmentRepository;
 import com.mzc.backend.lms.domains.board.repository.BoardCategoryRepository;
 import com.mzc.backend.lms.domains.board.repository.PostRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,6 +23,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -46,9 +50,14 @@ class AssignmentSubmissionRepositoryTest {
     @Autowired
     private BoardCategoryRepository boardCategoryRepository;
 
+    @Autowired
+    private AttachmentRepository attachmentRepository;
+
     private Assignment assignment;
     private AssignmentSubmission submission1;
     private AssignmentSubmission submission2;
+    private Attachment attachment1;
+    private Attachment attachment2;
 
     @BeforeEach
     void setUp() {
@@ -82,6 +91,27 @@ class AssignmentSubmissionRepositoryTest {
                 .build();
         assignmentRepository.save(assignment);
 
+        // 첨부파일 생성
+        attachment1 = Attachment.builder()
+                .post(post)
+                .originalName("assignment1.pdf")
+                .storedName("uuid1.pdf")
+                .filePath("/uploads/assignment1.pdf")
+                .fileSize(1024L)
+                .attachmentType(AttachmentType.DOCUMENT)
+                .build();
+        attachmentRepository.save(attachment1);
+
+        attachment2 = Attachment.builder()
+                .post(post)
+                .originalName("assignment2.zip")
+                .storedName("uuid2.zip")
+                .filePath("/uploads/assignment2.zip")
+                .fileSize(2048L)
+                .attachmentType(AttachmentType.OTHER)
+                .build();
+        attachmentRepository.save(attachment2);
+
         // 과제 제출 생성
         submission1 = AssignmentSubmission.builder()
                 .assignment(assignment)
@@ -91,6 +121,8 @@ class AssignmentSubmissionRepositoryTest {
                 .status("SUBMITTED")
                 .createdBy(10L)
                 .build();
+        submissionRepository.save(submission1);
+        submission1.addAttachments(List.of(attachment1));
         submissionRepository.save(submission1);
 
         submission2 = AssignmentSubmission.builder()
@@ -270,21 +302,91 @@ class AssignmentSubmissionRepositoryTest {
     }
 
     @Test
-    @DisplayName("과제 재제출")
-    void resubmit() {
+    @DisplayName("과제 재제출 - 채점 전 (수정 모드)")
+    void resubmit_beforeGrading() {
         // given
         String newContent = "수정된 내용입니다.";
-        LocalDateTime newSubmittedAt = LocalDateTime.now();
+        LocalDateTime originalSubmittedAt = submission1.getSubmittedAt();
 
         // when
-        submission1.resubmit(newContent, newSubmittedAt);
+        submission1.resubmit(newContent, null);
         AssignmentSubmission resubmitted = submissionRepository.save(submission1);
 
         // then
         assertThat(resubmitted.getContent()).isEqualTo(newContent);
+        assertThat(resubmitted.getSubmittedAt()).isEqualTo(originalSubmittedAt); // 제출 시간 유지
+        assertThat(resubmitted.getStatus()).isEqualTo("SUBMITTED"); // 상태 유지
         assertThat(resubmitted.getScore()).isNull();
         assertThat(resubmitted.getFeedback()).isNull();
+    }
+
+    @Test
+    @DisplayName("과제 재제출 - 채점 후 (재제출 모드)")
+    void resubmit_afterGrading() {
+        // given
+        submission1.grade(new BigDecimal("80.00"), "Good", 1L);
+        submissionRepository.save(submission1);
+        
+        String newContent = "재제출 내용입니다.";
+        LocalDateTime originalSubmittedAt = submission1.getSubmittedAt();
+
+        // when
+        submission1.resubmit(newContent, null);
+        AssignmentSubmission resubmitted = submissionRepository.save(submission1);
+
+        // then
+        assertThat(resubmitted.getContent()).isEqualTo(newContent);
+        assertThat(resubmitted.getSubmittedAt()).isNotEqualTo(originalSubmittedAt); // 제출 시간 갱신
+        assertThat(resubmitted.getStatus()).isEqualTo("SUBMITTED"); // 상태 재계산
+        assertThat(resubmitted.getScore()).isNull(); // 점수 초기화
+        assertThat(resubmitted.getFeedback()).isNull(); // 피드백 초기화
         assertThat(resubmitted.getGradedAt()).isNull();
+        assertThat(resubmitted.getGradedBy()).isNull();
+    }
+
+    @Test
+    @DisplayName("첨부파일 추가 테스트")
+    void addAttachments() {
+        // given
+        List<Attachment> newAttachments = List.of(attachment2);
+
+        // when
+        submission1.addAttachments(newAttachments);
+        AssignmentSubmission updated = submissionRepository.save(submission1);
+
+        // then
+        assertThat(updated.getAttachments()).hasSize(2);
+        assertThat(updated.getAttachments()).contains(attachment1, attachment2);
+    }
+
+    @Test
+    @DisplayName("재제출 시 첨부파일 교체 테스트")
+    void resubmit_withAttachments() {
+        // given
+        String newContent = "첨부파일을 교체합니다.";
+        List<Attachment> newAttachments = List.of(attachment2);
+
+        // when
+        submission1.resubmit(newContent, newAttachments);
+        AssignmentSubmission resubmitted = submissionRepository.save(submission1);
+
+        // then
+        assertThat(resubmitted.getAttachments()).hasSize(1);
+        assertThat(resubmitted.getAttachments()).containsOnly(attachment2);
+        assertThat(resubmitted.getAttachments()).doesNotContain(attachment1);
+    }
+
+    @Test
+    @DisplayName("첨부파일 포함 제출 조회 테스트")
+    void findSubmissionWithAttachments() {
+        // when
+        Optional<AssignmentSubmission> found = submissionRepository
+                .findByAssignmentIdAndUserId(assignment.getId(), 10L);
+
+        // then
+        assertThat(found).isPresent();
+        assertThat(found.get().getAttachments()).hasSize(1);
+        assertThat(found.get().getAttachments().get(0).getOriginalName()).isEqualTo("assignment1.pdf");
     }
 
     @Test

@@ -10,11 +10,14 @@ import com.mzc.backend.lms.domains.board.assignment.entity.Assignment;
 import com.mzc.backend.lms.domains.board.assignment.entity.AssignmentSubmission;
 import com.mzc.backend.lms.domains.board.assignment.repository.AssignmentRepository;
 import com.mzc.backend.lms.domains.board.assignment.repository.AssignmentSubmissionRepository;
+import com.mzc.backend.lms.domains.board.entity.Attachment;
 import com.mzc.backend.lms.domains.board.entity.BoardCategory;
 import com.mzc.backend.lms.domains.board.entity.Post;
+import com.mzc.backend.lms.domains.board.enums.AttachmentType;
 import com.mzc.backend.lms.domains.board.enums.BoardType;
 import com.mzc.backend.lms.domains.board.enums.PostType;
 import com.mzc.backend.lms.domains.board.exception.BoardException;
+import com.mzc.backend.lms.domains.board.repository.AttachmentRepository;
 import com.mzc.backend.lms.domains.board.repository.BoardCategoryRepository;
 import com.mzc.backend.lms.domains.board.repository.PostRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -58,6 +61,9 @@ class AssignmentServiceTest {
 
     @Autowired
     private BoardCategoryRepository boardCategoryRepository;
+
+    @Autowired
+    private AttachmentRepository attachmentRepository;
 
     private BoardCategory assignmentCategory;
     private Post testPost;
@@ -250,7 +256,6 @@ class AssignmentServiceTest {
     void submitAssignment_Success_OnTime() {
         // given
         AssignmentSubmissionRequestDto request = AssignmentSubmissionRequestDto.builder()
-                
                 .content("연결리스트 구현 완료했습니다.")
                 .build();
 
@@ -264,6 +269,7 @@ class AssignmentServiceTest {
         assertThat(response.getUserId()).isEqualTo(10L);
         assertThat(response.getStatus()).isEqualTo("SUBMITTED");
         assertThat(response.getContent()).isEqualTo("연결리스트 구현 완료했습니다.");
+        assertThat(response.getAttachments()).isEmpty();
     }
 
     @Test
@@ -322,13 +328,14 @@ class AssignmentServiceTest {
     }
 
     @Test
-    @DisplayName("과제 재제출 성공")
-    void resubmitAssignment_Success() {
+    @DisplayName("과제 재제출 성공 - 채점 전 (수정 모드)")
+    void resubmitAssignment_Success_BeforeGrading() {
         // given
         AssignmentSubmissionRequestDto submitRequest = AssignmentSubmissionRequestDto.builder()
                 .content("첫 번째 제출")
                 .build();
         AssignmentSubmissionResponseDto firstSubmission = assignmentService.submitAssignment(testAssignment.getId(), submitRequest, 13L);
+        LocalDateTime originalSubmittedAt = firstSubmission.getSubmittedAt();
 
         String newContent = "수정된 제출 내용입니다.";
 
@@ -339,8 +346,44 @@ class AssignmentServiceTest {
         // then
         assertThat(response).isNotNull();
         assertThat(response.getContent()).isEqualTo(newContent);
-        assertThat(response.getScore()).isNull(); // 재제출 시 점수 초기화
+        assertThat(response.getSubmittedAt()).isEqualTo(originalSubmittedAt); // 제출 시간 유지
+        assertThat(response.getStatus()).isEqualTo("SUBMITTED"); // 상태 유지
+        assertThat(response.getScore()).isNull();
         assertThat(response.getFeedback()).isNull();
+    }
+
+    @Test
+    @DisplayName("과제 재제출 성공 - 채점 후 (재제출 모드)")
+    void resubmitAssignment_Success_AfterGrading() {
+        // given
+        AssignmentSubmissionRequestDto submitRequest = AssignmentSubmissionRequestDto.builder()
+                .content("첫 번째 제출")
+                .build();
+        AssignmentSubmissionResponseDto firstSubmission = assignmentService.submitAssignment(testAssignment.getId(), submitRequest, 15L);
+        LocalDateTime originalSubmittedAt = firstSubmission.getSubmittedAt();
+
+        // 채점
+        AssignmentGradeRequestDto gradeRequest = AssignmentGradeRequestDto.builder()
+                .score(new BigDecimal("80.00"))
+                .feedback("Good")
+                .build();
+        assignmentService.gradeSubmission(firstSubmission.getId(), gradeRequest, 1L);
+
+        String newContent = "재제출 내용입니다.";
+
+        // when
+        AssignmentSubmissionResponseDto response = assignmentService.resubmitAssignment(
+                firstSubmission.getId(), newContent);
+
+        // then
+        assertThat(response).isNotNull();
+        assertThat(response.getContent()).isEqualTo(newContent);
+        assertThat(response.getSubmittedAt()).isNotEqualTo(originalSubmittedAt); // 제출 시간 갱신
+        assertThat(response.getStatus()).isEqualTo("SUBMITTED"); // 상태 재계산
+        assertThat(response.getScore()).isNull(); // 점수 초기화
+        assertThat(response.getFeedback()).isNull(); // 피드백 초기화
+        assertThat(response.getGradedAt()).isNull();
+        assertThat(response.getGradedBy()).isNull();
     }
 
     @Test
@@ -443,5 +486,73 @@ class AssignmentServiceTest {
         assertThat(pending).hasSize(2); // 3개 중 1개 채점되어 2개 대기
         assertThat(pending).allMatch(s -> 
                 s.getStatus().equals("SUBMITTED") || s.getStatus().equals("LATE"));
+    }
+
+    @Test
+    @DisplayName("과제 제출 성공 - 첨부파일 포함")
+    void submitAssignment_WithAttachments_Success() {
+        // given
+        Attachment attachment1 = Attachment.builder()
+                .originalName("homework.pdf")
+                .storedName("20250101_homework.pdf")
+                .filePath("/uploads/2025/20250101_homework.pdf")
+                .fileSize(1024L)
+                .attachmentType(AttachmentType.DOCUMENT)
+                .build();
+        Attachment attachment2 = Attachment.builder()
+                .originalName("code.zip")
+                .storedName("20250101_code.zip")
+                .filePath("/uploads/2025/20250101_code.zip")
+                .fileSize(2048L)
+                .attachmentType(AttachmentType.ARCHIVE)
+                .build();
+        attachmentRepository.save(attachment1);
+        attachmentRepository.save(attachment2);
+
+        AssignmentSubmissionRequestDto request = AssignmentSubmissionRequestDto.builder()
+                .content("첨부파일과 함께 제출합니다.")
+                .attachmentIds(List.of(attachment1.getId(), attachment2.getId()))
+                .build();
+
+        // when
+        AssignmentSubmissionResponseDto response = assignmentService.submitAssignment(
+                testAssignment.getId(), request, 50L);
+
+        // then
+        assertThat(response).isNotNull();
+        assertThat(response.getAttachments()).hasSize(2);
+        assertThat(response.getAttachments())
+                .extracting("originalName")
+                .containsExactlyInAnyOrder("homework.pdf", "code.zip");
+    }
+
+    @Test
+    @DisplayName("과제 제출 조회 - 첨부파일 포함")
+    void getSubmission_WithAttachments_Success() {
+        // given
+        Attachment attachment = Attachment.builder()
+                .originalName("report.pdf")
+                .storedName("20250102_report.pdf")
+                .filePath("/uploads/2025/20250102_report.pdf")
+                .fileSize(3072L)
+                .attachmentType(AttachmentType.DOCUMENT)
+                .build();
+        attachmentRepository.save(attachment);
+
+        AssignmentSubmissionRequestDto submitRequest = AssignmentSubmissionRequestDto.builder()
+                .content("리포트 제출")
+                .attachmentIds(List.of(attachment.getId()))
+                .build();
+        AssignmentSubmissionResponseDto submission = assignmentService.submitAssignment(
+                testAssignment.getId(), submitRequest, 60L);
+
+        // when
+        AssignmentSubmissionResponseDto response = assignmentService.getMySubmission(
+                testAssignment.getId(), 60L);
+
+        // then
+        assertThat(response).isNotNull();
+        assertThat(response.getAttachments()).hasSize(1);
+        assertThat(response.getAttachments().get(0).getOriginalName()).isEqualTo("report.pdf");
     }
 }

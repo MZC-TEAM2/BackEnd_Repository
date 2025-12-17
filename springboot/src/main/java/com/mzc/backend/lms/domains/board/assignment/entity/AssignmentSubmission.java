@@ -1,5 +1,6 @@
 package com.mzc.backend.lms.domains.board.assignment.entity;
 
+import com.mzc.backend.lms.domains.board.entity.Attachment;
 import com.mzc.backend.lms.domains.board.entity.AuditableEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -9,6 +10,8 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 과제 제출 엔티티
@@ -87,6 +90,29 @@ public class AssignmentSubmission extends AuditableEntity {
     @Column(name = "graded_by")
     private Long gradedBy;
 
+    /**
+     * 재제출 허용 여부 (교수가 설정)
+     */
+    @Column(name = "allow_resubmission", nullable = false)
+    private Boolean allowResubmission = false;
+
+    /**
+     * 재제출 마감일 (교수가 설정)
+     */
+    @Column(name = "resubmission_deadline")
+    private LocalDateTime resubmissionDeadline;
+
+    /**
+     * 첨부파일 목록
+     */
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "submission_attachments",
+        joinColumns = @JoinColumn(name = "submission_id"),
+        inverseJoinColumns = @JoinColumn(name = "attachment_id")
+    )
+    private List<Attachment> attachments = new ArrayList<>();
+
     @Builder
     public AssignmentSubmission(Assignment assignment, Long userId, String content,
                                 LocalDateTime submittedAt, String status, Long createdBy) {
@@ -101,16 +127,46 @@ public class AssignmentSubmission extends AuditableEntity {
     // --- 비즈니스 로직 ---
 
     /**
-     * 과제 재제출
+     * 과제 재제출 / 수정
+     * - 채점 완료된 경우: 교수가 허용했을 때만 재제출 가능 (제출 시간 갱신, 점수 초기화)
+     * - 채점 전인 경우: 수정 (제출 시간 유지, 내용만 변경)
      */
-    public void resubmit(String content, LocalDateTime submittedAt) {
+    public void resubmit(String content, List<Attachment> newAttachments) {
+        // 채점 완료 후 재제출인 경우 허용 여부 확인
+        if (isGraded() && !canResubmit()) {
+            throw new IllegalStateException("재제출이 허용되지 않았습니다.");
+        }
+        
         this.content = content;
-        this.submittedAt = submittedAt;
-        this.status = assignment.getDueDate().isBefore(submittedAt) ? "LATE" : "SUBMITTED";
-        this.score = null;
-        this.feedback = null;
-        this.gradedAt = null;
-        this.gradedBy = null;
+        
+        if (isGraded()) {
+            // 채점 완료된 경우 → 재제출 (전체 초기화)
+            LocalDateTime now = LocalDateTime.now();
+            this.submittedAt = now;
+            this.status = assignment.getDueDate().isBefore(now) ? "LATE" : "SUBMITTED";
+            this.score = null;
+            this.feedback = null;
+            this.gradedAt = null;
+            this.gradedBy = null;
+            this.allowResubmission = false; // 재제출 후 다시 비활성화
+            this.resubmissionDeadline = null;
+        }
+        // 채점 전인 경우 → 수정 (submitted_at과 status 유지)
+        
+        // 첨부파일은 항상 교체
+        this.attachments.clear();
+        if (newAttachments != null) {
+            this.attachments.addAll(newAttachments);
+        }
+    }
+
+    /**
+     * 첨부파일 추가
+     */
+    public void addAttachments(List<Attachment> attachments) {
+        if (attachments != null) {
+            this.attachments.addAll(attachments);
+        }
     }
 
     /**
@@ -137,6 +193,41 @@ public class AssignmentSubmission extends AuditableEntity {
      */
     public boolean isGraded() {
         return "GRADED".equals(this.status);
+    }
+
+    /**
+     * 재제출 가능 여부 확인
+     * - 채점 전: 항상 가능 (수정)
+     * - 채점 후: 교수가 허용하고 마감일 이전인 경우만 가능
+     */
+    public boolean canResubmit() {
+        // 채점 전이면 언제든지 수정 가능
+        if (!isGraded()) {
+            return true;
+        }
+        
+        // 채점 후에는 교수 허용 필요
+        if (!allowResubmission) {
+            return false;
+        }
+        
+        // 재제출 마감일이 설정되어 있으면 체크
+        if (resubmissionDeadline != null) {
+            return LocalDateTime.now().isBefore(resubmissionDeadline);
+        }
+        
+        return true;
+    }
+
+    /**
+     * 재제출 허용 (교수)
+     */
+    public void allowResubmission(LocalDateTime deadline) {
+        if (!isGraded()) {
+            throw new IllegalStateException("채점되지 않은 제출은 재제출 허용을 설정할 수 없습니다.");
+        }
+        this.allowResubmission = true;
+        this.resubmissionDeadline = deadline;
     }
 
     /**

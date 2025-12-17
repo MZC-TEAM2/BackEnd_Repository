@@ -10,11 +10,13 @@ import com.mzc.backend.lms.domains.board.assignment.entity.Assignment;
 import com.mzc.backend.lms.domains.board.assignment.entity.AssignmentSubmission;
 import com.mzc.backend.lms.domains.board.assignment.repository.AssignmentRepository;
 import com.mzc.backend.lms.domains.board.assignment.repository.AssignmentSubmissionRepository;
+import com.mzc.backend.lms.domains.board.entity.Attachment;
 import com.mzc.backend.lms.domains.board.entity.BoardCategory;
 import com.mzc.backend.lms.domains.board.entity.Post;
 import com.mzc.backend.lms.domains.board.enums.BoardType;
 import com.mzc.backend.lms.domains.board.exception.BoardErrorCode;
 import com.mzc.backend.lms.domains.board.exception.BoardException;
+import com.mzc.backend.lms.domains.board.repository.AttachmentRepository;
 import com.mzc.backend.lms.domains.board.repository.BoardCategoryRepository;
 import com.mzc.backend.lms.domains.board.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +41,7 @@ public class AssignmentService {
     private final AssignmentSubmissionRepository submissionRepository;
     private final PostRepository postRepository;
     private final BoardCategoryRepository boardCategoryRepository;
+    private final AttachmentRepository attachmentRepository;
 
     /**
      * 과제 등록 (교수)
@@ -182,8 +185,14 @@ public class AssignmentService {
             throw new BoardException(BoardErrorCode.POST_ALREADY_DELETED);
         }
 
+        // 1. Assignment 삭제
         assignment.delete();
-        log.info("과제 삭제 완료: assignmentId={}", assignmentId);
+        
+        // 2. 연결된 Post도 삭제
+        Post post = assignment.getPost();
+        post.delete();
+        
+        log.info("과제 삭제 완료: assignmentId={}, postId={}", assignmentId, post.getId());
     }
 
     /**
@@ -220,25 +229,34 @@ public class AssignmentService {
                 .build();
 
         AssignmentSubmission savedSubmission = submissionRepository.save(submission);
+        
+        // 첨부파일 처리
+        if (request.getAttachmentIds() != null && !request.getAttachmentIds().isEmpty()) {
+            List<Attachment> attachments = attachmentRepository.findAllById(request.getAttachmentIds());
+            savedSubmission.addAttachments(attachments);
+            log.info("첨부파일 {} 개 추가 완료", attachments.size());
+        }
+        
         log.info("과제 제출 완료: submissionId={}, status={}", savedSubmission.getId(), status);
 
         return AssignmentSubmissionResponseDto.from(savedSubmission);
     }
 
     /**
-     * 과제 재제출 (학생)
+     * 과제 재제출/수정 (학생)
+     * - 채점 완료된 경우: 재제출 (점수 초기화)
+     * - 채점 전인 경우: 수정 (내용만 변경)
      */
     @Transactional
     public AssignmentSubmissionResponseDto resubmitAssignment(Long submissionId, String content) {
-        log.info("과제 재제출 시작: submissionId={}", submissionId);
+        log.info("과제 재제출/수정 시작: submissionId={}", submissionId);
 
         AssignmentSubmission submission = submissionRepository.findById(submissionId)
                 .orElseThrow(() -> new BoardException(BoardErrorCode.POST_NOT_FOUND));
 
-        LocalDateTime submittedAt = LocalDateTime.now();
-        submission.resubmit(content, submittedAt);
+        submission.resubmit(content, null);
 
-        log.info("과제 재제출 완료: submissionId={}", submissionId);
+        log.info("과제 재제출/수정 완료: submissionId={}, isGraded={}", submissionId, submission.isGraded());
         return AssignmentSubmissionResponseDto.from(submission);
     }
 
@@ -288,5 +306,27 @@ public class AssignmentService {
         return pending.stream()
                 .map(AssignmentSubmissionResponseDto::from)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 재제출 허용 (교수)
+     * 채점된 제출에 대해 재제출을 허용합니다.
+     * 
+     * @param submissionId 제출 ID
+     * @param deadline 재제출 마감일 (null이면 무제한)
+     * @param professorId 교수 ID
+     */
+    @Transactional
+    public AssignmentSubmissionResponseDto allowResubmission(Long submissionId, LocalDateTime deadline, Long professorId) {
+        log.info("재제출 허용 시작: submissionId={}, deadline={}, professorId={}", submissionId, deadline, professorId);
+
+        AssignmentSubmission submission = submissionRepository.findById(submissionId)
+                .orElseThrow(() -> new BoardException(BoardErrorCode.POST_NOT_FOUND));
+
+        submission.allowResubmission(deadline);
+        submission.updateModifier(professorId);
+
+        log.info("재제출 허용 완료: submissionId={}", submissionId);
+        return AssignmentSubmissionResponseDto.from(submission);
     }
 }

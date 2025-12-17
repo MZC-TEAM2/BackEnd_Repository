@@ -27,16 +27,28 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @EntityGraph(attributePaths = {"attachments", "postHashtags", "postHashtags.hashtag"})
     Optional<Post> findWithAllById(Long id);
     
-    @Query("SELECT p FROM Post p WHERE p.category = :category AND p.isDeleted = false")
+    @Query("SELECT DISTINCT p FROM Post p " +
+           "LEFT JOIN FETCH p.postHashtags ph " +
+           "LEFT JOIN FETCH ph.hashtag h " +
+           "WHERE p.category = :category AND p.isDeleted = false")
     List<Post> findByCategory(@Param("category") BoardCategory category);
 
-    @Query("SELECT p FROM Post p WHERE p.category = :category AND p.isDeleted = false")
+    @Query("SELECT DISTINCT p FROM Post p " +
+           "LEFT JOIN FETCH p.postHashtags ph " +
+           "LEFT JOIN FETCH ph.hashtag h " +
+           "WHERE p.category = :category AND p.isDeleted = false")
     Page<Post> findByCategory(@Param("category") BoardCategory category, Pageable pageable);
 
-    @Query("SELECT p FROM Post p WHERE p.title LIKE %:title% AND p.isDeleted = false")
+    @Query("SELECT DISTINCT p FROM Post p " +
+           "LEFT JOIN FETCH p.postHashtags ph " +
+           "LEFT JOIN FETCH ph.hashtag h " +
+           "WHERE p.title LIKE %:title% AND p.isDeleted = false")
     Page<Post> findByTitleContaining(@Param("title") String title, Pageable pageable);
 
-    @Query("SELECT p FROM Post p WHERE p.category = :category AND p.title LIKE %:title% AND p.isDeleted = false")
+    @Query("SELECT DISTINCT p FROM Post p " +
+           "LEFT JOIN FETCH p.postHashtags ph " +
+           "LEFT JOIN FETCH ph.hashtag h " +
+           "WHERE p.category = :category AND p.title LIKE %:title% AND p.isDeleted = false")
     Page<Post> findByCategoryAndTitleContaining(@Param("category") BoardCategory category, @Param("title") String title, Pageable pageable);
 
     @Query("SELECT DISTINCT p FROM Post p " +
