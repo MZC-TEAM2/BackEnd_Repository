@@ -13,12 +13,18 @@ import com.mzc.backend.lms.domains.board.exception.BoardException;
 import com.mzc.backend.lms.domains.board.repository.AttachmentRepository;
 import com.mzc.backend.lms.domains.board.repository.CommentRepository;
 import com.mzc.backend.lms.domains.board.repository.PostRepository;
+import com.mzc.backend.lms.domains.notification.aop.annotation.NotifyEvent;
+import com.mzc.backend.lms.domains.notification.aop.event.NotificationEventType;
+import com.mzc.backend.lms.domains.user.profile.dto.UserBasicInfoDto;
+import com.mzc.backend.lms.domains.user.profile.service.UserInfoCacheService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -33,13 +39,27 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
     private final AttachmentRepository attachmentRepository;
-    
+    private final UserInfoCacheService userInfoCacheService;
+
     private static final int MAX_COMMENT_DEPTH = 1; // 대댓글까지만 허용 (depth 0, 1)
 
     /**
      * 댓글 생성
+     * - 게시글 작성자에게 알림 발송 (본인 댓글 제외)
+     * - 대댓글인 경우 부모 댓글 작성자에게도 알림 발송
      */
     @Transactional
+    @NotifyEvent(
+            type = NotificationEventType.COMMENT_CREATED,
+            titleExpression = "'내 게시글에 새 댓글이 등록되었습니다'",
+            messageExpression = "#result.content",
+            recipientIdExpression = "#result.postAuthorId",
+            senderIdExpression = "#result.author?.id",
+            relatedEntityType = "COMMENT",
+            relatedEntityIdExpression = "#result.id",
+            actionUrlExpression = "#result.postId.toString()",
+            conditionExpression = "#result.postAuthorId != null && #result.author?.id != null && #result.postAuthorId != #result.author.id"
+    )
     public CommentResponseDto createComment(CommentCreateRequestDto request) {
         log.info("댓글 생성: postId={}, parentCommentId={}", request.getPostId(), request.getParentCommentId());
 
@@ -55,7 +75,7 @@ public class CommentService {
         if (request.getParentCommentId() != null) {
             parentComment = commentRepository.findById(request.getParentCommentId())
                     .orElseThrow(() -> new BoardException(BoardErrorCode.PARENT_COMMENT_NOT_FOUND));
-            
+
             // 댓글 깊이 검증
             if (parentComment.getDepth() >= MAX_COMMENT_DEPTH) {
                 throw new BoardException(BoardErrorCode.COMMENT_DEPTH_EXCEEDED);
@@ -72,49 +92,30 @@ public class CommentService {
 
         // 5. 저장
         Comment savedComment = commentRepository.save(comment);
-        
+
         // 6. 첨부파일 연결
-        List<Attachment> savedAttachments = null;
         if (request.getAttachmentIds() != null && !request.getAttachmentIds().isEmpty()) {
             List<Attachment> attachments = attachmentRepository.findAllById(request.getAttachmentIds());
-            
+
             for (Attachment attachment : attachments) {
                 attachment.attachToComment(savedComment);
             }
-            
-            savedAttachments = attachmentRepository.saveAll(attachments);
-            
-            log.info("댓글에 첨부파일 연결: commentId={}, attachmentCount={}", 
+
+            attachmentRepository.saveAll(attachments);
+
+            log.info("댓글에 첨부파일 연결: commentId={}, attachmentCount={}",
                     savedComment.getId(), attachments.size());
         }
-        
+
         log.info("댓글 생성 완료: commentId={}, depth={}", savedComment.getId(), savedComment.getDepth());
 
-        // 7. 응답 생성 (첨부파일 포함)
-        CommentResponseDto response = CommentResponseDto.from(savedComment);
-        
-        // 첨부파일이 있으면 수동으로 추가 (지연 로딩 문제 해결)
-        if (savedAttachments != null && !savedAttachments.isEmpty()) {
-            List<AttachmentResponseDto> attachmentDtos = savedAttachments.stream()
-                    .map(AttachmentResponseDto::from)
-                    .collect(java.util.stream.Collectors.toList());
-            
-            // CommentResponseDto를 새로 빌드
-            return CommentResponseDto.builder()
-                    .id(response.getId())
-                    .postId(response.getPostId())
-                    .parentCommentId(response.getParentCommentId())
-                    .content(response.getContent())
-                    .depth(response.getDepth())
-                    .isDeletedByAdmin(response.isDeletedByAdmin())
-                    .createdAt(response.getCreatedAt())
-                    .updatedAt(response.getUpdatedAt())
-                    .childComments(response.getChildComments())
-                    .attachments(attachmentDtos)
-                    .build();
-        }
+        // 7. 작성자 정보 조회 (UserInfoCacheService 활용)
+        Map<Long, UserBasicInfoDto> userInfoMap = userInfoCacheService.getUserInfoMap(
+                Set.of(request.getAuthorId())
+        );
 
-        return response;
+        // 8. 응답 생성 (작성자 정보 포함)
+        return CommentResponseDto.from(savedComment, userInfoMap);
     }
 
     /**
