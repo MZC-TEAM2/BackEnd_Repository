@@ -93,6 +93,7 @@ logging:
     root: INFO
     com.mzc.backend.lms.domains.enrollment: DEBUG
     com.mzc.backend.lms.domains.course.course: DEBUG
+    com.mzc.backend.lms.domains.notification: DEBUG
 
 email:
   from: ${MAIL_FROM:${MAIL_USERNAME}}
