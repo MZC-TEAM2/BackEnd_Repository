@@ -40,8 +40,8 @@ public class CommentService {
      * 댓글 생성
      */
     @Transactional
-    public CommentResponseDto createComment(CommentCreateRequestDto request) {
-        log.info("댓글 생성: postId={}, parentCommentId={}", request.getPostId(), request.getParentCommentId());
+    public CommentResponseDto createComment(CommentCreateRequestDto request, Long authorId) {
+        log.info("댓글 생성: postId={}, parentCommentId={}, authorId={}", request.getPostId(), request.getParentCommentId(), authorId);
 
         // 1. 게시글 조회
         Post post = postRepository.findById(request.getPostId())
@@ -67,7 +67,7 @@ public class CommentService {
                 .post(post)
                 .parentComment(parentComment)
                 .content(request.getContent())
-                .authorId(request.getAuthorId())
+                .authorId(authorId)
                 .build();
 
         // 5. 저장
@@ -139,9 +139,8 @@ public class CommentService {
      * 댓글 수정
      */
     @Transactional
-    public CommentResponseDto updateComment(Long commentId, CommentUpdateRequestDto request) {
-        log.info("댓글 수정: commentId={}, attachmentIds={}, removedAttachmentIds={}", 
-                commentId, request.getAttachmentIds(), request.getRemovedAttachmentIds());
+    public CommentResponseDto updateComment(Long commentId, CommentUpdateRequestDto request, Long updatedBy) {
+        log.info("댓글 수정: commentId={}, updatedBy={}", commentId, updatedBy);
 
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new BoardException(BoardErrorCode.COMMENT_NOT_FOUND));

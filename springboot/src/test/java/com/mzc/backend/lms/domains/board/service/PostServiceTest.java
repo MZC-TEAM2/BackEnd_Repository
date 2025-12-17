@@ -15,6 +15,7 @@ import com.mzc.backend.lms.domains.board.repository.PostRepository;
 import com.mzc.backend.lms.domains.user.user.entity.User;
 import com.mzc.backend.lms.domains.user.user.repository.UserRepository;
 
+import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -52,6 +53,9 @@ class PostServiceTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private EntityManager entityManager;
+
     private BoardCategory testCategory;
     private User testUser;
 
@@ -70,6 +74,51 @@ class PostServiceTest {
                     User user = User.create(20250101003L, "test@test.com", "password");
                     return userRepository.save(user);
                 });
+        
+        // user_types 및 user_type_mappings 설정 (Flyway가 비활성화된 테스트 환경용)
+        setupUserTypeMappings();
+    }
+    
+    /**
+     * 테스트용 user_types 및 user_type_mappings 설정
+     * application-test.yaml에서 flyway.enabled=false이므로 수동 설정 필요
+     */
+    private void setupUserTypeMappings() {
+        try {
+            // user_types 테이블에 STUDENT 타입이 없으면 생성
+            Long studentTypeCount = ((Number) entityManager.createNativeQuery(
+                "SELECT COUNT(*) FROM user_types WHERE type_code = 'STUDENT'")
+                .getSingleResult()).longValue();
+            
+            if (studentTypeCount == 0) {
+                entityManager.createNativeQuery(
+                    "INSERT INTO user_types (id, type_code, type_name) VALUES (1, 'STUDENT', '학생')")
+                    .executeUpdate();
+                entityManager.flush();
+            }
+            
+            // testUser(20250101003L)에 대한 매핑이 없으면 생성
+            Long mappingCount = ((Number) entityManager.createNativeQuery(
+                "SELECT COUNT(*) FROM user_type_mappings WHERE user_id = :userId")
+                .setParameter("userId", testUser.getId())
+                .getSingleResult()).longValue();
+            
+            if (mappingCount == 0) {
+                Long studentTypeId = ((Number) entityManager.createNativeQuery(
+                    "SELECT id FROM user_types WHERE type_code = 'STUDENT'")
+                    .getSingleResult()).longValue();
+                
+                entityManager.createNativeQuery(
+                    "INSERT INTO user_type_mappings (user_id, user_type_id, assigned_at) VALUES (:userId, :typeId, NOW())")
+                    .setParameter("userId", testUser.getId())
+                    .setParameter("typeId", studentTypeId)
+                    .executeUpdate();
+                entityManager.flush();
+            }
+        } catch (Exception e) {
+            log.warn("Failed to setup user type mappings: {}", e.getMessage());
+            // 테스트 환경에서는 계속 진행
+        }
     }
 
     @Test
@@ -81,12 +130,12 @@ class PostServiceTest {
                 .categoryId(testCategory.getId())
                 .title("새 게시글")
                 .content("새 게시글 내용")
-                .postType(PostType.NORMAL)
+                .postType(PostType.NOTICE)
                 .isAnonymous(false)
                 .build();
 
         // when
-        PostResponseDto response = postService.createPost("NOTICE", request);
+        PostResponseDto response = postService.createPost("NOTICE", request, 1L);
 
         // then
         assertThat(response).isNotNull();
@@ -108,7 +157,7 @@ class PostServiceTest {
                 .build();
 
         // when & then
-        assertThatThrownBy(() -> postService.createPost("NOTICE", request))
+        assertThatThrownBy(() -> postService.createPost("NOTICE", request, 1L))
                 .isInstanceOf(BoardException.class);
     }
 
@@ -175,7 +224,7 @@ class PostServiceTest {
                 .build();
 
         // when
-        PostResponseDto response = postService.updatePost(post.getId(), request, null);
+        PostResponseDto response = postService.updatePost(post.getId(), request, null, 1L);
 
         // then
         assertThat(response.getTitle()).isEqualTo("수정된 제목");
@@ -197,7 +246,7 @@ class PostServiceTest {
                 .build();
 
         // when & then - 예외 발생하지 않아야 함
-        assertThatCode(() -> postService.updatePost(savedPost.getId(), request, null))
+        assertThatCode(() -> postService.updatePost(savedPost.getId(), request, null, 1L))
                 .doesNotThrowAnyException();
     }
 

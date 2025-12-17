@@ -44,6 +44,10 @@ public enum BoardErrorCode {
     BOARD_ACCESS_DENIED("ACCESS_001", "해당 게시판에 접근할 권한이 없습니다", HttpStatus.FORBIDDEN),
     PROFESSOR_ONLY_BOARD("ACCESS_002", "교수만 접근 가능한 게시판입니다", HttpStatus.FORBIDDEN),
     STUDENT_ONLY_BOARD("ACCESS_003", "학생만 접근 가능한 게시판입니다", HttpStatus.FORBIDDEN),
+    
+    // Assignment 관련 (ASSIGNMENT_0XX)
+    ALREADY_SUBMITTED("ASSIGNMENT_001", "이미 제출한 과제입니다", HttpStatus.CONFLICT),
+    SUBMISSION_NOT_FOUND("ASSIGNMENT_002", "제출 내역을 찾을 수 없습니다", HttpStatus.NOT_FOUND),
     ;
     
     private final String code;

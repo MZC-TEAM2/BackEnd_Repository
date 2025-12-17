@@ -89,10 +89,10 @@ class CommentServiceTest {
                 .postType(PostType.NOTICE)
                 .title("테스트 게시글")
                 .content("댓글 테스트를 위한 게시글입니다.")
-                .authorId(testUser.getId())
+                
                 .isAnonymous(false)
                 .build();
-        PostResponseDto postResponse = postService.createPost("NOTICE", postRequest);
+        PostResponseDto postResponse = postService.createPost("NOTICE", postRequest, testUser.getId());
         testPost = postRepository.findById(postResponse.getId()).orElseThrow();
     }
 
@@ -103,12 +103,12 @@ class CommentServiceTest {
         // given
         CommentCreateRequestDto request = CommentCreateRequestDto.builder()
                 .postId(testPost.getId())
-                .authorId(testUser.getId())
+                
                 .content("테스트 댓글입니다.")
                 .build();
 
         // when
-        CommentResponseDto response = commentService.createComment(request);
+        CommentResponseDto response = commentService.createComment(request, testUser.getId());
 
         // then
         assertThat(response).isNotNull();
@@ -149,13 +149,13 @@ class CommentServiceTest {
 
         CommentCreateRequestDto request = CommentCreateRequestDto.builder()
                 .postId(testPost.getId())
-                .authorId(testUser.getId())
+                
                 .content("첨부파일이 있는 댓글입니다.")
                 .attachmentIds(attachmentIds)
                 .build();
 
         // when
-        CommentResponseDto response = commentService.createComment(request);
+        CommentResponseDto response = commentService.createComment(request, testUser.getId());
 
         // then
         assertThat(response).isNotNull();
@@ -174,17 +174,17 @@ class CommentServiceTest {
         // given
         CommentCreateRequestDto createRequest = CommentCreateRequestDto.builder()
                 .postId(testPost.getId())
-                .authorId(testUser.getId())
+                
                 .content("원본 댓글 내용")
                 .build();
-        CommentResponseDto createdComment = commentService.createComment(createRequest);
+        CommentResponseDto createdComment = commentService.createComment(createRequest, testUser.getId());
 
         CommentUpdateRequestDto updateRequest = CommentUpdateRequestDto.builder()
                 .content("수정된 댓글 내용")
                 .build();
 
         // when
-        CommentResponseDto response = commentService.updateComment(createdComment.getId(), updateRequest);
+        CommentResponseDto response = commentService.updateComment(createdComment.getId(), updateRequest, testUser.getId());
 
         // then
         assertThat(response).isNotNull();
@@ -201,10 +201,10 @@ class CommentServiceTest {
         // given - 첨부파일 없이 댓글 생성
         CommentCreateRequestDto createRequest = CommentCreateRequestDto.builder()
                 .postId(testPost.getId())
-                .authorId(testUser.getId())
+                
                 .content("첨부파일 없는 댓글")
                 .build();
-        CommentResponseDto createdComment = commentService.createComment(createRequest);
+        CommentResponseDto createdComment = commentService.createComment(createRequest, testUser.getId());
 
         // 새 첨부파일 생성
         Attachment newAttachment = Attachment.builder()
@@ -225,7 +225,7 @@ class CommentServiceTest {
                 .build();
 
         // when
-        CommentResponseDto response = commentService.updateComment(createdComment.getId(), updateRequest);
+        CommentResponseDto response = commentService.updateComment(createdComment.getId(), updateRequest, testUser.getId());
 
         // then
         assertThat(response).isNotNull();
@@ -256,11 +256,11 @@ class CommentServiceTest {
 
         CommentCreateRequestDto createRequest = CommentCreateRequestDto.builder()
                 .postId(testPost.getId())
-                .authorId(testUser.getId())
+                
                 .content("기존 첨부파일이 있는 댓글")
                 .attachmentIds(oldAttachmentIds)
                 .build();
-        CommentResponseDto createdComment = commentService.createComment(createRequest);
+        CommentResponseDto createdComment = commentService.createComment(createRequest, testUser.getId());
 
         // 새 첨부파일 생성
         Attachment newAttachment = Attachment.builder()
@@ -285,7 +285,7 @@ class CommentServiceTest {
                 .build();
 
         // when
-        CommentResponseDto response = commentService.updateComment(createdComment.getId(), updateRequest);
+        CommentResponseDto response = commentService.updateComment(createdComment.getId(), updateRequest, testUser.getId());
 
         // then
         assertThat(response).isNotNull();
@@ -308,10 +308,10 @@ class CommentServiceTest {
         // given
         CommentCreateRequestDto createRequest = CommentCreateRequestDto.builder()
                 .postId(testPost.getId())
-                .authorId(testUser.getId())
+                
                 .content("삭제될 댓글")
                 .build();
-        CommentResponseDto createdComment = commentService.createComment(createRequest);
+        CommentResponseDto createdComment = commentService.createComment(createRequest, testUser.getId());
 
         // when
         commentService.deleteComment(createdComment.getId());
@@ -320,7 +320,7 @@ class CommentServiceTest {
         // 삭제된 댓글은 조회할 수 없어야 함
         assertThatThrownBy(() -> {
             commentService.updateComment(createdComment.getId(), 
-                    CommentUpdateRequestDto.builder().content("수정 시도").build());
+                    CommentUpdateRequestDto.builder().content("수정 시도").build(), testUser.getId());
         }).isInstanceOf(Exception.class);
 
         log.info("댓글 삭제 완료: {}", createdComment.getId());
@@ -333,21 +333,21 @@ class CommentServiceTest {
         // given - 부모 댓글 생성
         CommentCreateRequestDto parentRequest = CommentCreateRequestDto.builder()
                 .postId(testPost.getId())
-                .authorId(testUser.getId())
+                
                 .content("부모 댓글")
                 .build();
-        CommentResponseDto parentComment = commentService.createComment(parentRequest);
+        CommentResponseDto parentComment = commentService.createComment(parentRequest, testUser.getId());
 
         // 대댓글 생성
         CommentCreateRequestDto replyRequest = CommentCreateRequestDto.builder()
                 .postId(testPost.getId())
-                .authorId(testUser.getId())
+                
                 .content("대댓글입니다.")
                 .parentCommentId(parentComment.getId())
                 .build();
 
         // when
-        CommentResponseDto response = commentService.createComment(replyRequest);
+        CommentResponseDto response = commentService.createComment(replyRequest, testUser.getId());
 
         // then
         assertThat(response).isNotNull();
@@ -366,10 +366,10 @@ class CommentServiceTest {
         for (int i = 1; i <= 3; i++) {
             CommentCreateRequestDto request = CommentCreateRequestDto.builder()
                     .postId(testPost.getId())
-                    .authorId(testUser.getId())
+                    
                     .content("댓글 " + i)
                     .build();
-            commentService.createComment(request);
+            commentService.createComment(request, testUser.getId());
         }
 
         // when

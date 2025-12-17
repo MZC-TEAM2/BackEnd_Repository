@@ -4,15 +4,29 @@ import com.mzc.backend.lms.domains.board.entity.BoardCategory;
 import com.mzc.backend.lms.domains.board.entity.Post;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface PostRepository extends JpaRepository<Post, Long> {
+    
+    /**
+     * ID로 게시글 조회 (모든 연관관계 즉시 로딩)
+     * 생성 직후 응답을 위해 사용 - 한 번의 쿼리로 모든 데이터 로드
+     * 
+     * 참고: comments는 제외 (MultipleBagFetchException 방지)
+     * - 게시글 생성 직후에는 댓글이 없음
+     * - 필요시 지연 로딩으로 조회됨
+     */
+    @EntityGraph(attributePaths = {"attachments", "postHashtags", "postHashtags.hashtag"})
+    Optional<Post> findWithAllById(Long id);
+    
     @Query("SELECT p FROM Post p WHERE p.category = :category AND p.isDeleted = false")
     List<Post> findByCategory(@Param("category") BoardCategory category);
 

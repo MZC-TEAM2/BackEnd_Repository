@@ -20,9 +20,6 @@ public class CommentCreateRequestDto {
 
     @NotNull(message = "게시글 ID는 필수입니다")
     private Long postId;
-    
-    @NotNull(message = "작성자 ID는 필수입니다")
-    private Long authorId;
 
     private Long parentCommentId; // null이면 일반 댓글, 값이 있으면 대댓글
 

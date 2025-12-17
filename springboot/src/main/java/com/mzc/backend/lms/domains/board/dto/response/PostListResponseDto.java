@@ -28,8 +28,17 @@ public class PostListResponseDto {
     private int viewCount;
     private int likeCount;
     private int commentCount;
+    private Long createdBy;
+    private String createdByName;  // 작성자 이름
     private LocalDateTime createdAt;
     private List<HashtagDto> hashtags;
+
+    /**
+     * 작성자 이름 설정 (UserInfoCacheService를 통해 조회 후 설정)
+     */
+    public void setCreatedByName(String createdByName) {
+        this.createdByName = createdByName;
+    }
 
     public static PostListResponseDto from(Post post) {
         return PostListResponseDto.builder()
@@ -42,6 +51,8 @@ public class PostListResponseDto {
                 .viewCount(post.getViewCount())
                 .likeCount(post.getLikeCount())
                 .commentCount(post.getComments().size())
+                .createdBy(post.getCreatedBy())
+                .createdByName(null)  // PostService에서 enrichWithUserInfo()로 설정됨
                 .createdAt(post.getCreatedAt())
                 .hashtags(post.getPostHashtags().stream()
                         .map(postHashtag -> HashtagDto.from(postHashtag.getHashtag()))

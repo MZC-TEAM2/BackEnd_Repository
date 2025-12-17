@@ -16,6 +16,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.http.MediaType;
@@ -38,11 +39,14 @@ public class PostController {
     @PostMapping("/{boardType}/posts")
     public ResponseEntity<PostResponseDto> createPost(
             @PathVariable String boardType,
-            @Valid @RequestBody PostCreateRequestDto request
+            @Valid @RequestBody PostCreateRequestDto request,
+            Authentication authentication
     ) {
-        log.info("게시글 생성 API 호출: boardType={}, title={}, attachmentIds={}",
-                boardType, request.getTitle(), request.getAttachmentIds());
-        PostResponseDto response = postService.createPost(boardType, request);
+        log.info("Authentication Principal: {}, Name: {}", authentication.getPrincipal(), authentication.getName());
+        Long authorId = (Long) authentication.getPrincipal();
+        log.info("게시글 생성 API 호출: boardType={}, title={}, authorId={}",
+                boardType, request.getTitle(), authorId);
+        PostResponseDto response = postService.createPost(boardType, request, authorId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -74,10 +78,12 @@ public class PostController {
     public ResponseEntity<PostResponseDto> updatePost(
             @PathVariable Long id,
             @Valid @RequestPart("request") PostUpdateRequestDto request,
-            @RequestPart(value = "files", required = false) List<MultipartFile> files) {
-        log.info("게시글 수정 API 호출 (Multipart): postId={}, title={}, fileCount={}, deleteAttachmentIds={}", 
-                id, request.getTitle(), files != null ? files.size() : 0, request.getDeleteAttachmentIds());
-        PostResponseDto response = postService.updatePost(id, request, files);
+            @RequestPart(value = "files", required = false) List<MultipartFile> files,
+            Authentication authentication) {
+        Long updatedBy = (Long) authentication.getPrincipal();
+        log.info("게시글 수정 API 호출 (Multipart): postId={}, title={}, updatedBy={}", 
+                id, request.getTitle(), updatedBy);
+        PostResponseDto response = postService.updatePost(id, request, files, updatedBy);
         return ResponseEntity.ok(response);
     }
 
@@ -85,10 +91,12 @@ public class PostController {
     @PutMapping(value = "/posts/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<PostResponseDto> updatePostJson(
             @PathVariable Long id,
-            @Valid @RequestBody PostUpdateRequestDto request) {
-        log.info("게시글 수정 API 호출 (JSON): postId={}, title={}, attachmentIds={}, deleteAttachmentIds={}", 
-                id, request.getTitle(), request.getAttachmentIds(), request.getDeleteAttachmentIds());
-        PostResponseDto response = postService.updatePost(id, request, null);
+            @Valid @RequestBody PostUpdateRequestDto request,
+            Authentication authentication) {
+        Long updatedBy = (Long) authentication.getPrincipal();
+        log.info("게시글 수정 API 호출 (JSON): postId={}, title={}, updatedBy={}", 
+                id, request.getTitle(), updatedBy);
+        PostResponseDto response = postService.updatePost(id, request, null, updatedBy);
         return ResponseEntity.ok(response);
     }
 
