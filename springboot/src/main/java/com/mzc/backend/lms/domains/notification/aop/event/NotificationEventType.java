@@ -85,6 +85,16 @@ public enum NotificationEventType {
      */
     DISCUSSION_COMMENT_CREATED("DISCUSSION_COMMENT_CREATED", "게시판", "토론에 새 댓글이 등록되었습니다."),
 
+    /**
+     * 게시글에 댓글 등록
+     */
+    COMMENT_CREATED("COMMENT_CREATED", "게시판", "내 게시글에 새 댓글이 등록되었습니다."),
+
+    /**
+     * 댓글에 대댓글 등록
+     */
+    REPLY_CREATED("REPLY_CREATED", "게시판", "내 댓글에 답글이 등록되었습니다."),
+
     // ========== 성적 관련 ==========
     /**
      * 성적 등록/업데이트
