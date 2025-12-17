@@ -220,7 +220,6 @@ CREATE TABLE IF NOT EXISTS `week_contents` (
   `title` varchar(200) NOT NULL COMMENT '콘텐츠 제목',
   `content_url` varchar(500) NOT NULL COMMENT '콘텐츠 URL',
   `duration` varchar(10) DEFAULT NULL COMMENT '동영상 길이 표시 (예: 45:23)',
-  `duration` varchar(10) DEFAULT NULL COMMENT '동영상 길이 표시 (예: 45:23)',
   `display_order` int NOT NULL COMMENT '표시 순서',
   `created_at` timestamp NULL DEFAULT (now()) COMMENT '생성 일시',
   PRIMARY KEY (`id`)
