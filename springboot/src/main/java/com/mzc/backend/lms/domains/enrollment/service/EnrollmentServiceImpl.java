@@ -499,10 +499,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
      */
     private boolean isEnrollmentPeriodActive() {
         LocalDateTime now = LocalDateTime.now();
-        List<EnrollmentPeriod> periods = enrollmentPeriodRepository.findAll();
-        return periods.stream()
-                .anyMatch(period -> now.isAfter(period.getStartDatetime()) 
-                        && now.isBefore(period.getEndDatetime()));
+        return enrollmentPeriodRepository.existsActiveEnrollmentPeriod(now);
     }
 
     @Override

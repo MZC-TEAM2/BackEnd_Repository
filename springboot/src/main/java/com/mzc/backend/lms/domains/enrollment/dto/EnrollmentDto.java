@@ -12,5 +12,4 @@ public class EnrollmentDto {
     private Integer current;
     private Integer max;
     private Boolean isFull;
-    private Integer availableSeats;
 }

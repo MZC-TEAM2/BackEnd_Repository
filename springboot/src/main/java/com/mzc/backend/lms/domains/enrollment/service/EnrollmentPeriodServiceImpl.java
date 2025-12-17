@@ -3,6 +3,7 @@ package com.mzc.backend.lms.domains.enrollment.service;
 import com.mzc.backend.lms.domains.academy.entity.AcademicTerm;
 import com.mzc.backend.lms.domains.academy.entity.EnrollmentPeriod;
 import com.mzc.backend.lms.domains.academy.repository.EnrollmentPeriodRepository;
+import com.mzc.backend.lms.domains.academy.repository.PeriodTypeRepository;
 import com.mzc.backend.lms.domains.enrollment.dto.EnrollmentPeriodResponseDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,9 +11,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Optional;
 
 /**
  * 수강신청 기간 서비스 구현체
@@ -24,34 +24,45 @@ import java.util.List;
 public class EnrollmentPeriodServiceImpl implements EnrollmentPeriodService {
 
     private final EnrollmentPeriodRepository enrollmentPeriodRepository;
+    private final PeriodTypeRepository periodTypeRepository;
 
     @Override
-    public EnrollmentPeriodResponseDto getCurrentEnrollmentPeriod() {
+    public EnrollmentPeriodResponseDto getCurrentPeriod(String typeCode) {
         LocalDateTime now = LocalDateTime.now();
+        
+        Optional<EnrollmentPeriod> currentPeriodOpt;
+        
+        // typeCode가 null이거나 빈 문자열이면 현재 활성화된 기간 중 하나를 반환
+        if (typeCode == null || typeCode.trim().isEmpty()) {
+            currentPeriodOpt = enrollmentPeriodRepository.findFirstActivePeriod(now);
+        } else {
+            String periodTypeCode = typeCode.toUpperCase();
+            
+            // 타입 코드 유효성 검증
+            if (!periodTypeRepository.existsByTypeCode(periodTypeCode)) {
+                throw new IllegalArgumentException("유효하지 않은 기간 타입 코드입니다: " + periodTypeCode);
+            }
 
-        // 모든 수강신청 기간 조회
-        List<EnrollmentPeriod> periods = enrollmentPeriodRepository.findAll();
-
-        // 현재 활성화된 수강신청 기간 찾기
-        EnrollmentPeriod currentPeriod = periods.stream()
-                .filter(period -> {
-                    LocalDateTime startDatetime = period.getStartDatetime();
-                    LocalDateTime endDatetime = period.getEndDatetime();
-                    return !now.isBefore(startDatetime) && !now.isAfter(endDatetime);
-                })
-                .findFirst()
-                .orElse(null);
+            // 현재 활성화된 기간 찾기
+            currentPeriodOpt = enrollmentPeriodRepository
+                    .findFirstActivePeriodByTypeCode(periodTypeCode, now);
+        }
 
         // 활성화된 기간이 없으면 null 반환
-        if (currentPeriod == null) {
+        if (currentPeriodOpt.isEmpty()) {
             return EnrollmentPeriodResponseDto.builder()
                     .isActive(false)
                     .currentPeriod(null)
                     .build();
         }
 
+        EnrollmentPeriod currentPeriod = currentPeriodOpt.get();
+
         // 학기 정보 가져오기
         AcademicTerm term = currentPeriod.getAcademicTerm();
+        
+        // PeriodType 정보 가져오기 (이미 fetch join으로 로딩됨)
+        var periodType = currentPeriod.getPeriodType();
         
         // 날짜를 LocalDateTime으로 변환 (시작일은 00:00:00, 종료일은 23:59:59)
         LocalDateTime startDateTime = currentPeriod.getStartDatetime();
@@ -72,11 +83,18 @@ public class EnrollmentPeriodServiceImpl implements EnrollmentPeriodService {
                 .currentPeriod(EnrollmentPeriodResponseDto.CurrentPeriodDto.builder()
                         .id(currentPeriod.getId())
                         .term(EnrollmentPeriodResponseDto.TermDto.builder()
+                                .termId(term.getId())
                                 .year(term.getYear())
                                 .termType(term.getTermType())
                                 .termName(termName)
                                 .build())
                         .periodName(currentPeriod.getPeriodName())
+                        .periodType(periodType != null ? EnrollmentPeriodResponseDto.PeriodTypeDto.builder()
+                                .id(periodType.getId())
+                                .typeCode(periodType.getTypeCode())
+                                .typeName(periodType.getTypeName())
+                                .description(periodType.getDescription())
+                                .build() : null)
                         .startDatetime(startDateTime)
                         .endDatetime(endDateTime)
                         .targetYear(currentPeriod.getTargetYear() == 0 ? null : currentPeriod.getTargetYear())
@@ -101,5 +119,11 @@ public class EnrollmentPeriodServiceImpl implements EnrollmentPeriodService {
             case "WINTER" -> "겨울학기";
             default -> termType;
         };
+    }
+
+    @Override
+    @Deprecated
+    public EnrollmentPeriodResponseDto getCurrentEnrollmentPeriod() {
+        return getCurrentPeriod("ENROLLMENT");
     }
 }

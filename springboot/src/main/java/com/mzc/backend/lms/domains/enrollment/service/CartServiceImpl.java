@@ -1,6 +1,5 @@
 package com.mzc.backend.lms.domains.enrollment.service;
 
-import com.mzc.backend.lms.domains.academy.entity.EnrollmentPeriod;
 import com.mzc.backend.lms.domains.academy.repository.EnrollmentPeriodRepository;
 import com.mzc.backend.lms.domains.course.constants.CourseConstants;
 import com.mzc.backend.lms.domains.course.course.entity.Course;
@@ -349,14 +348,7 @@ public class CartServiceImpl implements CartService {
      */
     private boolean isEnrollmentPeriodActive() {
         LocalDateTime now = LocalDateTime.now();
-        List<EnrollmentPeriod> periods = enrollmentPeriodRepository.findAll();
-        
-        return periods.stream()
-                .anyMatch(period -> {
-                    LocalDateTime start = period.getStartDatetime();
-                    LocalDateTime end = period.getEndDatetime();
-                    return !now.isBefore(start) && !now.isAfter(end);
-                });
+        return enrollmentPeriodRepository.existsActiveEnrollmentPeriod(now);
     }
 
     /**

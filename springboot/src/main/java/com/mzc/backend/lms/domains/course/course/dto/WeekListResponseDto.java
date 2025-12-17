@@ -7,14 +7,15 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * 주차별 강의 계획 DTO
+ * 주차 목록 응답 DTO (교수용)
  */
 @Getter
 @Builder
-public class WeekDto {
+public class WeekListResponseDto {
     private Long id;
     private Integer weekNumber;
     private String weekTitle;
-    private List<WeekContentDto> contents;  // 주차 등록 응답에 포함
+    private List<WeekContentDto> contents;
     private LocalDateTime createdAt;
 }
+

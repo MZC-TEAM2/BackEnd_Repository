@@ -20,6 +20,7 @@ public class EnrollmentPeriodResponseDto {
         private Long id;
         private TermDto term;
         private String periodName;
+        private PeriodTypeDto periodType;
         private LocalDateTime startDatetime;
         private LocalDateTime endDatetime;
         private Integer targetYear;
@@ -28,7 +29,17 @@ public class EnrollmentPeriodResponseDto {
 
     @Getter
     @Builder
+    public static class PeriodTypeDto {
+        private Integer id;
+        private String typeCode;
+        private String typeName;
+        private String description;
+    }
+
+    @Getter
+    @Builder
     public static class TermDto {
+        private Long termId;  // 학기 ID 추가
         private Integer year;
         private String termType;
         private String termName;

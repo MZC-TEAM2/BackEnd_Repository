@@ -89,4 +89,39 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT c FROM Course c WHERE c.id = :id")
     Optional<Course> findByIdWithLock(@Param("id") Long id);
+
+    /**
+     * 교수 ID와 학기 ID로 강의 목록 조회
+     */
+    List<Course> findByProfessorProfessorIdAndAcademicTermId(Long professorId, Long academicTermId);
+
+    /**
+     * Subject, AcademicTerm, SectionNumber로 강의 존재 여부 확인 (중복 체크)
+     */
+    @Query("SELECT COUNT(c) > 0 FROM Course c " +
+           "WHERE c.subject.id = :subjectId " +
+           "AND c.academicTerm.id = :academicTermId " +
+           "AND c.sectionNumber = :sectionNumber")
+    boolean existsBySubjectIdAndAcademicTermIdAndSectionNumber(
+            @Param("subjectId") Long subjectId,
+            @Param("academicTermId") Long academicTermId,
+            @Param("sectionNumber") String sectionNumber);
+
+    /**
+     * 교수가 특정 시간에 다른 강의를 개설했는지 확인 (시간표 충돌 체크)
+     */
+    @Query("SELECT COUNT(c) > 0 FROM Course c " +
+           "JOIN c.schedules s " +
+           "WHERE c.professor.professorId = :professorId " +
+           "AND c.academicTerm.id = :academicTermId " +
+           "AND s.dayOfWeek = :dayOfWeek " +
+           "AND ((s.startTime <= :startTime AND s.endTime > :startTime) " +
+           "OR (s.startTime < :endTime AND s.endTime >= :endTime) " +
+           "OR (s.startTime >= :startTime AND s.endTime <= :endTime))")
+    boolean existsByProfessorAndTimeConflict(
+            @Param("professorId") Long professorId,
+            @Param("academicTermId") Long academicTermId,
+            @Param("dayOfWeek") java.time.DayOfWeek dayOfWeek,
+            @Param("startTime") java.time.LocalTime startTime,
+            @Param("endTime") java.time.LocalTime endTime);
 }

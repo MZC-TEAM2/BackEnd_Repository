@@ -14,7 +14,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 
@@ -62,6 +61,9 @@ public class Course {
 
     @Column(name = "current_students", nullable = false)
     private Integer currentStudents;
+    
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;  // 강의 설명 (분반별)
     
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

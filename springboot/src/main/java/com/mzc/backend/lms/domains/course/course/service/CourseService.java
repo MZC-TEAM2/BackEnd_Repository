@@ -166,7 +166,7 @@ public class CourseService {
         return courses;
     }
 
-    private CourseDto convertToCourseDto(Course course) {
+    public CourseDto convertToCourseDto(Course course) {
         // 교수 이름 조회
         String professorName = userViewService.getUserName(
                 course.getProfessor().getProfessorId().toString()

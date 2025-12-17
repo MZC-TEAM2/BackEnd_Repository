@@ -35,15 +35,22 @@ public class EnrollmentController {
     private final EnrollmentService enrollmentService;
 
     /**
-     * 현재 수강신청 기간 조회
+     * 현재 활성화된 기간 조회
+     * @param type 기간 타입 코드 (ENROLLMENT, COURSE_REGISTRATION, ADJUSTMENT, CANCELLATION)
+     *             기본값: ENROLLMENT
      */
     @GetMapping("/periods/current")
-    public ResponseEntity<?> getCurrentEnrollmentPeriod() {
+    public ResponseEntity<?> getCurrentPeriod(
+            @RequestParam(required = false) String type) {
         try {
-            EnrollmentPeriodResponseDto response = enrollmentPeriodService.getCurrentEnrollmentPeriod();
+            EnrollmentPeriodResponseDto response = enrollmentPeriodService.getCurrentPeriod(type);
             return ResponseEntity.ok(createSuccessResponse(response));
+        } catch (IllegalArgumentException e) {
+            log.warn("기간 조회 실패: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(createErrorResponse(e.getMessage()));
         } catch (Exception e) {
-            log.error("수강신청 기간 조회 실패: {}", e.getMessage(), e);
+            log.error("기간 조회 실패: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(createErrorResponse(e.getMessage()));
         }

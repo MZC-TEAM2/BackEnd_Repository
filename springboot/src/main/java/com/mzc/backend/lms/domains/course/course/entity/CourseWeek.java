@@ -49,4 +49,16 @@ public class CourseWeek {
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    /**
+     * 주차 정보 수정
+     */
+    public void update(Integer weekNumber, String weekTitle) {
+        if (weekNumber != null) {
+            this.weekNumber = weekNumber;
+        }
+        if (weekTitle != null) {
+            this.weekTitle = weekTitle;
+        }
+    }
 }
