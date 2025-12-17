@@ -9,6 +9,7 @@ import com.mzc.backend.lms.domains.board.enums.PostType;
 import com.mzc.backend.lms.domains.board.repository.BoardCategoryRepository;
 import com.mzc.backend.lms.domains.board.repository.HashtagRepository;
 import com.mzc.backend.lms.domains.board.repository.PostRepository;
+import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -45,6 +46,9 @@ class HashtagServiceTest {
     @Autowired
     private BoardCategoryRepository boardCategoryRepository;
 
+    @Autowired
+    private EntityManager entityManager;
+
     private HashtagService hashtagService;
 
     private Long userId;
@@ -52,7 +56,7 @@ class HashtagServiceTest {
 
     @BeforeEach
     void setUp() {
-        hashtagService = new HashtagService(hashtagRepository);
+        hashtagService = new HashtagService(hashtagRepository, entityManager);
         userId = 20241001L;
 
         // 테스트용 게시글 생성

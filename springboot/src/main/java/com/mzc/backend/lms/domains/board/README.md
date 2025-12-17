@@ -74,16 +74,23 @@ Table posts {
   content text [not null, note: "내용"]
   post_type varchar(30) [not null, note: "게시글 유형 (NOTICE/GENERAL/QUESTION/DISCUSSION/PROFESSOR/STUDENT/DEPARTMENT/CONTEST/CAREER/ASSIGNMENT/EXAM/QUIZ/STUDY_RECRUITMENT)"]
   is_anonymous boolean [default: false, note: "익명 게시글 여부"]
+  view_count int [default: 0, note: "조회수"]
+  like_count int [default: 0, note: "좋아요 수"]
+  is_deleted boolean [default: false, note: "삭제 여부 (성능 최적화용)"]
+  created_by bigint [not null, ref: > users.id, note: "생성자 ID"]
+  updated_by bigint [ref: > users.id, note: "수정자 ID"]
   created_at timestamp [not null, default: `now()`, note: "생성일시"]
   updated_at timestamp [note: "수정일시"]
   deleted_at timestamp [note: "삭제일시 (Soft Delete)"]
 
   indexes {
-    (category_id, created_at) [name: 'idx_category_created']
-    (course_id, created_at) [name: 'idx_course_created']
-    (department_id, created_at) [name: 'idx_department_created']
+    (category_id, is_deleted, created_at) [name: 'idx_category_active_created']
+    (course_id, is_deleted, created_at) [name: 'idx_course_active_created']
+    (department_id, is_deleted, created_at) [name: 'idx_department_active_created']
     (author_id, created_at) [name: 'idx_author_created']
     post_type
+    is_deleted
+    created_by
   }
 }
 
@@ -117,15 +124,21 @@ Table comments {
   content text [not null, note: "댓글 내용"]
   depth int [default: 0, note: "댓글 깊이 (0: 댓글, 1: 대댓글)"]
   is_anonymous boolean [default: false, note: "익명 댓글 여부"]
+  is_deleted boolean [default: false, note: "삭제 여부 (성능 최적화용)"]
+  is_deleted_by_admin boolean [default: false, note: "관리자에 의한 삭제 여부"]
+  created_by bigint [not null, ref: > users.id, note: "생성자 ID"]
+  updated_by bigint [ref: > users.id, note: "수정자 ID"]
   created_at timestamp [not null, default: `now()`, note: "생성일시"]
   updated_at timestamp [note: "수정일시"]
   deleted_at timestamp [note: "삭제일시 (Soft Delete)"]
 
   indexes {
-    (post_id, created_at) [name: 'idx_post_created']
-    (parent_comment_id, created_at) [name: 'idx_parent_created']
+    (post_id, is_deleted, created_at) [name: 'idx_post_active_created']
+    (parent_comment_id, is_deleted, created_at) [name: 'idx_parent_active_created']
     (author_id, created_at) [name: 'idx_author_created']
     depth
+    is_deleted
+    created_by
   }
 }
 
@@ -144,13 +157,15 @@ Table attachments {
   file_size bigint [not null, note: "파일 크기 (bytes)"]
   mime_type varchar(100) [not null, note: "MIME 타입"]
   uploader_id bigint [not null, ref: > users.id, note: "업로더 ID"]
+  download_count int [default: 0, note: "다운로드 횟수"]
+  is_deleted boolean [default: false, note: "삭제 여부"]
   created_at timestamp [not null, default: `now()`, note: "업로드일시"]
   updated_at timestamp [note: "수정일시"]
   deleted_at timestamp [note: "삭제일시 (Soft Delete)"]
 
   indexes {
-    post_id
-    comment_id
+    (post_id, deleted_at) [name: 'idx_post_active_attachments']
+    (comment_id, deleted_at) [name: 'idx_comment_active_attachments']
     uploader_id
     attachment_type
     mime_type
@@ -201,12 +216,15 @@ Table hashtags {
   created_by bigint [ref: > users.id, note: "태그 생성자 ID"]
   created_at timestamp [not null, default: `now()`, note: "생성일시"]
   updated_at timestamp [note: "수정일시"]
+  updated_by bigint [ref: > users.id, note: "수정자 ID"]
   deleted_at timestamp [note: "삭제일시 (Soft Delete)"]
+  is_deleted boolean [default: false, note: "삭제 여부"]
 
   indexes {
     name
     tag_category
     is_active
+    updated_by
   }
 }
 
@@ -216,11 +234,16 @@ Table post_hashtags {
   hashtag_id bigint [not null, ref: > hashtags.id, note: "해시태그 ID"]
   created_by bigint [not null, ref: > users.id, note: "태그 추가자 ID"]
   created_at timestamp [not null, default: `now()`, note: "연결 생성일시"]
+  updated_at timestamp [note: "수정일시"]
+  updated_by bigint [ref: > users.id, note: "수정자 ID"]
+  deleted_at timestamp [note: "삭제일시 (Soft Delete)"]
+  is_deleted boolean [default: false, note: "삭제 여부"]
 
   indexes {
     (post_id, hashtag_id) [unique, name: 'idx_post_hashtag']
     hashtag_id
     created_by
+    updated_by
   }
 }
 

@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,9 +24,12 @@ public class CommentController {
 
     // 댓글 생성
     @PostMapping("/comments")
-    public ResponseEntity<CommentResponseDto> createComment(@Valid @RequestBody CommentCreateRequestDto request) {
-        log.info("댓글 생성 API 호출: postId={}, parentCommentId={}", request.getPostId(), request.getParentCommentId());
-        CommentResponseDto response = commentService.createComment(request);
+    public ResponseEntity<CommentResponseDto> createComment(
+            @Valid @RequestBody CommentCreateRequestDto request,
+            Authentication authentication) {
+        Long authorId = (Long) authentication.getPrincipal();
+        log.info("댓글 생성 API 호출: postId={}, authorId={}", request.getPostId(), authorId);
+        CommentResponseDto response = commentService.createComment(request, authorId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -41,9 +45,11 @@ public class CommentController {
     @PutMapping("/comments/{id}")
     public ResponseEntity<CommentResponseDto> updateComment(
             @PathVariable Long id,
-            @Valid @RequestBody CommentUpdateRequestDto request) {
-        log.info("댓글 수정 API 호출: commentId={}", id);
-        CommentResponseDto response = commentService.updateComment(id, request);
+            @Valid @RequestBody CommentUpdateRequestDto request,
+            Authentication authentication) {
+        Long updatedBy = (Long) authentication.getPrincipal();
+        log.info("댓글 수정 API 호출: commentId={}, updatedBy={}", id, updatedBy);
+        CommentResponseDto response = commentService.updateComment(id, request, updatedBy);
         return ResponseEntity.ok(response);
     }
 

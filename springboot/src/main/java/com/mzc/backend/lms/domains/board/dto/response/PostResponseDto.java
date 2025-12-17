@@ -28,11 +28,21 @@ public class PostResponseDto {
     private boolean isAnonymous;
     private int viewCount;
     private int likeCount;
+    private Long createdBy;
+    private String createdByName;  // 작성자 이름
+    private Long updatedBy;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<CommentResponseDto> comments;
     private List<AttachmentResponseDto> attachments;
     private List<HashtagDto> hashtags;
+
+    /**
+     * 작성자 이름 설정 (UserInfoCacheService를 통해 조회 후 설정)
+     */
+    public void setCreatedByName(String createdByName) {
+        this.createdByName = createdByName;
+    }
 
     public static PostResponseDto from(Post post) {
         return PostResponseDto.builder()
@@ -45,6 +55,9 @@ public class PostResponseDto {
                 .isAnonymous(post.isAnonymous())
                 .viewCount(post.getViewCount())
                 .likeCount(post.getLikeCount())
+                .createdBy(post.getCreatedBy())
+                .createdByName(null)
+                .updatedBy(post.getUpdatedBy())
                 .createdAt(post.getCreatedAt())
                 .updatedAt(post.getUpdatedAt())
                 .comments(post.getComments().stream()

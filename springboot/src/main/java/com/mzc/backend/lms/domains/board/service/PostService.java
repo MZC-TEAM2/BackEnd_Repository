@@ -17,9 +17,12 @@ import com.mzc.backend.lms.domains.board.repository.BoardCategoryRepository;
 import com.mzc.backend.lms.domains.board.repository.PostLikeRepository;
 import com.mzc.backend.lms.domains.board.repository.PostRepository;
 import com.mzc.backend.lms.domains.board.repository.UserTypeQueryRepository;
+import com.mzc.backend.lms.domains.user.profile.dto.UserBasicInfoDto;
+import com.mzc.backend.lms.domains.user.profile.service.UserInfoCacheService;
 import com.mzc.backend.lms.domains.user.user.entity.User;
 import com.mzc.backend.lms.domains.user.user.repository.UserRepository;
 import com.mzc.backend.lms.util.file.FileUploadUtils;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -28,7 +31,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.Set;
 
 /**
  * 게시글 서비스
@@ -44,15 +49,17 @@ public class PostService {
     private final PostLikeRepository postLikeRepository;
     private final UserRepository userRepository;
     private final UserTypeQueryRepository userTypeQueryRepository;
+    private final UserInfoCacheService userInfoCacheService;
     private final FileUploadUtils fileStorageService;
     private final AttachmentRepository attachmentRepository;
     private final HashtagService hashtagService;
+    private final EntityManager entityManager;
 
     /**
      * 게시글 생성 (boardType 기반, 2단계 업로드)
      */
     @Transactional
-    public PostResponseDto createPost(String boardTypeStr, PostCreateRequestDto request) {
+    public PostResponseDto createPost(String boardTypeStr, PostCreateRequestDto request, Long authorId) {
         // 1. BoardType 변환
         BoardType boardType;
         try {
@@ -66,7 +73,7 @@ public class PostService {
                 .orElseThrow(() -> new BoardException(BoardErrorCode.BOARD_CATEGORY_NOT_FOUND));
 
         // 2-1. 역할 기반 접근 제어 (RBAC)
-        validateBoardAccess(boardType, request.getAuthorId());
+        validateBoardAccess(boardType, authorId);
 
         // 2-2. 게시글 유형 검증 (BoardType과 PostType 조합 확인)
         if (!boardType.isPostTypeAllowed(request.getPostType())) {
@@ -83,7 +90,7 @@ public class PostService {
                 .content(request.getContent())
                 .postType(request.getPostType())
                 .isAnonymous(request.getIsAnonymous())
-                .authorId(request.getAuthorId())
+                .authorId(authorId)
                 .build();
 
         // 5. 저장
@@ -91,13 +98,12 @@ public class PostService {
         
         // 6. 해시태그 처리
         if (request.getHashtags() != null && !request.getHashtags().isEmpty()) {
-            hashtagService.attachHashtagsToPost(savedPost, request.getHashtags(), request.getAuthorId());
+            hashtagService.attachHashtagsToPost(savedPost, request.getHashtags(), authorId);
             log.info("게시글에 해시태그 연결: postId={}, hashtagCount={}", 
                     savedPost.getId(), request.getHashtags().size());
         }
         
         // 7. 첨부파일 연결 (이미 업로드된 파일들)
-        List<Attachment> savedAttachments = null;
         if (request.getAttachmentIds() != null && !request.getAttachmentIds().isEmpty()) {
             List<Attachment> attachments = attachmentRepository.findAllById(request.getAttachmentIds());
             
@@ -105,7 +111,7 @@ public class PostService {
                 attachment.attachToPost(savedPost);
             }
             
-            savedAttachments = attachmentRepository.saveAll(attachments);
+            attachmentRepository.saveAll(attachments);
             
             log.info("게시글에 첨부파일 연결: postId={}, attachmentCount={}", 
                     savedPost.getId(), attachments.size());
@@ -113,14 +119,13 @@ public class PostService {
         
         log.info("게시글 생성 완료: postId={}", savedPost.getId());
 
-        // 8. 응답 생성 (첨부파일 포함)
+        // 8. 영속성 컨텍스트를 플러시하고 엔티티 새로고침
+        entityManager.flush();   // DB에 반영
+        entityManager.refresh(savedPost);  // 엔티티 다시 로드 (첨부파일, 해시태그 포함)
+
+        // 9. 응답 생성 - 작성자 이름 추가
         PostResponseDto response = PostResponseDto.from(savedPost);
-        
-        // 첨부파일이 있으면 수동으로 추가 (지연 로딩 문제 해결)
-        if (savedAttachments != null && !savedAttachments.isEmpty()) {
-            // PostResponseDto가 attachments 필드를 지원한다면 여기서 설정
-            // 현재는 PostResponseDto.from()이 자동으로 처리할 것으로 예상
-        }
+        enrichWithUserInfo(response);
         
         return response;
     }
@@ -165,7 +170,31 @@ public class PostService {
             }
         }
 
-        return posts.map(PostListResponseDto::from);
+        // 4. DTO 변환 및 사용자 이름 추가
+        Page<PostListResponseDto> result = posts.map(PostListResponseDto::from);
+        
+        // 5. 모든 게시글의 작성자 ID 수집
+        Set<Long> creatorIds = result.getContent().stream()
+                .map(PostListResponseDto::getCreatedBy)
+                .filter(id -> id != null)
+                .collect(Collectors.toSet());
+        
+        // 6. 사용자 정보 일괄 조회
+        if (!creatorIds.isEmpty()) {
+            Map<Long, UserBasicInfoDto> userInfoMap = userInfoCacheService.getUserInfoMap(creatorIds);
+            
+            // 7. 각 게시글에 작성자 이름 설정
+            result.getContent().forEach(dto -> {
+                if (dto.getCreatedBy() != null) {
+                    UserBasicInfoDto userInfo = userInfoMap.get(dto.getCreatedBy());
+                    if (userInfo != null && userInfo.getName() != null) {
+                        dto.setCreatedByName(userInfo.getName());
+                    }
+                }
+            });
+        }
+        
+        return result;
     }
 
     /**
@@ -205,7 +234,9 @@ public class PostService {
         // 조회수 증가
         post.increaseViewCount();
 
-        return PostResponseDto.from(post);
+        PostResponseDto response = PostResponseDto.from(post);
+        enrichWithUserInfo(response);
+        return response;
     }
 
     /**
@@ -226,7 +257,9 @@ public class PostService {
         // 조회수 증가
         post.increaseViewCount();
 
-        return PostResponseDto.from(post);
+        PostResponseDto response = PostResponseDto.from(post);
+        enrichWithUserInfo(response);
+        return response;
     }
 
     /**
@@ -260,7 +293,7 @@ public class PostService {
      * 게시글 수정
      */
     @Transactional
-    public PostResponseDto updatePost(Long postId, PostUpdateRequestDto request, List<MultipartFile> files) {
+    public PostResponseDto updatePost(Long postId, PostUpdateRequestDto request, List<MultipartFile> files, Long updatedBy) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new BoardException(BoardErrorCode.POST_NOT_FOUND));
 
@@ -311,7 +344,9 @@ public class PostService {
         log.info("게시글 해시태그 업데이트: postId={}, hashtagCount={}", 
                 post.getId(), request.getHashtags() != null ? request.getHashtags().size() : 0);
 
-        return PostResponseDto.from(post);
+        PostResponseDto response = PostResponseDto.from(post);
+        enrichWithUserInfo(response);
+        return response;
     }
 
     /**
@@ -387,8 +422,10 @@ public class PostService {
      * 역할 기반 게시판 접근 권한 검증 (RBAC)
      * 
      * 향후 개선 고려사항:
-     * - ADMIN 역할 추가 시 모든 게시판 접근 가능하도록 확장
-     * - JWT 토큰에서 역할 정보 직접 추출 (DB 조회 최소화)
+     * - TODO: ADMIN 역할에 대한 모든 게시판 접근 권한 추가
+     *   (UserRole enum에 ADMIN은 정의되어 있으나 이 메서드에서는 아직 활용되지 않음)
+     * - TODO: JWT 토큰에서 userType 직접 추출하여 DB 조회 최소화
+     *   (JWT claims에 userType이 포함되어 있으나 현재는 캐시/DB 조회 방식 사용 중)
      * 
      * 참고: SecurityConfig에서 이미 URL 기반 접근 제어가 작동하므로,
      *       이 메서드는 게시글 작성 시에만 사용됩니다.
@@ -400,6 +437,7 @@ public class PostService {
         }
         
         String userType = determineUserType(userId);
+        log.info("게시판 접근 권한 검증: boardType={}, userId={}, userType={}", boardType, userId, userType);
         
         // 교수 게시판 접근 제어
         if (boardType == BoardType.PROFESSOR && !"PROFESSOR".equals(userType)) {
@@ -419,14 +457,56 @@ public class PostService {
     /**
      * 사용자 타입 판별 (STUDENT 또는 PROFESSOR)
      * 
-     * UserTypeQueryRepository를 통해 user_type_mappings 테이블을 조회합니다.
-     * board 도메인 내에서 사용자 타입 확인을 처리하여 도메인 간 결합도를 낮춥니다.
+     * UserInfoCacheService를 통해 캐시된 사용자 정보에서 타입을 조회합니다.
+     * Redis 캐시를 활용하여 성능을 최적화합니다.
      */
     private String determineUserType(Long userId) {
-        return userTypeQueryRepository.findUserTypeCodeByUserId(userId)
-                .orElseGet(() -> {
-                    log.warn("사용자 타입 매핑이 없습니다. 기본값(STUDENT) 반환: userId={}", userId);
-                    return "STUDENT";
-                });
+        try {
+            Map<Long, UserBasicInfoDto> userInfoMap = userInfoCacheService.getUserInfoMap(Set.of(userId));
+            UserBasicInfoDto userInfo = userInfoMap.get(userId);
+            
+            if (userInfo != null && userInfo.getUserType() != null) {
+                log.info("사용자 타입 조회 성공 (캐시): userId={}, userType={}", userId, userInfo.getUserType());
+                return userInfo.getUserType();
+            }
+        } catch (Exception e) {
+            log.warn("UserInfoCacheService 조회 실패, UserTypeQueryRepository 사용: userId={}", userId, e);
+        }
+        
+        // Fallback: UserTypeQueryRepository 사용
+        Optional<String> userTypeOpt = userTypeQueryRepository.findUserTypeCodeByUserId(userId);
+        String userType = userTypeOpt.orElseGet(() -> {
+            log.warn("사용자 타입 매핑이 없습니다. 기본값(STUDENT) 반환: userId={}", userId);
+            return "STUDENT";
+        });
+        log.info("사용자 타입 조회 결과 (fallback): userId={}, userType={}", userId, userType);
+        return userType;
+    }
+
+    /**
+     * PostResponseDto에 사용자 정보(이름) 추가
+     */
+    private void enrichWithUserInfo(PostResponseDto response) {
+        if (response.getCreatedBy() != null) {
+            try {
+                log.info("사용자 정보 조회 시작: userId={}", response.getCreatedBy());
+                Map<Long, UserBasicInfoDto> userInfoMap = userInfoCacheService.getUserInfoMap(Set.of(response.getCreatedBy()));
+                UserBasicInfoDto userInfo = userInfoMap.get(response.getCreatedBy());
+                
+                log.info("조회된 사용자 정보: userId={}, userInfo={}", response.getCreatedBy(), userInfo);
+                
+                if (userInfo != null && userInfo.getName() != null) {
+                    response.setCreatedByName(userInfo.getName());
+                    log.info("게시글 작성자 이름 설정 완료: postId={}, createdBy={}, name={}", 
+                            response.getId(), response.getCreatedBy(), userInfo.getName());
+                } else {
+                    log.warn("사용자 정보가 없거나 이름이 null: userId={}, userInfo={}", response.getCreatedBy(), userInfo);
+                }
+            } catch (Exception e) {
+                log.error("사용자 이름 조회 실패: userId={}", response.getCreatedBy(), e);
+            }
+        } else {
+            log.warn("createdBy가 null입니다: postId={}", response.getId());
+        }
     }
 }
