@@ -1,11 +1,11 @@
 -- 더미 관리자 사용자 생성 (게시글 작성자용)
-INSERT INTO users (id, email, password, created_at) VALUES
+INSERT IGNORE INTO users (id, email, password, created_at) VALUES
 (20241001, 'admin@lms.ac.kr', '$2a$10$dummyHashedPassword123456789012345678901234567890', NOW());
 
-INSERT INTO user_type_mappings (user_id, user_type_id, assigned_at) VALUES
+INSERT IGNORE INTO user_type_mappings (user_id, user_type_id, assigned_at) VALUES
 (20241001, 2, NOW());  -- 교수 타입
 
-INSERT INTO user_profiles (user_id, name, created_at) VALUES
+INSERT IGNORE INTO user_profiles (user_id, name, created_at) VALUES
 (20241001, '관리자', NOW());
 
 -- 게시판 카테고리 초기화 데이터
