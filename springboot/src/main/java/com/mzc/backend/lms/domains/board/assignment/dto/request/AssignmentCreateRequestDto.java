@@ -44,6 +44,7 @@ public class AssignmentCreateRequestDto {
     @NotBlank(message = "제출 방법은 필수입니다")
     private String submissionMethod; // UPLOAD, TEXT, LINK
 
+    @Builder.Default
     private Boolean lateSubmissionAllowed = false;
 
     private BigDecimal latePenaltyPercent;

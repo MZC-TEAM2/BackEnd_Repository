@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,11 +26,15 @@ public class CommentController {
     // 댓글 생성
     @PostMapping("/comments")
     public ResponseEntity<CommentResponseDto> createComment(
-            @Valid @RequestBody CommentCreateRequestDto request,
-            Authentication authentication) {
-        Long authorId = (Long) authentication.getPrincipal();
-        log.info("댓글 생성 API 호출: postId={}, authorId={}", request.getPostId(), authorId);
-        CommentResponseDto response = commentService.createComment(request, authorId);
+            @AuthenticationPrincipal Long userId,
+            @Valid @RequestBody CommentCreateRequestDto request) {
+        log.info("댓글 생성 API 호출: userId={}, postId={}, parentCommentId={}",
+                userId, request.getPostId(), request.getParentCommentId());
+
+        // 인증된 사용자 ID를 작성자로 설정
+        request.setAuthorIdFromAuth(userId);
+
+        CommentResponseDto response = commentService.createComment(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -55,9 +60,12 @@ public class CommentController {
 
     // 댓글 삭제
     @DeleteMapping("/comments/{id}")
-    public ResponseEntity<Void> deleteComment(@PathVariable Long id) {
-        log.info("댓글 삭제 API 호출: commentId={}", id);
-        commentService.deleteComment(id);
+    public ResponseEntity<Void> deleteComment(
+            @PathVariable Long id,
+            Authentication authentication) {
+        Long deletedBy = (Long) authentication.getPrincipal();
+        log.info("댓글 삭제 API 호출: commentId={}, deletedBy={}", id, deletedBy);
+        commentService.deleteComment(id, deletedBy);
         return ResponseEntity.noContent().build();
     }
 }

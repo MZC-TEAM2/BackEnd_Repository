@@ -5,6 +5,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Where;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,6 +47,7 @@ public class Comment extends AuditableEntity {
     private boolean isDeletedByAdmin = false;
 
     @OneToMany(mappedBy = "parentComment", cascade = CascadeType.ALL)
+    @Where(clause = "is_deleted = false")
     private List<Comment> childComments = new ArrayList<>();
 
     @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
