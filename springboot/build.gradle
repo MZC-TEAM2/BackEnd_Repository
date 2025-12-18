@@ -62,13 +62,15 @@ dependencies {
 
     // Redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.apache.commons:commons-pool2'  // Lettuce 연결 풀용
 
     // Distributed Lock - ShedLock (for Scheduler)
     implementation 'net.javacrumbs.shedlock:shedlock-spring:6.0.2'
     implementation 'net.javacrumbs.shedlock:shedlock-provider-redis-spring:6.0.2'
 
     // Distributed Lock - Redisson (for Business Logic)
-    implementation 'org.redisson:redisson-spring-boot-starter:3.40.2'
+    // starter 대신 redisson만 사용 (Lettuce 연결 풀과 충돌 방지)
+    implementation 'org.redisson:redisson:3.40.2'
 
     // Image Processing (WebP)
     implementation 'com.sksamuel.scrimage:scrimage-core:4.1.3'
