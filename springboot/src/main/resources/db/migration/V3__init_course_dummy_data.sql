@@ -2,6 +2,32 @@
 INSERT INTO `academic_terms` (`id`, `year`, `term_type`, `start_date`, `end_date`) VALUES
 (1, 2025, '2', '2025-09-01', '2025-12-31');
 
+-- Users
+INSERT INTO `users` (`id`, `email`, `password`, `created_at`, `updated_at`, `deleted_at`) VALUES
+(20241001, 'admin@lms.ac.kr', '$2a$10$dummyHashedPassword123456789012345678901234567890', '2025-12-15 02:37:06.000000', NULL, NULL),
+(20250101001, 'm1vXyelY5laXJeb2SWNtpsik/TigvmbVzcp/qld1P+E=', '$2a$12$gmd6my6CSNM9mmXD9kT3h.yYUuBxpAA7vwRsYj2cUt2XXCKqvl5IO', '2025-12-10 02:19:04.239502', '2025-12-10 02:19:04.239534', NULL),
+(20250101002, '7xZQt8XCv72ArZRLQAyroTeSb4zxg8Wqs8ZfsRpgDO8=', '$2a$12$78jtlU.CMCmx5/aXAB8AHOZVXaBObkf/zbPkNYIC9y8LyMxGIXji2', '2025-12-10 02:21:27.336597', '2025-12-10 02:21:27.336611', NULL),
+(20250101003, 'HhQXq5CFjEeyhPWHZSohXXQzaytQRQjhz+6TqY/Dyc0=', '$2a$12$OkDJm4o50kM58UFlaRkiF.fkuYvgKmS5zW7SCR9hew6fB8KwbiUxe', '2025-12-16 05:41:11.010237', '2025-12-16 05:41:11.010440', NULL);
+
+-- User Profiles
+INSERT INTO `user_profiles` (`user_id`, `name`, `created_at`) VALUES
+(20250101001, 'GTVzcP/WI5I21T4mj/0Nsw==', '2025-12-10 02:19:04.243547'),
+(20250101002, 'GTVzcP/WI5I21T4mj/0Nsw==', '2025-12-10 02:21:27.337970'),
+(20250101003, 'nUr9zKL2KQ0a9mZ4XICgbA==', '2025-12-16 05:41:11.015906');
+
+-- Professors
+INSERT INTO `professors` (`professor_id`, `appointment_date`, `created_at`) VALUES
+(20250101002, '2025-12-09', '2025-12-10 02:21:27.339295'),
+(20250101003, '2025-12-15', '2025-12-16 05:41:11.019161');
+
+-- Professor Departments
+INSERT INTO `professor_departments` (`id`, `professor_id`, `department_id`, `is_primary`, `start_date`, `end_date`) VALUES
+(1, 20250101002, 1, b'1', '2025-12-09', NULL),
+(2, 20250101003, 1, b'1', '2025-12-15', NULL);
+
+-- Students
+INSERT INTO `students` (`student_id`, `admission_year`, `grade`, `created_at`) VALUES
+(20250101001, 2025, 1, '2025-12-10 02:19:04.246698');
 -- Courses
 INSERT INTO `courses` (`id`, `subject_id`, `academic_term_id`, `section_number`, `current_students`, `professor_id`, `max_students`, `created_at`, `description`) VALUES
 (1, 1, 1, '01', 12, 20250101002, 45, '2025-12-10 02:57:25', NULL),
@@ -245,19 +271,6 @@ INSERT INTO `course_weeks` (`id`, `course_id`, `week_number`, `week_title`, `cre
 (17, 45, 1, 'ㅁ', '2025-12-16 08:42:25'),
 (18, 46, 1, 'a', '2025-12-16 14:56:02');
 
--- Users
-INSERT INTO `users` (`id`, `email`, `password`, `created_at`, `updated_at`, `deleted_at`) VALUES
-(20241001, 'admin@lms.ac.kr', '$2a$10$dummyHashedPassword123456789012345678901234567890', '2025-12-15 02:37:06.000000', NULL, NULL),
-(20250101001, 'm1vXyelY5laXJeb2SWNtpsik/TigvmbVzcp/qld1P+E=', '$2a$12$gmd6my6CSNM9mmXD9kT3h.yYUuBxpAA7vwRsYj2cUt2XXCKqvl5IO', '2025-12-10 02:19:04.239502', '2025-12-10 02:19:04.239534', NULL),
-(20250101002, '7xZQt8XCv72ArZRLQAyroTeSb4zxg8Wqs8ZfsRpgDO8=', '$2a$12$78jtlU.CMCmx5/aXAB8AHOZVXaBObkf/zbPkNYIC9y8LyMxGIXji2', '2025-12-10 02:21:27.336597', '2025-12-10 02:21:27.336611', NULL),
-(20250101003, 'HhQXq5CFjEeyhPWHZSohXXQzaytQRQjhz+6TqY/Dyc0=', '$2a$12$OkDJm4o50kM58UFlaRkiF.fkuYvgKmS5zW7SCR9hew6fB8KwbiUxe', '2025-12-16 05:41:11.010237', '2025-12-16 05:41:11.010440', NULL);
-
--- User Profiles
-INSERT INTO `user_profiles` (`user_id`, `name`, `created_at`) VALUES
-(20250101001, 'GTVzcP/WI5I21T4mj/0Nsw==', '2025-12-10 02:19:04.243547'),
-(20250101002, 'GTVzcP/WI5I21T4mj/0Nsw==', '2025-12-10 02:21:27.337970'),
-(20250101003, 'nUr9zKL2KQ0a9mZ4XICgbA==', '2025-12-16 05:41:11.015906');
-
 -- Week Contents
 INSERT INTO `week_contents` (`id`, `week_id`, `content_type`, `title`, `content_url`, `duration`, `display_order`, `created_at`) VALUES
 (1, 18, 'VIDEO', 'a', 'a', '1', 1, '2025-12-16 14:56:02');
@@ -266,17 +279,3 @@ INSERT INTO `week_contents` (`id`, `week_id`, `content_type`, `title`, `content_
 INSERT INTO `enrollment_periods` (`id`, `term_id`, `period_name`, `period_type_id`, `start_datetime`, `end_datetime`, `target_year`, `created_at`) VALUES
 (1, 1, '1차 수강신청', 1, '2025-09-01 00:00:00', '2025-12-31 23:59:59', 0, '2025-12-10 02:57:25'),
 (2, 1, '강의등록', 2, '2025-12-01 23:59:59', '2025-12-16 16:45:44', 0, '2025-12-15 07:47:58');
-
--- Professors
-INSERT INTO `professors` (`professor_id`, `appointment_date`, `created_at`) VALUES
-(20250101002, '2025-12-09', '2025-12-10 02:21:27.339295'),
-(20250101003, '2025-12-15', '2025-12-16 05:41:11.019161');
-
--- Professor Departments
-INSERT INTO `professor_departments` (`id`, `professor_id`, `department_id`, `is_primary`, `start_date`, `end_date`) VALUES
-(1, 20250101002, 1, b'1', '2025-12-09', NULL),
-(2, 20250101003, 1, b'1', '2025-12-15', NULL);
-
--- Students
-INSERT INTO `students` (`student_id`, `admission_year`, `grade`, `created_at`) VALUES
-(20250101001, 2025, 1, '2025-12-10 02:19:04.246698');
