@@ -124,4 +124,24 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
             @Param("dayOfWeek") java.time.DayOfWeek dayOfWeek,
             @Param("startTime") java.time.LocalTime startTime,
             @Param("endTime") java.time.LocalTime endTime);
+
+    /**
+     * 교수가 특정 시간에 다른 강의를 개설했는지 확인 (시간표 충돌 체크, 특정 강의 제외)
+     */
+    @Query("SELECT COUNT(c) > 0 FROM Course c " +
+           "JOIN c.schedules s " +
+           "WHERE c.professor.professorId = :professorId " +
+           "AND c.academicTerm.id = :academicTermId " +
+           "AND c.id != :excludeCourseId " +
+           "AND s.dayOfWeek = :dayOfWeek " +
+           "AND ((s.startTime <= :startTime AND s.endTime > :startTime) " +
+           "OR (s.startTime < :endTime AND s.endTime >= :endTime) " +
+           "OR (s.startTime >= :startTime AND s.endTime <= :endTime))")
+    boolean existsByProfessorAndTimeConflictExcludingCourse(
+            @Param("professorId") Long professorId,
+            @Param("academicTermId") Long academicTermId,
+            @Param("excludeCourseId") Long excludeCourseId,
+            @Param("dayOfWeek") java.time.DayOfWeek dayOfWeek,
+            @Param("startTime") java.time.LocalTime startTime,
+            @Param("endTime") java.time.LocalTime endTime);
 }

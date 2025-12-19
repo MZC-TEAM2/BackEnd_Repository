@@ -142,7 +142,7 @@ public class CourseWeekContentController {
 
             WeekContentDto response = courseWeekContentService.createContent(courseId, weekId, request, professorId);
             return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(createSuccessResponse(response));
+                    .body(createSuccessResponse(response, "콘텐츠가 추가되었습니다"));
         } catch (IllegalArgumentException e) {
             log.warn("콘텐츠 등록 실패: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -177,7 +177,7 @@ public class CourseWeekContentController {
 
             WeekContentDto response = courseWeekContentService.updateContent(
                     courseId, weekId, contentId, request, professorId);
-            return ResponseEntity.ok(createSuccessResponse(response));
+            return ResponseEntity.ok(createSuccessResponse(response, "콘텐츠가 수정되었습니다"));
         } catch (IllegalArgumentException e) {
             log.warn("콘텐츠 수정 실패: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -223,7 +223,7 @@ public class CourseWeekContentController {
     }
 
     /**
-     * 강의 주차 목록 조회 (교수용)
+     * 강의 주차 목록 조회 (교수/수강중 학생)
      */
     @GetMapping
     public ResponseEntity<?> getWeeks(
@@ -236,10 +236,10 @@ public class CourseWeekContentController {
                         .body(createErrorResponse("로그인이 필요합니다."));
             }
 
-            Long professorId = Long.parseLong(authentication.getName());
-            log.debug("강의 주차 목록 조회: courseId={}, professorId={}", courseId, professorId);
+            Long requesterId = Long.parseLong(authentication.getName());
+            log.debug("강의 주차 목록 조회: courseId={}, requesterId={}", courseId, requesterId);
 
-            List<WeekListResponseDto> response = courseWeekContentService.getWeeks(courseId, professorId);
+            List<WeekListResponseDto> response = courseWeekContentService.getWeeks(courseId, requesterId);
             return ResponseEntity.ok(createSuccessResponse(response));
         } catch (IllegalArgumentException e) {
             log.warn("강의 주차 목록 조회 실패: {}", e.getMessage());
@@ -267,12 +267,12 @@ public class CourseWeekContentController {
                         .body(createErrorResponse("로그인이 필요합니다."));
             }
 
-            Long professorId = Long.parseLong(authentication.getName());
-            log.debug("주차별 콘텐츠 목록 조회: courseId={}, weekId={}, professorId={}",
-                    courseId, weekId, professorId);
+            Long requesterId = Long.parseLong(authentication.getName());
+            log.debug("주차별 콘텐츠 목록 조회: courseId={}, weekId={}, requesterId={}",
+                    courseId, weekId, requesterId);
 
             WeekContentsResponseDto response = courseWeekContentService.getWeekContents(
-                    courseId, weekId, professorId);
+                    courseId, weekId, requesterId);
             return ResponseEntity.ok(createSuccessResponse(response));
         } catch (IllegalArgumentException e) {
             log.warn("주차별 콘텐츠 목록 조회 실패: {}", e.getMessage());
@@ -286,39 +286,8 @@ public class CourseWeekContentController {
     }
 
     /**
-     * 콘텐츠 순서 변경
+     * 공통 성공 응답
      */
-    @PutMapping("/{weekId}/contents/reorder")
-    public ResponseEntity<?> reorderContents(
-            @PathVariable Long courseId,
-            @PathVariable Long weekId,
-            @RequestBody ReorderContentsRequestDto request,
-            Authentication authentication) {
-        try {
-            // 인증 확인
-            if (authentication == null || authentication.getName() == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(createErrorResponse("로그인이 필요합니다."));
-            }
-
-            Long professorId = Long.parseLong(authentication.getName());
-            log.debug("콘텐츠 순서 변경: courseId={}, weekId={}, professorId={}",
-                    courseId, weekId, professorId);
-
-            ReorderContentsResponseDto response = courseWeekContentService.reorderContents(
-                    courseId, weekId, request, professorId);
-            return ResponseEntity.ok(createSuccessResponse(response, "콘텐츠 순서가 변경되었습니다."));
-        } catch (IllegalArgumentException e) {
-            log.warn("콘텐츠 순서 변경 실패: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(createErrorResponse(e.getMessage()));
-        } catch (Exception e) {
-            log.error("콘텐츠 순서 변경 실패: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(createErrorResponse(e.getMessage()));
-        }
-    }
-
     private Map<String, Object> createSuccessResponse(Object data) {
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
