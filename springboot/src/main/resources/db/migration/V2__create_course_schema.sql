@@ -188,7 +188,7 @@ CREATE TABLE IF NOT EXISTS   `subject_prerequisites` (
 -- Table structure for table `users`
 --
 
-CREATE TABLE IF NOT EXISTS   IF NOT EXISTS `users` (
+CREATE TABLE IF NOT EXISTS `users` (
   `id` bigint NOT NULL,
   `email` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
   `password` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -201,7 +201,7 @@ CREATE TABLE IF NOT EXISTS   IF NOT EXISTS `users` (
 -- Table structure for table `week_contents`
 --
 
-CREATE TABLE IF NOT EXISTS   `week_contents` (
+CREATE TABLE IF NOT EXISTS `week_contents` (
   `id` bigint NOT NULL COMMENT '콘텐츠 식별자',
   `week_id` bigint NOT NULL COMMENT '주차 ID',
   `content_type` varchar(20) NOT NULL COMMENT '콘텐츠 유형 (VIDEO/DOCUMENT/LINK)',

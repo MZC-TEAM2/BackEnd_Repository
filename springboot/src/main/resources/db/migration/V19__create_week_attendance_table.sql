@@ -13,13 +13,6 @@ CREATE TABLE IF NOT EXISTS week_attendance (
     first_accessed_at TIMESTAMP NULL COMMENT '최초 접근 일시',
     completed_at TIMESTAMP NULL COMMENT '출석 완료 일시',
 
-    CONSTRAINT fk_week_attendance_student
-        FOREIGN KEY (student_id) REFERENCES students(student_id) ON DELETE CASCADE,
-    CONSTRAINT fk_week_attendance_week
-        FOREIGN KEY (week_id) REFERENCES course_weeks(id) ON DELETE CASCADE,
-    CONSTRAINT fk_week_attendance_course
-        FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
-
     CONSTRAINT uk_week_attendance_student_week UNIQUE (student_id, week_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
