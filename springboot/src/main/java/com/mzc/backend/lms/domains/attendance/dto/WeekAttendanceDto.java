@@ -3,6 +3,7 @@ package com.mzc.backend.lms.domains.attendance.dto;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 주차별 출석 현황 DTO
@@ -21,6 +22,7 @@ public class WeekAttendanceDto {
     private Integer completedVideoCount;
     private Integer totalVideoCount;
     private LocalDateTime completedAt;
+    private List<ContentProgressDto> contents;
 
     /**
      * 진행률 계산 (0 ~ 100)

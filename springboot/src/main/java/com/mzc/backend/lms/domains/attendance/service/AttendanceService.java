@@ -134,6 +134,9 @@ public class AttendanceService {
 
                     int totalVideos = countVideoContentsByWeek(week.getId());
 
+                    // 콘텐츠별 진행 상황 조회
+                    List<ContentProgressDto> contentProgresses = getContentProgressForWeek(studentId, week.getId());
+
                     return WeekAttendanceDto.builder()
                             .weekId(week.getId())
                             .weekNumber(week.getWeekNumber())
@@ -142,6 +145,7 @@ public class AttendanceService {
                             .completedVideoCount(attendance != null ? attendance.getCompletedVideoCount() : 0)
                             .totalVideoCount(totalVideos)
                             .completedAt(attendance != null ? attendance.getCompletedAt() : null)
+                            .contents(contentProgresses)
                             .build();
                 })
                 .collect(Collectors.toList());
@@ -363,5 +367,28 @@ public class AttendanceService {
                     return "Unknown";
                 })
                 .orElse("Unknown");
+    }
+
+    /**
+     * 주차별 콘텐츠 진행 상황 조회
+     */
+    private List<ContentProgressDto> getContentProgressForWeek(Long studentId, Long weekId) {
+        List<WeekContent> contents = weekContentRepository.findByWeekId(weekId);
+
+        return contents.stream()
+                .map(content -> {
+                    var progress = progressRepository
+                            .findByStudentStudentIdAndContent_Id(studentId, content.getId())
+                            .orElse(null);
+
+                    return ContentProgressDto.builder()
+                            .contentId(content.getId())
+                            .title(content.getTitle())
+                            .contentType(content.getContentType())
+                            .isCompleted(progress != null && progress.isVideoCompleted())
+                            .completedAt(progress != null ? progress.getCompletedAt() : null)
+                            .build();
+                })
+                .collect(java.util.stream.Collectors.toList());
     }
 }
