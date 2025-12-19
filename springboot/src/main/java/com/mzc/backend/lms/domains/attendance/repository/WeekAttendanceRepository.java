@@ -18,12 +18,12 @@ public interface WeekAttendanceRepository extends JpaRepository<WeekAttendance, 
     /**
      * 학생 ID와 주차 ID로 출석 조회
      */
-    Optional<WeekAttendance> findByStudentStudentIdAndWeekId(Long studentId, Long weekId);
+    Optional<WeekAttendance> findByStudentStudentIdAndWeek_Id(Long studentId, Long weekId);
 
     /**
      * 학생의 특정 강의 출석 목록 조회
      */
-    List<WeekAttendance> findByStudentStudentIdAndCourseId(Long studentId, Long courseId);
+    List<WeekAttendance> findByStudentStudentIdAndCourse_Id(Long studentId, Long courseId);
 
     /**
      * 학생의 모든 출석 목록 조회
@@ -33,12 +33,12 @@ public interface WeekAttendanceRepository extends JpaRepository<WeekAttendance, 
     /**
      * 특정 강의의 모든 학생 출석 목록 조회 (교수용)
      */
-    List<WeekAttendance> findByCourseId(Long courseId);
+    List<WeekAttendance> findByCourse_Id(Long courseId);
 
     /**
      * 특정 주차의 모든 학생 출석 목록 조회 (교수용)
      */
-    List<WeekAttendance> findByWeekId(Long weekId);
+    List<WeekAttendance> findByWeek_Id(Long weekId);
 
     /**
      * 학생의 특정 강의 출석 완료 주차 수 조회
