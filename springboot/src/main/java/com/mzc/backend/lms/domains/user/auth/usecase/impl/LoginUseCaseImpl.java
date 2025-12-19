@@ -1,5 +1,6 @@
 package com.mzc.backend.lms.domains.user.auth.usecase.impl;
 
+import com.mzc.backend.lms.domains.dashboard.student.event.LoginSuccessEvent;
 import com.mzc.backend.lms.domains.user.auth.dto.LoginRequestDto;
 import com.mzc.backend.lms.domains.user.auth.dto.LoginResponseDto;
 import com.mzc.backend.lms.domains.user.auth.encryption.service.EncryptionService;
@@ -19,6 +20,7 @@ import com.mzc.backend.lms.domains.user.user.entity.User;
 import com.mzc.backend.lms.domains.user.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,6 +44,7 @@ public class LoginUseCaseImpl implements LoginUseCase {
     private final EncryptionService encryptionService;
     private final JwtTokenService jwtTokenService;
     private final com.mzc.backend.lms.domains.user.student.repository.StudentDepartmentRepository studentDepartmentRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -87,8 +90,11 @@ public class LoginUseCaseImpl implements LoginUseCase {
             }
         }
 
-        log.info("로그인 성공: userId={}, userType={}, departmentId={}, departmentName={}", 
+        log.info("로그인 성공: userId={}, userType={}, departmentId={}, departmentName={}",
                 user.getId(), userInfo.userType, departmentId, departmentName);
+
+        // 로그인 성공 이벤트 발행
+        eventPublisher.publishEvent(new LoginSuccessEvent(user.getId(), userInfo.userType));
 
         return LoginResponseDto.of(
             accessToken,
