@@ -18,12 +18,12 @@ public interface StudentContentProgressRepository extends JpaRepository<StudentC
     /**
      * 학생 ID와 콘텐츠 ID로 진행 상황 조회
      */
-    Optional<StudentContentProgress> findByStudentStudentIdAndContentId(Long studentId, Long contentId);
+    Optional<StudentContentProgress> findByStudentStudentIdAndContent_Id(Long studentId, Long contentId);
 
     /**
      * 학생 ID와 콘텐츠 ID 목록으로 진행 상황 조회
      */
-    List<StudentContentProgress> findByStudentStudentIdAndContentIdIn(Long studentId, List<Long> contentIds);
+    List<StudentContentProgress> findByStudentStudentIdAndContent_IdIn(Long studentId, List<Long> contentIds);
 
     /**
      * 학생 ID와 콘텐츠 ID 목록 중 완료된 것만 조회

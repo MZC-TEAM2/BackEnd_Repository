@@ -75,7 +75,7 @@ public class AttendanceService {
 
         // 출석 레코드 조회 또는 생성
         WeekAttendance attendance = weekAttendanceRepository
-                .findByStudentStudentIdAndWeekId(studentId, weekId)
+                .findByStudentStudentIdAndWeek_Id(studentId, weekId)
                 .orElseGet(() -> {
                     WeekAttendance newAttendance = WeekAttendance.create(student, week, course, totalVideoCount);
                     return weekAttendanceRepository.save(newAttendance);
@@ -122,7 +122,7 @@ public class AttendanceService {
 
         // 출석 목록 조회
         List<WeekAttendance> attendances = weekAttendanceRepository
-                .findByStudentStudentIdAndCourseId(studentId, courseId);
+                .findByStudentStudentIdAndCourse_Id(studentId, courseId);
 
         // 주차별 출석 현황 매핑
         List<WeekAttendanceDto> weekAttendanceDtos = weeks.stream()
@@ -314,7 +314,7 @@ public class AttendanceService {
         var enrollments = enrollmentRepository.findByCourseId(courseId);
 
         // 해당 주차의 출석 목록 조회
-        List<WeekAttendance> attendances = weekAttendanceRepository.findByWeekId(weekId);
+        List<WeekAttendance> attendances = weekAttendanceRepository.findByWeek_Id(weekId);
         int totalVideos = countVideoContentsByWeek(weekId);
 
         return enrollments.stream()
