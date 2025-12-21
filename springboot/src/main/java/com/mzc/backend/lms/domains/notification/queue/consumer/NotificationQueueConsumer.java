@@ -4,12 +4,9 @@ import com.mzc.backend.lms.domains.notification.queue.dto.BatchNotificationMessa
 import com.mzc.backend.lms.domains.notification.queue.dto.NotificationMessage;
 import com.mzc.backend.lms.domains.notification.queue.processor.NotificationProcessor;
 import com.mzc.backend.lms.domains.notification.queue.service.NotificationQueueService;
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.context.SmartLifecycle;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Component;
 
@@ -22,12 +19,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * 알림 큐 컨슈머
  * Redis 큐에서 알림 메시지를 가져와 처리
+ * SmartLifecycle을 구현하여 Redis ConnectionFactory보다 먼저 종료되도록 함
  */
 @Slf4j
 @Component
 @EnableAsync
-@RequiredArgsConstructor
-public class NotificationQueueConsumer {
+public class NotificationQueueConsumer implements SmartLifecycle {
 
     private final NotificationQueueService queueService;
     private final NotificationProcessor processor;
@@ -44,8 +41,17 @@ public class NotificationQueueConsumer {
     private ExecutorService executorService;
     private final AtomicBoolean running = new AtomicBoolean(false);
 
-    @PostConstruct
-    public void init() {
+    public NotificationQueueConsumer(NotificationQueueService queueService, NotificationProcessor processor) {
+        this.queueService = queueService;
+        this.processor = processor;
+    }
+
+    /**
+     * SmartLifecycle - 시작
+     * Redis ConnectionFactory가 준비된 후 시작됨
+     */
+    @Override
+    public void start() {
         if (consumerEnabled) {
             startConsumers();
         } else {
@@ -53,15 +59,46 @@ public class NotificationQueueConsumer {
         }
     }
 
-    @PreDestroy
-    public void shutdown() {
+    /**
+     * SmartLifecycle - 종료
+     * Redis ConnectionFactory보다 먼저 종료됨 (phase가 낮으므로)
+     */
+    @Override
+    public void stop() {
         stopConsumers();
+    }
+
+    /**
+     * SmartLifecycle - 실행 상태 확인
+     */
+    @Override
+    public boolean isRunning() {
+        return running.get();
+    }
+
+    /**
+     * SmartLifecycle - 자동 시작 여부
+     */
+    @Override
+    public boolean isAutoStartup() {
+        return true;
+    }
+
+    /**
+     * SmartLifecycle - phase 설정
+     * 낮은 값이 먼저 시작되고 나중에 종료됨
+     * Redis ConnectionFactory는 기본값(0)이므로, 이보다 높은 값을 설정하면
+     * 나중에 시작되고 먼저 종료됨
+     */
+    @Override
+    public int getPhase() {
+        return Integer.MAX_VALUE - 1;
     }
 
     /**
      * 컨슈머 시작
      */
-    public void startConsumers() {
+    private void startConsumers() {
         if (running.compareAndSet(false, true)) {
             executorService = Executors.newFixedThreadPool(threadCount);
 
@@ -78,12 +115,13 @@ public class NotificationQueueConsumer {
     /**
      * 컨슈머 중지
      */
-    public void stopConsumers() {
+    private void stopConsumers() {
         if (running.compareAndSet(true, false)) {
             if (executorService != null) {
                 executorService.shutdown();
                 try {
-                    if (!executorService.awaitTermination(30, TimeUnit.SECONDS)) {
+                    // 블로킹 작업이 완료될 때까지 대기 (poll timeout + 여유시간)
+                    if (!executorService.awaitTermination(pollTimeoutSeconds + 5, TimeUnit.SECONDS)) {
                         executorService.shutdownNow();
                     }
                 } catch (InterruptedException e) {
@@ -200,12 +238,5 @@ public class NotificationQueueConsumer {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
-    }
-
-    /**
-     * 컨슈머 실행 상태 확인
-     */
-    public boolean isRunning() {
-        return running.get();
     }
 }

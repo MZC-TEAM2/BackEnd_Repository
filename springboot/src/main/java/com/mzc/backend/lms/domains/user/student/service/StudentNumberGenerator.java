@@ -2,6 +2,7 @@ package com.mzc.backend.lms.domains.user.student.service;
 
 import com.mzc.backend.lms.domains.user.student.entity.StudentNumberSequence;
 import com.mzc.backend.lms.domains.user.student.repository.StudentNumberSequenceRepository;
+import com.mzc.backend.lms.domains.user.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,10 @@ import java.time.Year;
  * - CC: 단과대학 코드 (2자리)
  * - DD: 학과 코드 (2자리)
  * - NNN: 순번 (3자리)
+ *
+ * 로드밸런싱 환경(다중 인스턴스)에서도 안전하게 동작:
+ * - 비관적 락(PESSIMISTIC_WRITE)으로 동시성 제어
+ * - 시퀀스 미존재 시 기존 users 테이블 기반으로 초기값 설정
  */
 @Slf4j
 @Service
@@ -24,6 +29,7 @@ import java.time.Year;
 public class StudentNumberGenerator {
 
     private final StudentNumberSequenceRepository sequenceRepository;
+    private final UserRepository userRepository;
 
     /**
      * 학번 생성
@@ -56,11 +62,7 @@ public class StudentNumberGenerator {
         // 시퀀스 조회 또는 생성 (비관적 락)
         StudentNumberSequence sequence = sequenceRepository
                 .findByYearAndCollegeAndDepartmentWithLock(currentYear, collegeId, departmentId)
-                .orElseGet(() -> {
-                    StudentNumberSequence newSequence = StudentNumberSequence.create(
-                            currentYear, collegeId, departmentId);
-                    return sequenceRepository.save(newSequence);
-                });
+                .orElseGet(() -> createSequenceWithExistingData(currentYear, collegeId, departmentId));
 
         // 다음 시퀀스 번호 가져오기
         Integer nextSequence = sequence.getNextSequence();
@@ -75,6 +77,26 @@ public class StudentNumberGenerator {
 
         log.info("Generated number: {}", generatedNumber);
         return generatedNumber;
+    }
+
+    /**
+     * 기존 users 테이블의 데이터를 고려하여 시퀀스 생성
+     */
+    private StudentNumberSequence createSequenceWithExistingData(
+            Integer year, Long collegeId, Long departmentId) {
+        // 학번 prefix 생성 (YYYYCCDD)
+        String prefix = String.format("%d%02d%02d", year, collegeId, departmentId);
+
+        // 기존 users 테이블에서 해당 패턴의 최대 순번 조회
+        Integer maxExistingSequence = userRepository.findMaxSequenceByPrefix(prefix)
+                .orElse(0);
+
+        log.info("Creating new sequence for prefix={}, maxExistingSequence={}",
+                prefix, maxExistingSequence);
+
+        StudentNumberSequence newSequence = StudentNumberSequence.createWithInitialSequence(
+                year, collegeId, departmentId, maxExistingSequence);
+        return sequenceRepository.save(newSequence);
     }
 
     /**

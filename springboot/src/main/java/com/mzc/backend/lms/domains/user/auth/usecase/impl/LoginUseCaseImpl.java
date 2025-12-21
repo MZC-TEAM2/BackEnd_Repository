@@ -1,5 +1,6 @@
 package com.mzc.backend.lms.domains.user.auth.usecase.impl;
 
+import com.mzc.backend.lms.domains.dashboard.student.event.LoginSuccessEvent;
 import com.mzc.backend.lms.domains.user.auth.dto.LoginRequestDto;
 import com.mzc.backend.lms.domains.user.auth.dto.LoginResponseDto;
 import com.mzc.backend.lms.domains.user.auth.encryption.service.EncryptionService;
@@ -19,6 +20,7 @@ import com.mzc.backend.lms.domains.user.user.entity.User;
 import com.mzc.backend.lms.domains.user.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,6 +43,8 @@ public class LoginUseCaseImpl implements LoginUseCase {
     private final RefreshTokenRepository refreshTokenRepository;
     private final EncryptionService encryptionService;
     private final JwtTokenService jwtTokenService;
+    private final com.mzc.backend.lms.domains.user.student.repository.StudentDepartmentRepository studentDepartmentRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -71,7 +75,26 @@ public class LoginUseCaseImpl implements LoginUseCase {
                 .map(UserProfileImage::getThumbnailUrl)
                 .orElse(null);
 
-        log.info("로그인 성공: userId={}, userType={}", user.getId(), userInfo.userType);
+        // 학과 정보 조회 (학생인 경우)
+        Long departmentId = null;
+        String departmentName = null;
+        if ("STUDENT".equals(userInfo.userType)) {
+            try {
+                var studentDepartment = studentDepartmentRepository.findByStudentId(user.getId());
+                if (studentDepartment.isPresent()) {
+                    departmentId = studentDepartment.get().getDepartment().getId();
+                    departmentName = studentDepartment.get().getDepartment().getDepartmentName();
+                }
+            } catch (Exception e) {
+                log.warn("학과 정보 조회 실패: userId={}", user.getId(), e);
+            }
+        }
+
+        log.info("로그인 성공: userId={}, userType={}, departmentId={}, departmentName={}",
+                user.getId(), userInfo.userType, departmentId, departmentName);
+
+        // 로그인 성공 이벤트 발행
+        eventPublisher.publishEvent(new LoginSuccessEvent(user.getId(), userInfo.userType));
 
         return LoginResponseDto.of(
             accessToken,
@@ -81,7 +104,9 @@ public class LoginUseCaseImpl implements LoginUseCase {
             userInfo.name,
             decryptedEmail,
             user.getId().toString(),
-            thumbnailUrl
+            thumbnailUrl,
+            departmentId,
+            departmentName
         );
     }
 

@@ -19,10 +19,10 @@ public class AES256EncryptionStrategy implements EncryptionStrategy {
     private static final String ALGORITHM = "AES/CBC/PKCS5Padding";
     private static final String AES = "AES";
 
-    @Value("${encryption.aes.secret-key:defaultSecretKey1234567890123456}")
+    @Value("${security.aes.encryption-key:defaultSecretKey1234567890123456}")
     private String secretKey;
 
-    @Value("${encryption.aes.iv:defaultIvParam456}")
+    @Value("${security.aes.iv:defaultIvParam456}")
     private String iv;
 
     /**

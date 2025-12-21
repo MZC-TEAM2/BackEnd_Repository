@@ -53,10 +53,16 @@ public class SignupUseCaseImpl implements SignupUseCase {
     @Transactional(rollbackFor = Exception.class)
     public String execute(SignupRequestDto dto) {
         try {
+            log.info("회원가입 시작: email={}, userType={}, departmentId={}", 
+                    dto.getEmail(), dto.getUserType(), dto.getDepartmentId());
+            
             validateSignupRequest(dto);
 
             Department department = departmentRepository.findById(dto.getDepartmentId())
-                    .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 학과입니다."));
+                    .orElseThrow(() -> {
+                        log.error("학과를 찾을 수 없음: departmentId={}", dto.getDepartmentId());
+                        return new IllegalArgumentException("유효하지 않은 학과입니다.");
+                    });
 
             // 학번/교번 먼저 생성
             Long userNumber;

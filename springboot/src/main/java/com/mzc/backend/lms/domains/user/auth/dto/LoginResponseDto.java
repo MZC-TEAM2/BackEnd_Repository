@@ -18,6 +18,8 @@ public class LoginResponseDto {
     private String email;
     private String userId;        // 학번 또는 교번 (User의 PK)
     private String thumbnailUrl;  // 프로필 썸네일 이미지 URL
+    private Long departmentId;    // 학과 ID (학생의 경우)
+    private String departmentName; // 학과명 (학생의 경우)
 
     /**
      * 토큰 정보만 포함한 응답 생성
@@ -35,7 +37,7 @@ public class LoginResponseDto {
     public static LoginResponseDto of(String accessToken, String refreshToken,
                                      String userType, String userNumber,
                                      String name, String email, String userId,
-                                     String thumbnailUrl) {
+                                     String thumbnailUrl, Long departmentId, String departmentName) {
         return LoginResponseDto.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
@@ -45,6 +47,8 @@ public class LoginResponseDto {
                 .email(email)
                 .userId(userId)
                 .thumbnailUrl(thumbnailUrl)
+                .departmentId(departmentId)
+                .departmentName(departmentName)
                 .build();
     }
 }

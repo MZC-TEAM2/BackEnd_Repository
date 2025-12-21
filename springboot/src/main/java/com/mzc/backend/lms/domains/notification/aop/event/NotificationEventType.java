@@ -27,6 +27,17 @@ public enum NotificationEventType {
      */
     COURSE_ENROLLMENT_REJECTED("COURSE_ENROLLMENT_REJECTED", "강의", "수강 신청이 거절되었습니다."),
 
+    // ========== 수강신청 관련 ==========
+    /**
+     * 수강신청 완료
+     */
+    ENROLLMENT_CREATED("COURSE_ENROLLED", "수강신청", "수강신청이 완료되었습니다."),
+
+    /**
+     * 수강취소 완료
+     */
+    ENROLLMENT_CANCELLED("COURSE_DROPPED", "수강신청", "수강이 취소되었습니다."),
+
     // ========== 과제 관련 ==========
     /**
      * 새 과제 등록
@@ -84,6 +95,16 @@ public enum NotificationEventType {
      * 토론 댓글 등록
      */
     DISCUSSION_COMMENT_CREATED("DISCUSSION_COMMENT_CREATED", "게시판", "토론에 새 댓글이 등록되었습니다."),
+
+    /**
+     * 게시글에 댓글 등록
+     */
+    COMMENT_CREATED("COMMENT_CREATED", "게시판", "내 게시글에 새 댓글이 등록되었습니다."),
+
+    /**
+     * 댓글에 대댓글 등록
+     */
+    REPLY_CREATED("REPLY_CREATED", "게시판", "내 댓글에 답글이 등록되었습니다."),
 
     // ========== 성적 관련 ==========
     /**

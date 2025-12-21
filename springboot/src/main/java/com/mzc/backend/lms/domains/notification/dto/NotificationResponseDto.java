@@ -1,6 +1,7 @@
 package com.mzc.backend.lms.domains.notification.dto;
 
 import com.mzc.backend.lms.domains.notification.entity.Notification;
+import com.mzc.backend.lms.domains.user.auth.encryption.annotation.Encrypted;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -18,6 +19,8 @@ public class NotificationResponseDto {
     private String typeName;
     private String category;
     private Long senderId;
+
+    @Encrypted
     private String senderName;
     private String relatedEntityType;
     private Long relatedEntityId;

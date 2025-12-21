@@ -52,18 +52,19 @@ class NotificationQueueConsumerTest {
 
     @AfterEach
     void tearDown() {
-        consumer.stopConsumers();
+        consumer.stop();
     }
 
     @Test
     @DisplayName("컨슈머 시작 후 running 상태 true")
     void startConsumers() {
         // given
+        ReflectionTestUtils.setField(consumer, "consumerEnabled", true);
         when(queueService.dequeue(anyLong())).thenReturn(Optional.empty());
         when(queueService.dequeueBatch(anyLong())).thenReturn(Optional.empty());
 
         // when
-        consumer.startConsumers();
+        consumer.start();
 
         // then
         assertThat(consumer.isRunning()).isTrue();
@@ -73,12 +74,13 @@ class NotificationQueueConsumerTest {
     @DisplayName("컨슈머 중지 후 running 상태 false")
     void stopConsumers() {
         // given
+        ReflectionTestUtils.setField(consumer, "consumerEnabled", true);
         when(queueService.dequeue(anyLong())).thenReturn(Optional.empty());
         when(queueService.dequeueBatch(anyLong())).thenReturn(Optional.empty());
-        consumer.startConsumers();
+        consumer.start();
 
         // when
-        consumer.stopConsumers();
+        consumer.stop();
 
         // then
         assertThat(consumer.isRunning()).isFalse();
@@ -88,12 +90,13 @@ class NotificationQueueConsumerTest {
     @DisplayName("이미 시작된 컨슈머는 중복 시작되지 않음")
     void startConsumersAlreadyRunning() {
         // given
+        ReflectionTestUtils.setField(consumer, "consumerEnabled", true);
         when(queueService.dequeue(anyLong())).thenReturn(Optional.empty());
         when(queueService.dequeueBatch(anyLong())).thenReturn(Optional.empty());
-        consumer.startConsumers();
+        consumer.start();
 
         // when
-        consumer.startConsumers(); // 중복 호출
+        consumer.start(); // 중복 호출
 
         // then
         assertThat(consumer.isRunning()).isTrue();
@@ -103,7 +106,7 @@ class NotificationQueueConsumerTest {
     @DisplayName("이미 중지된 컨슈머는 중복 중지되지 않음")
     void stopConsumersAlreadyStopped() {
         // when
-        consumer.stopConsumers(); // 시작하지 않고 중지 호출
+        consumer.stop(); // 시작하지 않고 중지 호출
 
         // then
         assertThat(consumer.isRunning()).isFalse();
@@ -113,6 +116,7 @@ class NotificationQueueConsumerTest {
     @DisplayName("단일 알림 메시지 처리")
     void processNotificationMessage() throws InterruptedException {
         // given
+        ReflectionTestUtils.setField(consumer, "consumerEnabled", true);
         NotificationMessage message = NotificationMessage.of(1, 100L, 200L, "테스트");
         CountDownLatch latch = new CountDownLatch(1);
 
@@ -125,7 +129,7 @@ class NotificationQueueConsumerTest {
         when(queueService.dequeueBatch(anyLong())).thenReturn(Optional.empty());
 
         // when
-        consumer.startConsumers();
+        consumer.start();
         boolean completed = latch.await(5, TimeUnit.SECONDS);
 
         // then
@@ -137,6 +141,7 @@ class NotificationQueueConsumerTest {
     @DisplayName("배치 알림 메시지 처리")
     void processBatchNotificationMessage() throws InterruptedException {
         // given
+        ReflectionTestUtils.setField(consumer, "consumerEnabled", true);
         BatchNotificationMessage message = BatchNotificationMessage.forCourse(
                 1L, 1, 100L, Arrays.asList(200L, 300L), 10L, "알림", "메시지"
         );
@@ -151,7 +156,7 @@ class NotificationQueueConsumerTest {
                 });
 
         // when
-        consumer.startConsumers();
+        consumer.start();
         boolean completed = latch.await(5, TimeUnit.SECONDS);
 
         // then
@@ -163,6 +168,7 @@ class NotificationQueueConsumerTest {
     @DisplayName("단일 알림 처리 실패 시 재시도")
     void processWithRetryForNotification() throws InterruptedException {
         // given
+        ReflectionTestUtils.setField(consumer, "consumerEnabled", true);
         NotificationMessage message = NotificationMessage.of(1, 100L, 200L, "테스트");
         AtomicInteger callCount = new AtomicInteger(0);
         CountDownLatch latch = new CountDownLatch(1);
@@ -184,7 +190,7 @@ class NotificationQueueConsumerTest {
         }).when(processor).process(any(NotificationMessage.class));
 
         // when
-        consumer.startConsumers();
+        consumer.start();
         boolean completed = latch.await(10, TimeUnit.SECONDS);
 
         // then
@@ -196,6 +202,7 @@ class NotificationQueueConsumerTest {
     @DisplayName("배치 알림 처리 실패 시 재시도")
     void processWithRetryForBatch() throws InterruptedException {
         // given
+        ReflectionTestUtils.setField(consumer, "consumerEnabled", true);
         BatchNotificationMessage message = BatchNotificationMessage.forCourse(
                 1L, 1, 100L, Arrays.asList(200L, 300L), 10L, "알림", "메시지"
         );
@@ -219,7 +226,7 @@ class NotificationQueueConsumerTest {
         }).when(processor).processBatch(any(BatchNotificationMessage.class));
 
         // when
-        consumer.startConsumers();
+        consumer.start();
         boolean completed = latch.await(10, TimeUnit.SECONDS);
 
         // then
@@ -228,44 +235,45 @@ class NotificationQueueConsumerTest {
     }
 
     @Test
-    @DisplayName("init 메소드 - 컨슈머 비활성화 상태")
-    void initWithConsumerDisabled() {
+    @DisplayName("start 메소드 - 컨슈머 비활성화 상태")
+    void startWithConsumerDisabled() {
         // given
         ReflectionTestUtils.setField(consumer, "consumerEnabled", false);
 
         // when
-        consumer.init();
+        consumer.start();
 
         // then
         assertThat(consumer.isRunning()).isFalse();
     }
 
     @Test
-    @DisplayName("init 메소드 - 컨슈머 활성화 상태")
-    void initWithConsumerEnabled() {
+    @DisplayName("start 메소드 - 컨슈머 활성화 상태")
+    void startWithConsumerEnabled() {
         // given
         ReflectionTestUtils.setField(consumer, "consumerEnabled", true);
         when(queueService.dequeue(anyLong())).thenReturn(Optional.empty());
         when(queueService.dequeueBatch(anyLong())).thenReturn(Optional.empty());
 
         // when
-        consumer.init();
+        consumer.start();
 
         // then
         assertThat(consumer.isRunning()).isTrue();
     }
 
     @Test
-    @DisplayName("shutdown 메소드 호출 시 컨슈머 중지")
-    void shutdownStopsConsumer() {
+    @DisplayName("stop 메소드 호출 시 컨슈머 중지")
+    void stopStopsConsumer() {
         // given
+        ReflectionTestUtils.setField(consumer, "consumerEnabled", true);
         when(queueService.dequeue(anyLong())).thenReturn(Optional.empty());
         when(queueService.dequeueBatch(anyLong())).thenReturn(Optional.empty());
-        consumer.startConsumers();
+        consumer.start();
         assertThat(consumer.isRunning()).isTrue();
 
         // when
-        consumer.shutdown();
+        consumer.stop();
 
         // then
         assertThat(consumer.isRunning()).isFalse();
@@ -275,6 +283,7 @@ class NotificationQueueConsumerTest {
     @DisplayName("큐 서비스 오류 발생 시에도 컨슈머 계속 동작")
     void consumerContinuesOnQueueServiceError() throws InterruptedException {
         // given
+        ReflectionTestUtils.setField(consumer, "consumerEnabled", true);
         AtomicInteger callCount = new AtomicInteger(0);
         CountDownLatch latch = new CountDownLatch(3);
 
@@ -290,12 +299,24 @@ class NotificationQueueConsumerTest {
         when(queueService.dequeueBatch(anyLong())).thenReturn(Optional.empty());
 
         // when
-        consumer.startConsumers();
+        consumer.start();
         boolean completed = latch.await(10, TimeUnit.SECONDS);
 
         // then
         assertThat(completed).isTrue();
         assertThat(callCount.get()).isGreaterThanOrEqualTo(3);
         assertThat(consumer.isRunning()).isTrue();
+    }
+
+    @Test
+    @DisplayName("SmartLifecycle - isAutoStartup은 true")
+    void isAutoStartupReturnsTrue() {
+        assertThat(consumer.isAutoStartup()).isTrue();
+    }
+
+    @Test
+    @DisplayName("SmartLifecycle - getPhase는 높은 값 반환")
+    void getPhaseReturnsHighValue() {
+        assertThat(consumer.getPhase()).isEqualTo(Integer.MAX_VALUE - 1);
     }
 }

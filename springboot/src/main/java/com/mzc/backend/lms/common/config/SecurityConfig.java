@@ -1,9 +1,13 @@
 package com.mzc.backend.lms.common.config;
 
 import com.mzc.backend.lms.domains.user.auth.jwt.filter.JwtAuthenticationFilter;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -15,6 +19,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Map;
 
 import java.util.Arrays;
 
@@ -51,13 +57,25 @@ public class SecurityConfig {
                     "/health",
                     "/error",
                     "/swagger-ui/**",
+                    "/swagger-ui.html",
+                    "/swagger-resources/**",
                     "/v3/api-docs/**"
                 ).permitAll()
 
-                // 학생만 접근 가능
+                // 학생 게시판 - 학생만 접근 가능 (조회, 작성, 수정, 삭제)
+                .requestMatchers("/api/v1/boards/STUDENT/**").hasAuthority("STUDENT")
+
+                // 교수 게시판 - 교수만 접근 가능 (조회, 작성, 수정, 삭제)
+                .requestMatchers("/api/v1/boards/PROFESSOR/**").hasAuthority("PROFESSOR")
+
+                // 나머지 게시판 API - 인증된 사용자 접근 가능
+                .requestMatchers("/api/v1/boards/**").authenticated()
+                .requestMatchers("/api/v1/board/**").authenticated()  // 댓글 API
+
+                // 학생 전용 API
                 .requestMatchers("/api/student/**").hasAuthority("STUDENT")
 
-                // 교수만 접근 가능
+                // 교수 전용 API
                 .requestMatchers("/api/professor/**").hasAuthority("PROFESSOR")
 
                 // 나머지 요청은 인증 필요
@@ -65,7 +83,24 @@ public class SecurityConfig {
             )
 
             // JWT 필터 추가
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+
+            // 인증 실패 시 401 Unauthorized 응답
+            .exceptionHandling(exception -> exception
+                .authenticationEntryPoint((request, response, authException) -> {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                    response.setCharacterEncoding("UTF-8");
+
+                    Map<String, Object> errorResponse = Map.of(
+                        "status", 401,
+                        "error", "Unauthorized",
+                        "message", "인증이 필요합니다. 토큰이 없거나 만료되었습니다."
+                    );
+
+                    new ObjectMapper().writeValue(response.getOutputStream(), errorResponse);
+                })
+            );
 
         return http.build();
     }
@@ -77,7 +112,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "http://localhost:8080"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE","PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
