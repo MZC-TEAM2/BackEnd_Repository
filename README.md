@@ -20,6 +20,16 @@
 | Container | Docker, Docker Compose |
 
 ---
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [API Specification](./api-spec/README.md) | 도메인별 API 명세 (12개 도메인, 94개 API) |
+| [Flow Charts](./flow-chart) | 기능별 플로우 차트 (33개) |
+| [DB Diagram](https://dbdiagram.io/d/MZC_TEAM2-691ebf15228c5bbc1aadecbc) | 데이터베이스 스키마 |
+
+
+---
 
 ## Architecture
 
@@ -101,33 +111,6 @@ springboot/
 
 ---
 
-## Getting Started
-
-### Prerequisites
-- Java 21+
-- Docker & Docker Compose
-- Gradle 8.x
-
-### Run with Docker Compose
-
-```bash
-# 전체 서비스 실행
-docker-compose up -d
-
-# 로그 확인
-docker-compose logs -f spring-app
-```
-
-### Local Development
-
-```bash
-# MySQL, Redis만 실행
-docker-compose up -d mysql redis
-
-# 애플리케이션 실행
-cd springboot
-./gradlew bootRun
-```
 
 ### Access Points
 | Service | URL |
@@ -138,11 +121,3 @@ cd springboot
 | Redis Commander | http://localhost:8082 |
 
 ---
-
-## Documentation
-
-| Document | Description |
-|----------|-------------|
-| [API Specification](./api-spec/README.md) | 도메인별 API 명세 (12개 도메인, 94개 API) |
-| [Flow Charts](./flow-chart) | 기능별 플로우 차트 (33개) |
-| [DB Diagram](https://dbdiagram.io/d/MZC_TEAM2-691ebf15228c5bbc1aadecbc) | 데이터베이스 스키마 |
