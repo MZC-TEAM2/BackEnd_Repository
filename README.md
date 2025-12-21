@@ -7,6 +7,27 @@
 
 ---
 
+## API Specification
+
+> 도메인별 API 문서: [api-spec/README.md](./api-spec/README.md)
+
+| 도메인 | 설명 | API 수 |
+|--------|------|--------|
+| [Auth](./api-spec/auth.md) | 인증/인가 (회원가입, 로그인, 토큰) | 7개 |
+| [Profile](./api-spec/profile.md) | 프로필 관리 (조회, 수정, 이미지) | 4개 |
+| [User Search](./api-spec/user-search.md) | 유저 검색 (학생/교수 탐색) | 4개 |
+| [Course](./api-spec/course.md) | 강의 관리 (조회, 개설, 주차/콘텐츠) | 16개 |
+| [Subject](./api-spec/subject.md) | 과목 관리 (목록, 상세, 검색) | 3개 |
+| [Enrollment](./api-spec/enrollment.md) | 수강신청 (장바구니, 신청, 취소) | 9개 |
+| [Attendance](./api-spec/attendance.md) | 출석 관리 (학생/교수) | 6개 |
+| [Board](./api-spec/board.md) | 게시판 (게시글, 댓글, 첨부파일) | 15개 |
+| [Assignment](./api-spec/assignment.md) | 과제 (등록, 제출, 채점) | 10개 |
+| [Message](./api-spec/message.md) | 메시지 (대화방, 메시지, SSE) | 12개 |
+| [Notification](./api-spec/notification.md) | 알림 (조회, 읽음처리, 삭제) | 8개 |
+| [Dashboard](./api-spec/dashboard.md) | 대시보드 (학생용) | 4개 |
+
+---
+
 ## Flow Charts
 
 ### Auth (인증)
@@ -90,11 +111,3 @@
 | [진도 추적 플로우](./flow-chart/Video%20Streaming/진도%20추적%20플로우.png) | 영상 시청 진도 기록 |
 | [학습률 계산 플로우](./flow-chart/Video%20Streaming/학습률%20계산%20플로우.png) | 강의 학습 완료율 계산 |
 | [부정 시청 감지 플로우](./flow-chart/Video%20Streaming/부정%20시청%20감지%20플로우.png) | 비정상 시청 패턴 탐지 |
-
----
-
-## Documentation
-- [API Specification](./docs/API_SPEC.md)
-- [Feature Specification](./docs/FEATURE_SPEC.md)
-- [Flow Charts Guide](./docs/FLOW_CHARTS.md)
-- [Troubleshooting](./docs/TROUBLESHOOTING.md)
