@@ -8,6 +8,9 @@ import com.mzc.backend.lms.domains.assessment.enums.AssessmentType;
 import com.mzc.backend.lms.domains.assessment.repository.AssessmentAttemptRepository;
 import com.mzc.backend.lms.domains.assessment.repository.AssessmentRepository;
 import com.mzc.backend.lms.domains.attendance.repository.WeekAttendanceRepository;
+import com.mzc.backend.lms.domains.board.assignment.entity.Assignment;
+import com.mzc.backend.lms.domains.board.assignment.repository.AssignmentRepository;
+import com.mzc.backend.lms.domains.board.assignment.repository.AssignmentSubmissionRepository;
 import com.mzc.backend.lms.domains.course.course.entity.Course;
 import com.mzc.backend.lms.domains.course.course.entity.CourseGradingPolicy;
 import com.mzc.backend.lms.domains.course.course.repository.CourseGradingPolicyRepository;
@@ -41,7 +44,6 @@ import java.util.Map;
  * - 퀴즈 0개는 0 처리
  * - final_score는 정규화(B): (획득합/만점합)*100 을 각 항목별로 만든 후 가중합
  * - 출석은 A안: (출석완료 주차수/전체주차수)*100
- * - 과제는 아직 미구현: 점수/만점합을 0으로 두어 0 처리(가중치가 0인 과목만 정상)
  * - 등급은 상대평가(비율)로 배정 (A+,A0,A-,B+,B0,B-,C+,C0,C-,D+,D0,D-,F)
  */
 @Slf4j
@@ -65,6 +67,9 @@ public class GradePublishService {
     private final AssessmentRepository assessmentRepository;
     private final AssessmentAttemptRepository assessmentAttemptRepository;
 
+    private final AssignmentRepository assignmentRepository;
+    private final AssignmentSubmissionRepository assignmentSubmissionRepository;
+
     private final CourseWeekRepository courseWeekRepository;
     private final WeekAttendanceRepository weekAttendanceRepository;
 
@@ -83,7 +88,6 @@ public class GradePublishService {
 
         // 공개는 "성적공개기간(GRADE_PUBLISH)"에만 허용
         // 스케줄러는 최근 시작/진행 중인 공개기간의 학기만 대상으로 처리 (과거 학기 반복 방지)
-        LocalDateTime from = now.minusHours(48);
         List<EnrollmentPeriod> activePublishPeriods = enrollmentPeriodRepository.findFirstActivePeriodByTypeCode(GRADE_PUBLISH, now)
                 .map(List::of)
                 .orElseGet(List::of);
@@ -196,11 +200,6 @@ public class GradePublishService {
         CourseGradingPolicy policy = courseGradingPolicyRepository.findById(courseId)
                 .orElseThrow(() -> new IllegalArgumentException("강의 평가비율을 찾을 수 없습니다. courseId=" + courseId));
 
-        // 과제 기능이 아직 미구현이면 assignment 비중이 0인 강의만 산출 허용
-        if (policy.getAssignment() != null && policy.getAssignment() > 0) {
-            throw new IllegalArgumentException("과제 기능이 미구현인데 assignment 비중이 0이 아닙니다. courseId=" + courseId);
-        }
-
         // 평가 항목별 Assessment 목록/만점합
         List<Assessment> quizzes = assessmentRepository.findActiveByCourse(courseId, AssessmentType.QUIZ);
         List<Assessment> midterms = assessmentRepository.findActiveByCourse(courseId, AssessmentType.MIDTERM);
@@ -220,9 +219,29 @@ public class GradePublishService {
             return;
         }
 
+        // 과제 채점 미완료가 있으면 강의 전체 스킵
+        List<Assignment> assignments = assignmentRepository.findByCourseId(courseId);
+        List<Long> assignmentIds = assignments.stream().map(Assignment::getId).toList();
+        if (!assignmentIds.isEmpty() && assignmentSubmissionRepository.existsPendingGradingByAssignmentIds(assignmentIds)) {
+            log.info("성적 자동 공개 스킵(과제 채점 미완료) courseId={}", courseId);
+            return;
+        }
+
         BigDecimal quizMax = sumTotalScore(quizzes);
         BigDecimal midtermMax = sumTotalScore(midterms);
         BigDecimal finalMax = sumTotalScore(finals);
+        BigDecimal assignmentMax = sumAssignmentMaxScore(assignments);
+
+        // 과제 점수(학생별 획득합) 배치 조회
+        Map<Long, BigDecimal> assignmentEarnedMap = new HashMap<>();
+        if (!assignmentIds.isEmpty()) {
+            List<Object[]> rows = assignmentSubmissionRepository.sumGradedScoreByUserGroupByUserId(assignmentIds);
+            for (Object[] r : rows) {
+                Long userId = (Long) r[0];
+                BigDecimal sum = (BigDecimal) r[1];
+                assignmentEarnedMap.put(userId, sum != null ? sum : BigDecimal.ZERO);
+            }
+        }
 
         long totalWeeks = courseWeekRepository.countByCourseId(courseId);
 
@@ -245,9 +264,8 @@ public class GradePublishService {
             // 출석 점수(A안): 0~100 정규화 점수
             BigDecimal attendanceNormalized = calcAttendanceNormalized(studentId, courseId, totalWeeks);
 
-            // 과제는 아직 미구현 -> 0 처리
-            BigDecimal assignmentEarned = BigDecimal.ZERO;
-            BigDecimal assignmentMax = BigDecimal.ZERO;
+            // 과제 점수(획득합)
+            BigDecimal assignmentEarned = assignmentEarnedMap.getOrDefault(studentId, BigDecimal.ZERO);
 
             // 각 항목 정규화(0~100)
             BigDecimal quizNormalized = normalizeTo100(quizEarned, quizMax);
@@ -307,14 +325,8 @@ public class GradePublishService {
     public void publishCourseIfReady(Course course, LocalDateTime now, boolean strict) {
         Long courseId = course.getId();
 
-        CourseGradingPolicy policy = courseGradingPolicyRepository.findById(courseId)
+        courseGradingPolicyRepository.findById(courseId)
                 .orElseThrow(() -> new IllegalArgumentException("강의 평가비율을 찾을 수 없습니다. courseId=" + courseId));
-        if (policy.getAssignment() != null && policy.getAssignment() > 0) {
-            String msg = "성적 공개 스킵/불가(과제 미구현인데 assignment 비중>0) courseId=" + courseId;
-            if (strict) throw new IllegalArgumentException(msg);
-            log.info(msg);
-            return;
-        }
 
         // 시험 채점 미완료가 있으면 공개 불가
         List<Assessment> midterms = assessmentRepository.findActiveByCourse(courseId, AssessmentType.MIDTERM);
@@ -329,6 +341,16 @@ public class GradePublishService {
         }
         if (!finalIds.isEmpty() && assessmentAttemptRepository.existsUngradedSubmittedByAssessmentIds(finalIds)) {
             String msg = "성적 공개 스킵/불가(기말 채점 미완료) courseId=" + courseId;
+            if (strict) throw new IllegalArgumentException(msg);
+            log.info(msg);
+            return;
+        }
+
+        // 과제 채점 미완료가 있으면 공개 불가
+        List<Assignment> assignments = assignmentRepository.findByCourseId(courseId);
+        List<Long> assignmentIds = assignments.stream().map(Assignment::getId).toList();
+        if (!assignmentIds.isEmpty() && assignmentSubmissionRepository.existsPendingGradingByAssignmentIds(assignmentIds)) {
+            String msg = "성적 공개 스킵/불가(과제 채점 미완료) courseId=" + courseId;
             if (strict) throw new IllegalArgumentException(msg);
             log.info(msg);
             return;
@@ -383,6 +405,14 @@ public class GradePublishService {
         BigDecimal sum = BigDecimal.ZERO;
         for (Assessment a : list) {
             if (a.getTotalScore() != null) sum = sum.add(a.getTotalScore());
+        }
+        return sum;
+    }
+
+    private BigDecimal sumAssignmentMaxScore(List<Assignment> list) {
+        BigDecimal sum = BigDecimal.ZERO;
+        for (Assignment a : list) {
+            if (a.getMaxScore() != null) sum = sum.add(a.getMaxScore());
         }
         return sum;
     }

@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -30,9 +30,8 @@ public class StudentAttendanceController {
      * GET /api/v1/attendance/my
      */
     @GetMapping("/my")
-    public ResponseEntity<?> getMyAttendance(Authentication authentication) {
+    public ResponseEntity<?> getMyAttendance(@AuthenticationPrincipal Long studentId) {
         try {
-            Long studentId = getStudentId(authentication);
             if (studentId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(createErrorResponse("Login required"));
@@ -59,9 +58,8 @@ public class StudentAttendanceController {
     @GetMapping("/courses/{courseId}")
     public ResponseEntity<?> getCourseAttendance(
             @PathVariable Long courseId,
-            Authentication authentication) {
+            @AuthenticationPrincipal Long studentId) {
         try {
-            Long studentId = getStudentId(authentication);
             if (studentId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(createErrorResponse("Login required"));
@@ -89,9 +87,8 @@ public class StudentAttendanceController {
     public ResponseEntity<?> getWeekAttendanceDetail(
             @PathVariable Long courseId,
             @PathVariable Long weekId,
-            Authentication authentication) {
+            @AuthenticationPrincipal Long studentId) {
         try {
-            Long studentId = getStudentId(authentication);
             if (studentId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(createErrorResponse("Login required"));
@@ -114,17 +111,6 @@ public class StudentAttendanceController {
             log.error("Failed to get week attendance: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(createErrorResponse(e.getMessage()));
-        }
-    }
-
-    private Long getStudentId(Authentication authentication) {
-        if (authentication == null || authentication.getName() == null) {
-            return null;
-        }
-        try {
-            return Long.parseLong(authentication.getName());
-        } catch (NumberFormatException e) {
-            return null;
         }
     }
 

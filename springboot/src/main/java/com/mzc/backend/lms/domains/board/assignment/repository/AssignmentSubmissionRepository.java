@@ -76,4 +76,27 @@ public interface AssignmentSubmissionRepository extends JpaRepository<Assignment
     @Query("SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END FROM AssignmentSubmission s WHERE s.assignment.id = :assignmentId AND s.userId = :userId AND s.isDeleted = false")
     boolean existsByAssignmentIdAndUserId(@Param("assignmentId") Long assignmentId, 
                                           @Param("userId") Long userId);
+
+    /**
+     * 강의(과제들) 기준으로 채점 미완료 제출이 존재하는지 확인
+     * - status가 SUBMITTED/LATE 인 경우 채점 대기(미완료)로 간주
+     * - (방어) status=GRADED 인데 score가 null 인 비정상 데이터도 미완료로 간주
+     */
+    @Query("SELECT COUNT(s) > 0 FROM AssignmentSubmission s " +
+            "WHERE s.assignment.id IN :assignmentIds " +
+            "AND (s.status IN ('SUBMITTED', 'LATE') OR (s.status = 'GRADED' AND s.score IS NULL)) " +
+            "AND s.isDeleted = false")
+    boolean existsPendingGradingByAssignmentIds(@Param("assignmentIds") List<Long> assignmentIds);
+
+    /**
+     * 학생별 과제 점수(획득합) 배치 조회
+     * - status=GRADED 인 제출만 집계
+     * - 반환: (userId, sum(score))
+     */
+    @Query("SELECT s.userId, COALESCE(SUM(s.score), 0) FROM AssignmentSubmission s " +
+            "WHERE s.assignment.id IN :assignmentIds " +
+            "AND s.status = 'GRADED' " +
+            "AND s.isDeleted = false " +
+            "GROUP BY s.userId")
+    List<Object[]> sumGradedScoreByUserGroupByUserId(@Param("assignmentIds") List<Long> assignmentIds);
 }

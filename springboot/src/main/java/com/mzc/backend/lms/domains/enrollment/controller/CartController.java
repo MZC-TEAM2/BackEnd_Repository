@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -31,18 +31,17 @@ public class CartController {
      * 장바구니 조회
      */
     @GetMapping
-    public ResponseEntity<?> getCart(Authentication authentication) {
+    public ResponseEntity<?> getCart(@AuthenticationPrincipal Long studentId) {
         try {
             // 인증 확인
-            if (authentication == null || authentication.getName() == null) {
+            if (studentId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(createErrorResponse("로그인이 필요합니다."));
             }
 
-            String studentId = authentication.getName();
             log.debug("장바구니 조회: studentId={}", studentId);
 
-            CartResponseDto response = cartService.getCart(studentId);
+            CartResponseDto response = cartService.getCart(String.valueOf(studentId));
             return ResponseEntity.ok(createSuccessResponse(response));
         } catch (Exception e) {
             log.error("장바구니 조회 실패: {}", e.getMessage(), e);
@@ -57,18 +56,17 @@ public class CartController {
     @PostMapping("/bulk")
     public ResponseEntity<?> addToCartBulk(
             @RequestBody CourseIdsRequestDto request,
-            Authentication authentication) {
+            @AuthenticationPrincipal Long studentId) {
         try {
             // 인증 확인
-            if (authentication == null || authentication.getName() == null) {
+            if (studentId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(createErrorResponse("로그인이 필요합니다."));
             }
 
-            String studentId = authentication.getName();
             log.debug("장바구니 요청 항목 일괄 추가: studentId={}, courseIds={}", studentId, request.getCourseIds());
 
-            CartBulkAddResponseDto response = cartService.addToCartBulk(request, studentId);
+            CartBulkAddResponseDto response = cartService.addToCartBulk(request, String.valueOf(studentId));
             return ResponseEntity.ok(createSuccessResponse(response));
         } catch (IllegalArgumentException e) {
             log.warn("장바구니 요청 항목 일괄 추가 실패: {}", e.getMessage());
@@ -87,18 +85,17 @@ public class CartController {
     @DeleteMapping("/bulk")
     public ResponseEntity<?> deleteFromCartBulk(
             @RequestBody CartBulkDeleteRequestDto request,
-            Authentication authentication) {
+            @AuthenticationPrincipal Long studentId) {
         try {
             // 인증 확인
-            if (authentication == null || authentication.getName() == null) {
+            if (studentId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(createErrorResponse("로그인이 필요합니다."));
             }
 
-            String studentId = authentication.getName();
             log.debug("장바구니 요청 항목 일괄 삭제: studentId={}, cartIds={}", studentId, request.getCartIds());
 
-            CartBulkDeleteResponseDto response = cartService.deleteFromCartBulk(request, studentId);
+            CartBulkDeleteResponseDto response = cartService.deleteFromCartBulk(request, String.valueOf(studentId));
             return ResponseEntity.ok(createSuccessResponse(response));
         } catch (IllegalArgumentException e) {
             log.warn("장바구니 요청 항목 일괄 삭제 실패: {}", e.getMessage());
@@ -117,18 +114,17 @@ public class CartController {
 
     @DeleteMapping
     public ResponseEntity<?> deleteAllCart(
-            Authentication authentication) {
+            @AuthenticationPrincipal Long studentId) {
         try {
             // 인증 확인
-            if (authentication == null || authentication.getName() == null) {
+            if (studentId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(createErrorResponse("로그인이 필요합니다."));
             }
 
-            String studentId = authentication.getName();
             log.debug("장바구니 전체 비우기: studentId={}", studentId);
 
-            CartBulkDeleteResponseDto response = cartService.deleteAllCart(studentId);
+            CartBulkDeleteResponseDto response = cartService.deleteAllCart(String.valueOf(studentId));
             return ResponseEntity.ok(createSuccessResponse(response));
         }
         catch (IllegalArgumentException e) {

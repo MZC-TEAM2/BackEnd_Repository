@@ -5,7 +5,7 @@ import com.mzc.backend.lms.domains.course.grade.service.ProfessorGradeQueryServi
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,13 +33,12 @@ public class ProfessorGradeQueryController {
     public ResponseEntity<?> listCourseGrades(
             @PathVariable Long courseId,
             @RequestParam(required = false, defaultValue = "ALL") String status,
-            Authentication authentication
+            @AuthenticationPrincipal Long professorId
     ) {
         try {
-            if (authentication == null || authentication.getName() == null) {
+            if (professorId == null) {
                 return ResponseEntity.status(401).body(error("인증이 필요합니다."));
             }
-            Long professorId = Long.parseLong(authentication.getName());
 
             ProfessorGradeQueryService.GradeQueryStatus st;
             try {

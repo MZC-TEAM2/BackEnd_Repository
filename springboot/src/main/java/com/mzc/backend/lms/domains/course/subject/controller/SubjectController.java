@@ -13,6 +13,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -42,10 +43,10 @@ public class SubjectController {
             @RequestParam(required = false) String courseType,
             @RequestParam(required = false) Integer credits,
             @RequestParam(required = false, defaultValue = "true") Boolean isActive,
+            @AuthenticationPrincipal Long userId,
             Authentication authentication
     ) {
-        // 인증 정보에서 userId와 userType 추출
-        Long userId = Long.parseLong(authentication.getName());
+        // 인증 정보에서 userType 추출
         String userType = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .filter(auth -> auth.equals("PROFESSOR") || auth.equals("STUDENT"))

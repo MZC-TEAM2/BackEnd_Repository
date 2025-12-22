@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,16 +34,15 @@ public class ProfessorCourseGradePublishController {
     @PostMapping("/{courseId}/grades/calculate")
     public ResponseEntity<?> calculateCourse(
             @PathVariable Long courseId,
-            Authentication authentication
+            @AuthenticationPrincipal Long professorId
     ) {
         try {
             if (courseId == null) {
                 return ResponseEntity.badRequest().body(error("courseId는 필수입니다."));
             }
-            if (authentication == null || authentication.getName() == null) {
+            if (professorId == null) {
                 return ResponseEntity.status(401).body(error("인증이 필요합니다."));
             }
-            Long professorId = Long.parseLong(authentication.getName());
 
             Course course = courseRepository.findById(courseId)
                     .orElseThrow(() -> new IllegalArgumentException("강의를 찾을 수 없습니다. courseId=" + courseId));
@@ -70,16 +69,15 @@ public class ProfessorCourseGradePublishController {
     @PostMapping("/{courseId}/grades/publish")
     public ResponseEntity<?> publishCourse(
             @PathVariable Long courseId,
-            Authentication authentication
+            @AuthenticationPrincipal Long professorId
     ) {
         try {
             if (courseId == null) {
                 return ResponseEntity.badRequest().body(error("courseId는 필수입니다."));
             }
-            if (authentication == null || authentication.getName() == null) {
+            if (professorId == null) {
                 return ResponseEntity.status(401).body(error("인증이 필요합니다."));
             }
-            Long professorId = Long.parseLong(authentication.getName());
 
             Course course = courseRepository.findById(courseId)
                     .orElseThrow(() -> new IllegalArgumentException("강의를 찾을 수 없습니다. courseId=" + courseId));

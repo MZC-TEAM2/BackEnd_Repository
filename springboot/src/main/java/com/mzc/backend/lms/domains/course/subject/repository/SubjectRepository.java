@@ -4,7 +4,9 @@ import com.mzc.backend.lms.domains.course.subject.entity.Subject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -62,6 +64,13 @@ public interface SubjectRepository extends JpaRepository<Subject, Long> {
         WHERE s.id = :subjectId
         """)
     java.util.Optional<Subject> findByIdWithDetails(@Param("subjectId") Long subjectId);
+
+    /**
+     * 비관적 락을 사용하여 과목 조회 (동시성 제어용)
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT s FROM Subject s WHERE s.id = :id")
+    java.util.Optional<Subject> findByIdWithLock(@Param("id") Long id);
 
     /**
      * 과목 검색 - 과목명 또는 과목코드로 검색 (페이징 지원)

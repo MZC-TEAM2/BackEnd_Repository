@@ -74,9 +74,14 @@ public class SecurityConfig {
 
                 // 학생 전용 API
                 .requestMatchers("/api/student/**").hasAuthority("STUDENT")
+                .requestMatchers("/api/v1/student/**").hasAuthority("STUDENT")
 
                 // 교수 전용 API
                 .requestMatchers("/api/professor/**").hasAuthority("PROFESSOR")
+                .requestMatchers("/api/v1/professor/**").hasAuthority("PROFESSOR")
+
+                // 공통(학생/교수) 학기 조회 API
+                .requestMatchers(HttpMethod.GET, "/api/v1/academic-terms/**").authenticated()
 
                 // 나머지 요청은 인증 필요
                 .anyRequest().authenticated()
