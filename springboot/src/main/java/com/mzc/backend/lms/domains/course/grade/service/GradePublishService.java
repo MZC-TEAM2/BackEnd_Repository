@@ -44,6 +44,7 @@ import java.util.Map;
  * - 퀴즈 0개는 0 처리
  * - final_score는 정규화(B): (획득합/만점합)*100 을 각 항목별로 만든 후 가중합
  * - 출석은 A안: (출석완료 주차수/전체주차수)*100
+ * - 결석 3회 이상이면 최종 등급은 무조건 F (publish 단계에서 강제)
  * - 등급은 상대평가(비율)로 배정 (A+,A0,A-,B+,B0,B-,C+,C0,C-,D+,D0,D-,F)
  */
 @Slf4j
@@ -55,6 +56,7 @@ public class GradePublishService {
 
     private static final String GRADE_CALCULATION = "GRADE_CALCULATION";
     private static final String GRADE_PUBLISH = "GRADE_PUBLISH";
+    private static final long FAIL_ABSENCE_COUNT = 3L;
 
     private final EnrollmentPeriodRepository enrollmentPeriodRepository;
     private final PeriodTypeRepository periodTypeRepository;
@@ -385,12 +387,38 @@ public class GradePublishService {
             }
         }
 
-        // 상대평가 등급 배정(finalScore 기반)
-        List<StudentGradeCalc> calcs = grades.stream().map(g -> StudentGradeCalc.builder()
-                .studentId(g.getStudentId())
-                .finalScore(g.getFinalScore())
-                .build()).toList();
-        Map<Long, String> gradeMap = assignRelativeGrades(calcs);
+        // 결석 3회 이상이면 무조건 F
+        // - 상대평가 "대상 집단"에서 제외한 뒤(=F 확정), 남은 학생들끼리 상대평가를 재계산한다.
+        long totalWeeks = courseWeekRepository.countByCourseId(courseId);
+        Map<Long, String> gradeMap = new HashMap<>(Math.max(16, studentIds.size() * 2));
+
+        Map<Long, Integer> completedMap = new HashMap<>();
+        if (totalWeeks > 0) {
+            List<Object[]> stats = weekAttendanceRepository.getAttendanceStatsByCourse(courseId);
+            for (Object[] r : stats) {
+                Long sid = (Long) r[0];
+                Number completed = (Number) r[2]; // SUM(CASE...) 결과
+                completedMap.put(sid, completed == null ? 0 : completed.intValue());
+            }
+        }
+
+        List<StudentGradeCalc> eligibleCalcs = new ArrayList<>();
+        for (Grade g : grades) {
+            long completed = (totalWeeks > 0) ? completedMap.getOrDefault(g.getStudentId(), 0) : 0;
+            long absences = (totalWeeks > 0) ? Math.max(0, totalWeeks - completed) : 0;
+            if (totalWeeks > 0 && absences >= FAIL_ABSENCE_COUNT) {
+                gradeMap.put(g.getStudentId(), "F");
+                continue;
+            }
+            eligibleCalcs.add(StudentGradeCalc.builder()
+                    .studentId(g.getStudentId())
+                    .finalScore(g.getFinalScore())
+                    .build());
+        }
+
+        // 상대평가 등급 배정(finalScore 기반) - 결석 F 확정자를 제외한 집단
+        Map<Long, String> eligibleMap = assignRelativeGrades(eligibleCalcs);
+        gradeMap.putAll(eligibleMap);
 
         for (Grade g : grades) {
             String finalGrade = gradeMap.get(g.getStudentId());
