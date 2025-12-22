@@ -163,20 +163,8 @@ INSERT INTO hashtags (name, display_name, color, tag_category, is_active, create
 ('이력서', '이력서', '#d32f2f', 'CAREER', 1, 20241001, NOW()),
 ('코딩테스트', '코딩테스트', '#1976d2', 'STUDY_RECRUITMENT', 1, 20241001, NOW()),
 ('자격증', '자격증', '#9c27b0', 'STUDY_RECRUITMENT', 1, 20241001, NOW()),
-('프로젝트', '프로젝트', '#0288d1', 'STUDY_RECRUITMENT', 1, 20241001, NOW()),
 ('토익토스', '토익토스', '#f57c00', 'STUDY_RECRUITMENT', 1, 20241001, NOW()),
-('전공공부', '전공공부', '#388e3c', 'STUDY_RECRUITMENT', 1, 20241001, NOW()),
-('학과공지', '학과공지', '#1976d2', 'DEPARTMENT', 1, 20241001, NOW()),
-('전공수업', '전공수업', '#9c27b0', 'DEPARTMENT', 1, 20241001, NOW()),
-('졸업요건', '졸업요건', '#0288d1', 'DEPARTMENT', 1, 20241001, NOW()),
-('학과행사', '학과행사', '#f57c00', 'DEPARTMENT', 1, 20241001, NOW()),
-('교수님공지', '교수님공지', '#d32f2f', 'DEPARTMENT', 1, 20241001, NOW()),
-('학과세미나', '학과세미나', '#388e3c', 'DEPARTMENT', 1, 20241001, NOW()),
-('졸업논문', '졸업논문', '#1976d2', 'DEPARTMENT', 1, 20241001, NOW()),
-('학과동아리', '학과동아리', '#9c27b0', 'DEPARTMENT', 1, 20241001, NOW()),
-('코딩과제', '코딩과제', '#0288d1', 'ASSIGNMENT', 1, 20241001, NOW()),
-('프로그래밍', '프로그래밍', '#f57c00', 'ASSIGNMENT', 1, 20241001, NOW()),
-('동적계획법', '동적계획법', '#388e3c', 'ASSIGNMENT', 1, 20241001, NOW());
+('전공공부', '전공공부', '#388e3c', 'STUDY_RECRUITMENT', 1, 20241001, NOW());
 
 
 -- 질문 게시판 해시태그
@@ -296,31 +284,31 @@ WHERE p.title LIKE '%사진 취미%';
 INSERT INTO post_hashtags (post_id, hashtag_id, created_by, created_at) 
 SELECT p.id, h.id, 20241001, NOW()
 FROM posts p
-JOIN hashtags h ON h.name IN ('자료구조', '알고리즘')
+JOIN hashtags h ON h.name IN ('개념이해', '과제질문')
 WHERE p.title LIKE '%자료구조 이진트리%' OR p.title LIKE '%알고리즘 시간복잡도%';
 
 INSERT INTO post_hashtags (post_id, hashtag_id, created_by, created_at) 
 SELECT p.id, h.id, 20241001, NOW()
 FROM posts p
-JOIN hashtags h ON h.name IN ('데이터베이스')
+JOIN hashtags h ON h.name IN ('시험준비')
 WHERE p.title LIKE '%SQL JOIN%' OR p.title LIKE '%DB 정규화%';
 
 INSERT INTO post_hashtags (post_id, hashtag_id, created_by, created_at) 
 SELECT p.id, h.id, 20241001, NOW()
 FROM posts p
-JOIN hashtags h ON h.name IN ('웹개발')
+JOIN hashtags h ON h.name IN ('문제풀이')
 WHERE p.title LIKE '%React%' OR p.title LIKE '%Spring Boot%' OR p.title LIKE '%RESTful%';
 
 INSERT INTO post_hashtags (post_id, hashtag_id, created_by, created_at) 
 SELECT p.id, h.id, 20241001, NOW()
 FROM posts p
-JOIN hashtags h ON h.name IN ('운영체제')
+JOIN hashtags h ON h.name IN ('학습자료')
 WHERE p.title LIKE '%운영체제 프로세스%';
 
 INSERT INTO post_hashtags (post_id, hashtag_id, created_by, created_at) 
 SELECT p.id, h.id, 20241001, NOW()
 FROM posts p
-JOIN hashtags h ON h.name IN ('네트워크')
+JOIN hashtags h ON h.name IN ('프로젝트')
 WHERE p.title LIKE '%TCP vs UDP%' OR p.title LIKE '%네트워크 OSI%';
 
 INSERT INTO post_hashtags (post_id, hashtag_id, created_by, created_at) 
@@ -877,16 +865,26 @@ INSERT INTO posts (category_id, author_id, title, content, post_type, is_anonymo
 
 -- 공모전 게시판 게시글 해시태그 연결
 
+INSERT INTO post_hashtags (post_id, hashtag_id, created_by, created_at) 
+SELECT p.id, h.id, 20241001, NOW()
+FROM posts p
+CROSS JOIN hashtags h
+WHERE p.title = 'IT/소프트웨어 공모전 정보'
+AND h.name = 'it/소프트웨어';
 
+INSERT INTO post_hashtags (post_id, hashtag_id, created_by, created_at) 
+SELECT p.id, h.id, 20241001, NOW()
+FROM posts p
+CROSS JOIN hashtags h
+WHERE p.title = '디자인 공모전 - UI/UX'
+AND h.name = '디자인';
 
-
-
-
-
-
-
-
-
+INSERT INTO post_hashtags (post_id, hashtag_id, created_by, created_at) 
+SELECT p.id, h.id, 20241001, NOW()
+FROM posts p
+CROSS JOIN hashtags h
+WHERE p.title = '마케팅 아이디어 공모전'
+AND h.name = '마케팅';
 
 -- 취업정보 게시판 게시글 해시태그 연결
 
