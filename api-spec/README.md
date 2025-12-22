@@ -1,6 +1,8 @@
 # LMS API Specification
 
 > Learning Management System Backend API 문서
+> 
+ > **작성자** : 송명주 (최종수정 2025-12-22)
 
 ## 목차
 
