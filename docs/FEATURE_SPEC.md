@@ -1,9 +1,11 @@
 # LMS (Learning Management System) - 기능명세서
 
 > **프로젝트명**: MZC 1st Project - 학습관리시스템
-> **버전**: 1.0
+> 
 > **아키텍처**: 서버 분리 (Core API Server + Video Streaming Server)
+> 
 > **기술 스택**: Spring Boot 3.5.7, Java 21, MySQL, Redis
+> 
 > **팀**: MZC Team 2
 
 ---
@@ -947,4 +949,7 @@ messages           - 메시지
 
 ---
 
-**문서 작성일**: 2025/12/18
+> **문서 작성일**: 2025/12/22
+> **버전**: 1.0
+> 
+> **작성자** : 송명주(2025-12-22)
