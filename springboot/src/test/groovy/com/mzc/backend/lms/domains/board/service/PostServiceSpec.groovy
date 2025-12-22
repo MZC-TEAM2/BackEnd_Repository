@@ -54,10 +54,11 @@ class PostServiceSpec extends Specification {
             professorDepartmentRepository
     )
 
-    def "게시글을 조회한다"() {
+    def "게시글을 조회하면 조회수가 증가한다"() {
         given: "존재하는 게시글"
         def postId = 1L
         def category = Mock(BoardCategory) {
+            getId() >> 1L
             getBoardType() >> BoardType.FREE
         }
         def post = Mock(Post) {
@@ -71,10 +72,18 @@ class PostServiceSpec extends Specification {
             getLikeCount() >> 0
             getPostHashtags() >> []
             getAttachments() >> []
+            getComments() >> []
+            getPostType() >> PostType.NORMAL
+            isAnonymous() >> false
+            getDepartmentId() >> null
+            getCreatedBy() >> 1L
+            getUpdatedBy() >> null
+            getCreatedAt() >> null
+            getUpdatedAt() >> null
         }
 
         postRepository.findByIdWithHashtags(postId) >> Optional.of(post)
-        userInfoCacheService.getUserInfoMap(_) >> [1L: new UserBasicInfoDto(1L, "테스터", null, "STUDENT")]
+        userInfoCacheService.getUserInfoMap(_) >> [1L: new UserBasicInfoDto(1L, "테스터", "STUDENT")]
 
         when: "게시글을 조회하면"
         def result = postService.getPost("FREE", postId, 1L)
@@ -212,6 +221,7 @@ class PostServiceSpec extends Specification {
     def "잘못된 게시판 타입으로 조회 시 예외가 발생한다"() {
         given: "잘못된 게시판 타입"
         def invalidBoardType = "INVALID_TYPE"
+        postRepository.findByIdWithHashtags(1L) >> Optional.empty()
 
         when: "게시글을 조회하면"
         postService.getPost(invalidBoardType, 1L, 1L)
