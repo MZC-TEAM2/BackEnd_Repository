@@ -1,11 +1,16 @@
 # LMS (Learning Management System) - 기능명세서
 
 > **프로젝트명**: MZC 1st Project - 학습관리시스템
+>
 > **버전**: 1.0
+>
 > **아키텍처**: 서버 분리 (Core API Server + Video Streaming Server)
+> 
 > **기술 스택**: Spring Boot 3.5.7, Java 21, MySQL, Redis
+> 
 > **팀**: MZC Team 2
-
+> 
+> **작성자** : 송명주 (최종수정 2025-12-22)
 ---
 
 ## 목차
@@ -469,231 +474,14 @@
 
 ---
 
-## 7. API 엔드포인트
 
-### 7.1 인증 API (`/api/auth`)
+## 7. 기술적 특징
 
-| Method | Endpoint | 설명 |
-|--------|----------|------|
-| POST | /signup/email-verification | 이메일 인증 코드 발송 |
-| POST | /signup/verify-code | 인증 코드 확인 |
-| POST | /signup | 회원가입 |
-| POST | /login | 로그인 |
-| POST | /refresh | 토큰 갱신 |
-| POST | /logout | 로그아웃 |
-| GET | /check-email | 이메일 중복 확인 |
-
-### 7.2 프로필 API (`/api/v1/profile`)
-
-| Method | Endpoint | 설명 |
-|--------|----------|------|
-| GET | /me | 내 프로필 조회 |
-| PATCH | /me | 프로필 수정 |
-| POST | /me/image | 프로필 이미지 업로드 |
-| DELETE | /me/image | 프로필 이미지 삭제 |
-
-### 7.3 사용자 검색 API (`/api/v1/users`)
-
-| Method | Endpoint | 설명 |
-|--------|----------|------|
-| GET | /search | 사용자 검색 |
-| GET | /colleges | 단과대학 목록 |
-| GET | /colleges/{id}/departments | 단과대학별 학과 목록 |
-| GET | /departments | 전체 학과 목록 |
-
-### 7.4 강의 API (`/api/v1/courses`)
-
-| Method | Endpoint | 설명 |
-|--------|----------|------|
-| GET | / | 강의 목록 조회 |
-| GET | /{courseId} | 강의 상세 조회 |
-
-### 7.5 교수 강의 관리 API (`/api/v1/professor/courses`)
-
-| Method | Endpoint | 설명 |
-|--------|----------|------|
-| POST | / | 강의 개설 |
-| PUT | /{courseId} | 강의 수정 |
-| DELETE | /{courseId} | 강의 삭제 |
-| GET | / | 내 강의 목록 |
-| GET | /{courseId} | 내 강의 상세 |
-
-### 7.6 주차별 콘텐츠 API (`/api/v1/professor/courses/{courseId}/weeks`)
-
-| Method | Endpoint | 설명 |
-|--------|----------|------|
-| GET | / | 주차 목록 조회 |
-| POST | / | 주차 등록 |
-| PUT | /{weekId} | 주차 수정 |
-| DELETE | /{weekId} | 주차 삭제 |
-| GET | /{weekId}/contents | 콘텐츠 목록 |
-| POST | /{weekId}/contents | 콘텐츠 등록 |
-| PUT | /{weekId}/contents/{contentId} | 콘텐츠 수정 |
-| DELETE | /{weekId}/contents/{contentId} | 콘텐츠 삭제 |
-| PUT | /{weekId}/contents/reorder | 콘텐츠 순서 변경 |
-
-### 7.7 과목 API (`/api/v1/subjects`)
-
-| Method | Endpoint | 설명 |
-|--------|----------|------|
-| GET | / | 과목 목록 조회 |
-| GET | /{subjectId} | 과목 상세 조회 |
-| GET | /search | 과목 검색 |
-
-### 7.8 수강신청 API (`/api/v1/enrollments`)
-
-| Method | Endpoint | 설명 |
-|--------|----------|------|
-| GET | /periods/current | 현재 수강신청 기간 조회 |
-| GET | /courses | 수강신청 가능 강의 조회 |
-| POST | /bulk | 수강신청 (일괄) |
-| DELETE | /bulk | 수강 취소 (일괄) |
-| GET | /my | 내 수강 목록 |
-
-### 7.9 장바구니 API (`/api/v1/carts`)
-
-| Method | Endpoint | 설명 |
-|--------|----------|------|
-| GET | / | 장바구니 조회 |
-| POST | /bulk | 장바구니 추가 (일괄) |
-| DELETE | /bulk | 장바구니 삭제 (일괄) |
-| DELETE | / | 장바구니 전체 삭제 |
-
-### 7.10 게시판 API (`/api/v1/board`)
-
-| Method | Endpoint | 설명 |
-|--------|----------|------|
-| POST | /{boardType}/posts | 게시글 작성 |
-| GET | /{boardType}/posts | 게시글 목록 |
-| GET | /{boardType}/posts/{id} | 게시글 상세 |
-| PUT | /posts/{id} | 게시글 수정 |
-| DELETE | /posts/{id} | 게시글 삭제 |
-| POST | /posts/{id}/like | 좋아요 토글 |
-| GET | /posts/{id}/liked | 좋아요 여부 조회 |
-
-### 7.11 댓글 API (`/api/v1/board`)
-
-| Method | Endpoint | 설명 |
-|--------|----------|------|
-| POST | /comments | 댓글 작성 |
-| GET | /comments | 댓글 목록 (postId 필터) |
-| PUT | /comments/{id} | 댓글 수정 |
-| DELETE | /comments/{id} | 댓글 삭제 |
-
-### 7.12 첨부파일 API (`/api/v1/attachments`)
-
-| Method | Endpoint | 설명 |
-|--------|----------|------|
-| POST | /upload | 단일 파일 업로드 |
-| POST | /upload/multiple | 다중 파일 업로드 |
-| GET | /{attachmentId}/download | 파일 다운로드 |
-| GET | /{attachmentId} | 첨부파일 정보 조회 |
-| DELETE | /{attachmentId} | 첨부파일 삭제 |
-
-### 7.13 과제 API (`/api/v1/assignments`)
-
-| Method | Endpoint | 설명 |
-|--------|----------|------|
-| POST | / | 과제 등록 (교수) |
-| GET | / | 강의별 과제 목록 |
-| GET | /{id} | 과제 상세 |
-| PUT | /{id} | 과제 수정 (교수) |
-| DELETE | /{id} | 과제 삭제 (교수) |
-| POST | /{id}/submit | 과제 제출 (학생) |
-| GET | /{id}/submissions | 제출 목록 (교수) |
-| PUT | /submissions/{submissionId}/grade | 채점 (교수) |
-| GET | /{id}/my-submission | 내 제출 조회 (학생) |
-
-### 7.14 알림 API (`/api/notifications`)
-
-| Method | Endpoint | 설명 |
-|--------|----------|------|
-| GET | / | 알림 목록 (커서 기반) |
-| GET | /{notificationId} | 알림 상세 |
-| GET | /unread-count | 안읽은 알림 개수 |
-| PATCH | /{notificationId}/read | 읽음 처리 |
-| PATCH | /read-all | 모든 알림 읽음 처리 |
-| DELETE | /{notificationId} | 알림 삭제 |
-| DELETE | /read | 읽은 알림 삭제 |
-| DELETE | /all | 모든 알림 삭제 |
-
-### 7.15 대화방 API (`/api/v1/conversations`)
-
-| Method | Endpoint | 설명 |
-|--------|----------|------|
-| GET | / | 대화방 목록 |
-| POST | /with/{otherUserId} | 대화방 생성/조회 |
-| GET | /{conversationId} | 대화방 상세 |
-| DELETE | /{conversationId} | 대화방 삭제 |
-| POST | /{conversationId}/read | 읽음 처리 |
-| GET | /unread-count | 전체 안읽음 수 |
-
-### 7.16 메시지 API (`/api/v1/messages`)
-
-| Method | Endpoint | 설명 |
-|--------|----------|------|
-| POST | / | 메시지 전송 |
-| POST | /bulk | 메시지 일괄 전송 |
-| GET | /conversations/{conversationId} | 대화 내역 조회 |
-| DELETE | /{messageId} | 메시지 삭제 |
-| POST | /conversations/{conversationId}/read | 읽음 처리 |
-
-### 7.17 SSE API (`/api/v1/sse`)
-
-| Method | Endpoint | 설명 |
-|--------|----------|------|
-| GET | /subscribe | SSE 연결 (실시간 알림/메시지) |
-
----
-
-### 7.18 Video Streaming API (Port: 8090)
-
-> **Video Streaming Server** 전용 API
-
-#### 영상 업로드 (TUS Protocol)
-| Method | Endpoint | 설명 |
-|--------|----------|------|
-| OPTIONS | /api/v1/videos/upload | TUS 프로토콜 지원 확인 |
-| POST | /api/v1/videos/upload | 업로드 생성 (Location 헤더 반환) |
-| HEAD | /api/v1/videos/upload/** | 업로드 상태 확인 |
-| PATCH | /api/v1/videos/upload/** | 청크 업로드 |
-| DELETE | /api/v1/videos/upload/** | 업로드 취소 |
-
-#### 영상 스트리밍
-| Method | Endpoint | 설명 |
-|--------|----------|------|
-| GET | /api/v1/videos/stream/{videoId} | 영상 스트리밍 (Range 헤더 지원) |
-
-#### 시청 세션
-| Method | Endpoint | 설명 |
-|--------|----------|------|
-| POST | /api/v1/sessions | 시청 세션 시작 |
-| DELETE | /api/v1/sessions/{sessionId} | 시청 세션 종료 |
-| GET | /api/v1/sessions/{sessionId} | 세션 정보 조회 |
-| GET | /api/v1/sessions/active | 활성 세션 조회 (userId) |
-
-#### 진도 보고
-| Method | Endpoint | 설명 |
-|--------|----------|------|
-| POST | /api/v1/progress | 진도 보고 (5초 간격) |
-| GET | /api/v1/progress/{contentId} | 진도 조회 (studentId) |
-
-#### 시청 이벤트
-| Method | Endpoint | 설명 |
-|--------|----------|------|
-| POST | /api/v1/watch-events | 이벤트 기록 |
-| GET | /api/v1/watch-events/session/{sessionId} | 세션별 이벤트 조회 |
-| GET | /api/v1/watch-events/session/{sessionId}/type | 이벤트 유형별 조회 |
-
----
-
-## 8. 기술적 특징
-
-### 8.1 동시성 제어
+### 7.1 동시성 제어
 
 수강신청 시 정원 초과를 방지하기 위해 **두 가지 락 전략**을 지원합니다.
 
-#### 8.1.1 JPA 비관적 락 (현재 적용)
+#### 7.1.1 JPA 비관적 락 (현재 적용)
 
 단일 DB 환경에서 사용하는 방식입니다.
 
@@ -715,7 +503,7 @@ if (course.getCurrentStudents() >= course.getMaxStudents()) {
 course.setCurrentStudents(course.getCurrentStudents() + 1);
 ```
 
-#### 8.1.2 Redisson 분산 락 (스케일 아웃 대응)
+#### 7.1.2 Redisson 분산 락 (스케일 아웃 대응)
 
 다중 서버 환경에서 사용할 수 있는 Redis 기반 분산 락입니다.
 
@@ -775,7 +563,7 @@ distributedLockService.executeWithLock(
 
 ---
 
-### 8.2 AOP 기반 자동 알림 시스템
+### 7.2 AOP 기반 자동 알림 시스템
 
 비즈니스 로직과 알림 로직을 분리하기 위해 **@NotifyEvent 어노테이션**을 사용합니다.
 
@@ -837,7 +625,7 @@ public GradeResult gradeAssignment(Long submissionId, int score) {
 
 ---
 
-### 8.3 이벤트 기반 아키텍처
+### 7.3 이벤트 기반 아키텍처
 
 수강신청/취소 시 **Spring ApplicationEventPublisher**를 활용하여 이벤트를 발행합니다.
 
@@ -859,7 +647,7 @@ public void onEnrollmentCreated(EnrollmentCreatedEvent event) {
 
 ---
 
-### 8.4 Soft Delete 구현
+### 7.4 Soft Delete 구현
 
 데이터 복구 가능성과 참조 무결성을 위해 **Soft Delete** 패턴을 적용했습니다.
 
@@ -874,7 +662,7 @@ public class User {
 
 ---
 
-### 8.5 커서 기반 페이지네이션
+### 7.5 커서 기반 페이지네이션
 
 대용량 데이터 조회 성능을 위해 알림, 메시지 목록에 **커서 기반 페이지네이션**을 적용했습니다.
 
@@ -892,7 +680,7 @@ public ResponseEntity<?> getNotifications(
 
 ---
 
-### 8.6 SSE 기반 실시간 통신
+### 7.6 SSE 기반 실시간 통신
 
 메시지, 알림의 실시간 수신을 위해 **Server-Sent Events**를 사용합니다.
 
@@ -905,7 +693,7 @@ public SseEmitter subscribe(@AuthenticationPrincipal Long userId) {
 
 ---
 
-### 8.7 코드 품질 자동화
+### 7.7 코드 품질 자동화
 
 빌드 시 자동으로 코드 품질 검사를 수행합니다.
 
@@ -915,36 +703,5 @@ public SseEmitter subscribe(@AuthenticationPrincipal Long userId) {
 # pmdMain, pmdTest
 # spotbugsMain, spotbugsTest
 ```
-
----
-
-## 부록: 데이터베이스 ERD
-
-상세 ERD는 `docs/updated_erd.dbml` 파일을 참조하세요.
-
-### 주요 테이블
-
-```
-users              - 사용자 기본 정보
-students           - 학생 정보
-professors         - 교수 정보
-courses            - 강의 정보
-course_schedules   - 강의 시간표
-course_weeks       - 주차별 강의 계획
-course_week_contents - 주차별 콘텐츠
-enrollments        - 수강신청
-course_carts       - 장바구니
-posts              - 게시글
-comments           - 댓글
-attachments        - 첨부파일
-hashtags           - 해시태그
-post_hashtags      - 게시글-해시태그 연결
-post_likes         - 좋아요
-notifications      - 알림
-conversations      - 대화방
-messages           - 메시지
-```
-
----
 
 **문서 작성일**: 2025/12/18

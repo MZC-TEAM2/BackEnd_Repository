@@ -25,8 +25,10 @@
 | Document | Description |
 |----------|-------------|
 | [API Specification](./api-spec/README.md) | 도메인별 API 명세 (12개 도메인, 94개 API) |
+| [API Operations](./docs/API_OPERATIONS.md) | API 오퍼레이션 명세서 |
 | [Flow Charts](./flow-chart) | 기능별 플로우 차트 (33개) |
-| [DB Diagram](https://dbdiagram.io/d/MZC_TEAM2-691ebf15228c5bbc1aadecbc) | 데이터베이스 스키마 |
+| [DB Diagram](./docs/lms_db.png) | 데이터베이스 ERD |
+| [Table Specification](./docs/TABLE_SPEC.md) | 테이블 명세서 (50+ 테이블) |
 
 
 ---
@@ -112,12 +114,24 @@ springboot/
 ---
 
 
+### Docker Infrastructure
+
+| Container | Image | Port | Description |
+|-----------|-------|------|-------------|
+| lms-mysql | mysql:8.0 | 3306 | MySQL 8.0 데이터베이스 |
+| lms-redis | redis:7-alpine | 6379 | Redis 7 캐시/메시지 큐 |
+| lms-phpmyadmin | phpmyadmin:latest | 8081 | MySQL 관리 UI |
+| lms-redis-commander | rediscommander/redis-commander | 8082 | Redis 관리 UI |
+
 ### Access Points
+
 | Service | URL |
 |---------|-----|
 | API Server | http://localhost:8080 |
 | Swagger UI | http://localhost:8080/swagger-ui.html |
 | phpMyAdmin | http://localhost:8081 |
 | Redis Commander | http://localhost:8082 |
+| MySQL | localhost:3306 |
+| Redis | localhost:6379 |
 
 ---
