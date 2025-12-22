@@ -1,0 +1,270 @@
+services:
+  # Nginx Load Balancer & Static File Server
+  nginx:
+    image: nginx:alpine
+    container_name: lms-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "8080:8080"
+      - "8090:8090"
+    volumes:
+      - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      - ./uploads:/var/www/uploads:ro
+    depends_on:
+      - spring-app-1
+      - spring-app-2
+      - spring-app-3
+      - video-server-1
+      - video-server-2
+      - video-server-3
+    networks:
+      - lms-network
+
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: lms-mysql
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DATABASE_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${DATABASE_NAME}
+      MYSQL_USER: ${DATABASE_USER}
+      MYSQL_PASSWORD: ${DATABASE_PASSWORD}
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - lms-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: lms-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    networks:
+      - lms-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Spring Boot Application - Instance 1
+  spring-app-1:
+    image: ddingsh9/mzc-core-api:latest
+    container_name: lms-spring-app-1
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: mysql
+      DATABASE_PORT: ${DATABASE_PORT}
+      DATABASE_NAME: ${DATABASE_NAME}
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: ${REDIS_PORT}
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_FROM: ${MAIL_FROM}
+      MAIL_FROM_NAME: ${MAIL_FROM_NAME}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ACCESS_TOKEN_EXPIRATION_TIME: ${JWT_ACCESS_TOKEN_EXPIRATION_TIME}
+      JWT_REFRESH_TOKEN_EXPIRATION_TIME: ${JWT_REFRESH_TOKEN_EXPIRATION_TIME}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      ENCRYPTION_IV: ${ENCRYPTION_IV}
+      APP_SERVER_URL: http://nginx
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./uploads:/app/uploads
+      - app-logs-1:/app/logs
+    networks:
+      - lms-network
+
+  # Spring Boot Application - Instance 2
+  spring-app-2:
+    image: ddingsh9/mzc-core-api:latest
+    container_name: lms-spring-app-2
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: mysql
+      DATABASE_PORT: ${DATABASE_PORT}
+      DATABASE_NAME: ${DATABASE_NAME}
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: ${REDIS_PORT}
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_FROM: ${MAIL_FROM}
+      MAIL_FROM_NAME: ${MAIL_FROM_NAME}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ACCESS_TOKEN_EXPIRATION_TIME: ${JWT_ACCESS_TOKEN_EXPIRATION_TIME}
+      JWT_REFRESH_TOKEN_EXPIRATION_TIME: ${JWT_REFRESH_TOKEN_EXPIRATION_TIME}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      ENCRYPTION_IV: ${ENCRYPTION_IV}
+      APP_SERVER_URL: http://nginx
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./uploads:/app/uploads
+      - app-logs-2:/app/logs
+    networks:
+      - lms-network
+
+  # Spring Boot Application - Instance 3
+  spring-app-3:
+    image: ddingsh9/mzc-core-api:latest
+    container_name: lms-spring-app-3
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: mysql
+      DATABASE_PORT: ${DATABASE_PORT}
+      DATABASE_NAME: ${DATABASE_NAME}
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: ${REDIS_PORT}
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_FROM: ${MAIL_FROM}
+      MAIL_FROM_NAME: ${MAIL_FROM_NAME}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ACCESS_TOKEN_EXPIRATION_TIME: ${JWT_ACCESS_TOKEN_EXPIRATION_TIME}
+      JWT_REFRESH_TOKEN_EXPIRATION_TIME: ${JWT_REFRESH_TOKEN_EXPIRATION_TIME}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      ENCRYPTION_IV: ${ENCRYPTION_IV}
+      APP_SERVER_URL: http://nginx
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./uploads:/app/uploads
+      - app-logs-3:/app/logs
+    networks:
+      - lms-network
+
+  # Video Server - Instance 1
+  video-server-1:
+    image: ddingsh9/mzc-video-server:latest
+    container_name: lms-video-server-1
+    restart: unless-stopped
+    environment:
+      SERVER_PORT: 8080
+      DATABASE_URL: mysql
+      DATABASE_PORT: ${DATABASE_PORT}
+      DATABASE_NAME: ${DATABASE_NAME}
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: ${REDIS_PORT}
+      VIDEO_STORAGE_PATH: /app/uploads
+      VIDEO_TEMP_PATH: /app/temp
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - video-uploads:/app/uploads
+      - video-temp-1:/app/temp
+    networks:
+      - lms-network
+
+
+  # Video Server - Instance 2
+  video-server-2:
+    image: ddingsh9/mzc-video-server:latest
+    container_name: lms-video-server-2
+    restart: unless-stopped
+    environment:
+      SERVER_PORT: 8080
+      DATABASE_URL: mysql
+      DATABASE_PORT: ${DATABASE_PORT}
+      DATABASE_NAME: ${DATABASE_NAME}
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: ${REDIS_PORT}
+      VIDEO_STORAGE_PATH: /app/uploads
+      VIDEO_TEMP_PATH: /app/temp
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - video-uploads:/app/uploads
+      - video-temp-2:/app/temp
+    networks:
+      - lms-network
+
+  # Video Server - Instance 3
+  video-server-3:
+    image: ddingsh9/mzc-video-server:latest
+    container_name: lms-video-server-3
+    restart: unless-stopped
+    environment:
+      SERVER_PORT: 8080
+      DATABASE_URL: mysql
+      DATABASE_PORT: ${DATABASE_PORT}
+      DATABASE_NAME: ${DATABASE_NAME}
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: ${REDIS_PORT}
+      VIDEO_STORAGE_PATH: /app/uploads
+      VIDEO_TEMP_PATH: /app/temp
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - video-uploads:/app/uploads
+      - video-temp-3:/app/temp
+    networks:
+      - lms-network
+
+networks:
+  lms-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+  redis-data:
+  app-logs-1:
+  app-logs-2:
+  app-logs-3:
+  video-uploads:
+  video-temp-1:
+  video-temp-2:
+  video-temp-3:
