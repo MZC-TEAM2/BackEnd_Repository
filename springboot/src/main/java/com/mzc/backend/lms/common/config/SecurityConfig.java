@@ -63,6 +63,9 @@ public class SecurityConfig {
                     "/v3/api-docs/**"
                 ).permitAll()
 
+                // 해시태그 검색 API - 인증 없이 접근 가능
+                .requestMatchers("/api/v1/hashtags/**").permitAll()
+
                 // 학생 게시판 - 학생만 접근 가능 (조회, 작성, 수정, 삭제)
                 .requestMatchers("/api/v1/boards/STUDENT/**").hasAuthority("STUDENT")
 

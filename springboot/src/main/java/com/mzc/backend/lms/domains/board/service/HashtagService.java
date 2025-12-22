@@ -127,4 +127,36 @@ public class HashtagService {
         log.info("게시글 해시태그 업데이트 완료: postId={}, newTagCount={}", 
                 post.getId(), tagNames != null ? tagNames.size() : 0);
     }
+
+    /**
+     * 해시태그 검색 (자동완성용)
+     * - 활성화된 해시태그 중 키워드가 포함된 항목 반환
+     * - name 또는 displayName에서 검색
+     * - 최대 10개 반환
+     * 
+     * @param keyword 검색 키워드
+     * @return 해시태그 리스트
+     */
+    public List<Hashtag> searchHashtags(String keyword) {
+        if (keyword == null || keyword.isBlank()) {
+            return List.of();
+        }
+
+        // LIKE 패턴 생성: %keyword%
+        String likePattern = "%" + keyword.trim().toLowerCase() + "%";
+        
+        log.info("해시태그 검색: keyword={}, pattern={}", keyword, likePattern);
+        
+        // name과 displayName 모두에서 검색
+        List<Hashtag> results = hashtagRepository
+                .searchActiveHashtagsByKeywordInBoth(likePattern);
+
+        // 최대 10개로 제한
+        if (results.size() > 10) {
+            results = results.subList(0, 10);
+        }
+
+        log.info("해시태그 검색 결과: keyword={}, resultCount={}", keyword, results.size());
+        return results;
+    }
 }

@@ -55,6 +55,7 @@ public class PostService {
     private final HashtagService hashtagService;
     private final EntityManager entityManager;
     private final com.mzc.backend.lms.domains.user.student.repository.StudentDepartmentRepository studentDepartmentRepository;
+    private final com.mzc.backend.lms.domains.user.professor.repository.ProfessorDepartmentRepository professorDepartmentRepository;
 
     /**
      * 게시글 생성 (boardType 기반, 2단계 업로드)
@@ -569,9 +570,19 @@ public class PostService {
         }
         
         try {
-            return studentDepartmentRepository.findByStudentId(userId)
-                    .map(sd -> sd.getDepartment().getId())
+            // 1. 학생 학과 조회
+            Optional<Long> studentDept = studentDepartmentRepository.findByStudentId(userId)
+                    .map(sd -> sd.getDepartment().getId());
+            
+            if (studentDept.isPresent()) {
+                return studentDept.get();
+            }
+            
+            // 2. 교수 학과 조회
+            return professorDepartmentRepository.findByProfessorId(userId)
+                    .map(pd -> pd.getDepartment().getId())
                     .orElse(null);
+
         } catch (Exception e) {
             log.warn("학과 정보 조회 실패: userId={}", userId, e);
             return null;
