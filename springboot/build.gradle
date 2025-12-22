@@ -7,6 +7,7 @@ buildscript {
 
 plugins {
     id 'java'
+    id 'groovy'
     id 'org.springframework.boot' version '3.5.7'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'checkstyle'
@@ -103,6 +104,11 @@ dependencies {
     // Test - Slf4j
 	testImplementation 'org.projectlombok:lombok'
 	testAnnotationProcessor 'org.projectlombok:lombok'
+
+    // Spock Framework (Groovy BDD Testing)
+    testImplementation 'org.spockframework:spock-core:2.4-M4-groovy-4.0'
+    testImplementation 'org.spockframework:spock-spring:2.4-M4-groovy-4.0'
+    testImplementation 'org.apache.groovy:groovy-all:4.0.24'
 
 }
 
