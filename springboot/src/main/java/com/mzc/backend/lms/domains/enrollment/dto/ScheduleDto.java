@@ -9,9 +9,9 @@ import lombok.Getter;
 @Getter
 @Builder
 public class ScheduleDto {
-    private Integer dayOfWeek;
-    private String dayName;
-    private String startTime;
-    private String endTime;
-    private String classroom;
+	private Integer dayOfWeek;
+	private String dayName;
+	private String startTime;
+	private String endTime;
+	private String classroom;
 }
