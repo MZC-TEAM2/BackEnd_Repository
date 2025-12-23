@@ -138,14 +138,14 @@ class AssignmentServiceSpec extends Specification {
         then: "Post가 저장된다"
         1 * postRepository.save({ Post p ->
             p.getTitle() == "새 과제" &&
-            p.getContent() == "과제 설명" &&
-            p.getCategory() == boardCategory
+                    p.getContent() == "과제 설명" &&
+                    p.getCategory() == boardCategory
         }) >> post
 
         and: "과제가 저장된다"
         1 * assignmentRepository.save({ Assignment a ->
             a.getCourseId() == 10L &&
-            a.getPost() == post
+                    a.getPost() == post
         }) >> assignment
     }
 
@@ -305,7 +305,7 @@ class AssignmentServiceSpec extends Specification {
         then: "새 제출이 저장된다"
         1 * submissionRepository.save({ AssignmentSubmission s ->
             s.getContent() == "제출 내용" &&
-            s.getUserId() == studentId
+                    s.getUserId() == studentId
         }) >> submission
     }
 
