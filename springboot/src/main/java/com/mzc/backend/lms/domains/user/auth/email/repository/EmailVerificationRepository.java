@@ -15,32 +15,32 @@ import java.util.Optional;
  */
 @Repository
 public interface EmailVerificationRepository extends JpaRepository<EmailVerification, Long> {
-
-    /**
-     * 이메일과 인증 코드로 조회
-     */
-    Optional<EmailVerification> findByEmailAndVerificationCode(String email, String verificationCode);
-
-    /**
-     * 가장 최근 이메일 인증 조회
-     */
-    Optional<EmailVerification> findTopByEmailOrderByCreatedAtDesc(String email);
-
-    /**
-     * 이메일로 미인증 상태 조회
-     */
-    @Query("SELECT ev FROM EmailVerification ev WHERE ev.email = :email AND ev.isVerified = false AND ev.expiresAt > :now")
-    Optional<EmailVerification> findValidByEmail(@Param("email") String email, @Param("now") LocalDateTime now);
-
-    /**
-     * 이메일 인증 완료 여부 확인
-     */
-    boolean existsByEmailAndIsVerifiedTrue(String email);
-
-    /**
-     * 만료된 인증 정보 삭제
-     */
-    @Modifying
-    @Query("DELETE FROM EmailVerification ev WHERE ev.expiresAt < :now")
-    void deleteExpiredVerifications(@Param("now") LocalDateTime now);
+	
+	/**
+	 * 이메일과 인증 코드로 조회
+	 */
+	Optional<EmailVerification> findByEmailAndVerificationCode(String email, String verificationCode);
+	
+	/**
+	 * 가장 최근 이메일 인증 조회
+	 */
+	Optional<EmailVerification> findTopByEmailOrderByCreatedAtDesc(String email);
+	
+	/**
+	 * 이메일로 미인증 상태 조회
+	 */
+	@Query("SELECT ev FROM EmailVerification ev WHERE ev.email = :email AND ev.isVerified = false AND ev.expiresAt > :now")
+	Optional<EmailVerification> findValidByEmail(@Param("email") String email, @Param("now") LocalDateTime now);
+	
+	/**
+	 * 이메일 인증 완료 여부 확인
+	 */
+	boolean existsByEmailAndIsVerifiedTrue(String email);
+	
+	/**
+	 * 만료된 인증 정보 삭제
+	 */
+	@Modifying
+	@Query("DELETE FROM EmailVerification ev WHERE ev.expiresAt < :now")
+	void deleteExpiredVerifications(@Param("now") LocalDateTime now);
 }
