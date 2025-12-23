@@ -18,64 +18,64 @@ import java.util.List;
 @RequestMapping("/api/v1/conversations")
 @RequiredArgsConstructor
 public class ConversationController implements ConversationControllerSwagger {
-
-    private final ConversationService conversationService;
-
-    @Override
-    @GetMapping
-    public ResponseEntity<List<ConversationListResponseDto>> getConversations(
-            @AuthenticationPrincipal Long userId
-    ) {
-        List<ConversationListResponseDto> result = conversationService.getConversations(userId);
-        return ResponseEntity.ok(result);
-    }
-
-    @Override
-    @PostMapping("/with/{otherUserId}")
-    public ResponseEntity<ConversationResponseDto> getOrCreateConversation(
-            @AuthenticationPrincipal Long userId,
-            @PathVariable Long otherUserId
-    ) {
-        ConversationResponseDto result = conversationService.getOrCreateConversation(userId, otherUserId);
-        return ResponseEntity.ok(result);
-    }
-
-    @Override
-    @GetMapping("/{conversationId}")
-    public ResponseEntity<ConversationResponseDto> getConversation(
-            @AuthenticationPrincipal Long userId,
-            @PathVariable Long conversationId
-    ) {
-        ConversationResponseDto result = conversationService.getConversation(conversationId, userId);
-        return ResponseEntity.ok(result);
-    }
-
-    @Override
-    @DeleteMapping("/{conversationId}")
-    public ResponseEntity<Void> deleteConversation(
-            @AuthenticationPrincipal Long userId,
-            @PathVariable Long conversationId
-    ) {
-        conversationService.deleteConversation(conversationId, userId);
-        return ResponseEntity.noContent().build();
-    }
-
-    @Override
-    @PostMapping("/{conversationId}/read")
-    public ResponseEntity<Void> markAsRead(
-            @AuthenticationPrincipal Long userId,
-            @PathVariable Long conversationId
-    ) {
-        conversationService.markAsRead(conversationId, userId);
-        return ResponseEntity.ok().build();
-    }
-
-    @Override
-    @GetMapping("/unread-count")
-    public ResponseEntity<Integer> getTotalUnreadCount(
-            @AuthenticationPrincipal Long userId
-    ) {
-        int count = conversationService.getTotalUnreadCount(userId);
-        return ResponseEntity.ok(count);
-    }
+	
+	private final ConversationService conversationService;
+	
+	@Override
+	@GetMapping
+	public ResponseEntity<List<ConversationListResponseDto>> getConversations(
+			@AuthenticationPrincipal Long userId
+	) {
+		List<ConversationListResponseDto> result = conversationService.getConversations(userId);
+		return ResponseEntity.ok(result);
+	}
+	
+	@Override
+	@PostMapping("/with/{otherUserId}")
+	public ResponseEntity<ConversationResponseDto> getOrCreateConversation(
+			@AuthenticationPrincipal Long userId,
+			@PathVariable Long otherUserId
+	) {
+		ConversationResponseDto result = conversationService.getOrCreateConversation(userId, otherUserId);
+		return ResponseEntity.ok(result);
+	}
+	
+	@Override
+	@GetMapping("/{conversationId}")
+	public ResponseEntity<ConversationResponseDto> getConversation(
+			@AuthenticationPrincipal Long userId,
+			@PathVariable Long conversationId
+	) {
+		ConversationResponseDto result = conversationService.getConversation(conversationId, userId);
+		return ResponseEntity.ok(result);
+	}
+	
+	@Override
+	@DeleteMapping("/{conversationId}")
+	public ResponseEntity<Void> deleteConversation(
+			@AuthenticationPrincipal Long userId,
+			@PathVariable Long conversationId
+	) {
+		conversationService.deleteConversation(conversationId, userId);
+		return ResponseEntity.noContent().build();
+	}
+	
+	@Override
+	@PostMapping("/{conversationId}/read")
+	public ResponseEntity<Void> markAsRead(
+			@AuthenticationPrincipal Long userId,
+			@PathVariable Long conversationId
+	) {
+		conversationService.markAsRead(conversationId, userId);
+		return ResponseEntity.ok().build();
+	}
+	
+	@Override
+	@GetMapping("/unread-count")
+	public ResponseEntity<Integer> getTotalUnreadCount(
+			@AuthenticationPrincipal Long userId
+	) {
+		int count = conversationService.getTotalUnreadCount(userId);
+		return ResponseEntity.ok(count);
+	}
 }
