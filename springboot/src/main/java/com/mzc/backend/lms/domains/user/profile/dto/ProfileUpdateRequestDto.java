@@ -13,9 +13,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProfileUpdateRequestDto {
-
-    private String name;
-    private String mobileNumber;
-    private String homeNumber;
-    private String officeNumber;
+	
+	private String name;
+	private String mobileNumber;
+	private String homeNumber;
+	private String officeNumber;
 }
