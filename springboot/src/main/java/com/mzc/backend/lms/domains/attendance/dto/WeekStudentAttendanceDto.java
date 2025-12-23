@@ -13,11 +13,11 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class WeekStudentAttendanceDto {
-
-    private Long studentId;
-    private String studentName;
-    private Boolean isCompleted;
-    private Integer completedVideoCount;
-    private Integer totalVideoCount;
-    private LocalDateTime completedAt;
+	
+	private Long studentId;
+	private String studentName;
+	private Boolean isCompleted;
+	private Integer completedVideoCount;
+	private Integer totalVideoCount;
+	private LocalDateTime completedAt;
 }
