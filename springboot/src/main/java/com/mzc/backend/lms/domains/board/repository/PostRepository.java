@@ -87,7 +87,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 	Page<Post> findByCategoryAndDepartmentId(@Param("category") BoardCategory category,
 	                                         @Param("departmentId") Long departmentId,
 	                                         Pageable pageable);
-	
+	 
 	@Query("SELECT DISTINCT p FROM Post p " +
 			"LEFT JOIN FETCH p.postHashtags ph " +
 			"LEFT JOIN FETCH ph.hashtag h " +

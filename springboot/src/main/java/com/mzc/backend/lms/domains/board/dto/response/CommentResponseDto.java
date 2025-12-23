@@ -117,7 +117,8 @@ public class CommentResponseDto {
 		private Long id;
 		private String name;
 		private String userType;
-		
+		private String thumbnailUrl;
+
 		public static AuthorInfo from(UserBasicInfoDto userInfo) {
 			if (userInfo == null) {
 				return null;
@@ -126,6 +127,7 @@ public class CommentResponseDto {
 					.id(userInfo.getId())
 					.name(userInfo.getName())
 					.userType(userInfo.getUserType())
+					.thumbnailUrl(userInfo.getThumbnailUrl())
 					.build();
 		}
 	}

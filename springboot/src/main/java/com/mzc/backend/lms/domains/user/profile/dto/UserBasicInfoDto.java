@@ -14,11 +14,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserBasicInfoDto {
-	
+
 	private Long id;            // 학번 또는 교번 (userId와 동일)
 	private String name;        // 복호화된 이름
 	private String userType;    // STUDENT, PROFESSOR
-	
+	private String thumbnailUrl; // 프로필 썸네일 URL
+
 	public static UserBasicInfoDto ofStudent(Long id, String name) {
 		return UserBasicInfoDto.builder()
 				.id(id)
@@ -26,12 +27,30 @@ public class UserBasicInfoDto {
 				.userType("STUDENT")
 				.build();
 	}
-	
+
+	public static UserBasicInfoDto ofStudent(Long id, String name, String thumbnailUrl) {
+		return UserBasicInfoDto.builder()
+				.id(id)
+				.name(name)
+				.userType("STUDENT")
+				.thumbnailUrl(thumbnailUrl)
+				.build();
+	}
+
 	public static UserBasicInfoDto ofProfessor(Long id, String name) {
 		return UserBasicInfoDto.builder()
 				.id(id)
 				.name(name)
 				.userType("PROFESSOR")
+				.build();
+	}
+
+	public static UserBasicInfoDto ofProfessor(Long id, String name, String thumbnailUrl) {
+		return UserBasicInfoDto.builder()
+				.id(id)
+				.name(name)
+				.userType("PROFESSOR")
+				.thumbnailUrl(thumbnailUrl)
 				.build();
 	}
 }

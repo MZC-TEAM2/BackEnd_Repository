@@ -6,6 +6,7 @@ import com.mzc.backend.lms.domains.dashboard.student.dto.EnrollmentSummaryDto;
 import com.mzc.backend.lms.domains.dashboard.student.dto.NoticeDto;
 import com.mzc.backend.lms.domains.dashboard.student.dto.PendingAssignmentDto;
 import com.mzc.backend.lms.domains.dashboard.student.dto.TodayCourseDto;
+import com.mzc.backend.lms.domains.dashboard.student.dto.UpcomingAssessmentDto;
 import com.mzc.backend.lms.domains.dashboard.student.repository.DashboardQueryRepository;
 import com.mzc.backend.lms.domains.enrollment.entity.Enrollment;
 import com.mzc.backend.lms.domains.user.professor.entity.Professor;
@@ -53,6 +54,27 @@ public class StudentDashboardService {
 	 */
 	public List<PendingAssignmentDto> getPendingAssignments(Long studentId, int withinDays) {
 		return dashboardQueryRepository.findPendingAssignments(studentId, withinDays);
+	}
+
+	/**
+	 * 예정된 시험 목록 조회 (기본 7일 이내)
+	 *
+	 * @param studentId 학생 ID
+	 * @return 예정된 시험 목록
+	 */
+	public List<UpcomingAssessmentDto> getUpcomingAssessments(Long studentId) {
+		return getUpcomingAssessments(studentId, DEFAULT_PENDING_DAYS);
+	}
+
+	/**
+	 * 예정된 시험 목록 조회 (기간 지정)
+	 *
+	 * @param studentId  학생 ID
+	 * @param withinDays 시험일 기준 일수
+	 * @return 예정된 시험 목록
+	 */
+	public List<UpcomingAssessmentDto> getUpcomingAssessments(Long studentId, int withinDays) {
+		return dashboardQueryRepository.findUpcomingAssessments(studentId, withinDays);
 	}
 	
 	/**

@@ -4,6 +4,7 @@ import com.mzc.backend.lms.domains.board.enums.BoardType;
 import com.mzc.backend.lms.domains.dashboard.student.dto.EnrollmentSummaryDto;
 import com.mzc.backend.lms.domains.dashboard.student.dto.NoticeDto;
 import com.mzc.backend.lms.domains.dashboard.student.dto.PendingAssignmentDto;
+import com.mzc.backend.lms.domains.dashboard.student.dto.UpcomingAssessmentDto;
 import com.mzc.backend.lms.domains.enrollment.entity.Enrollment;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
@@ -158,10 +159,58 @@ public class DashboardQueryRepository {
 				JOIN c.subject s
 				WHERE e.student.studentId = :studentId
 				""";
-		
+
 		TypedQuery<EnrollmentSummaryDto> query = em.createQuery(jpql, EnrollmentSummaryDto.class);
 		query.setParameter("studentId", studentId);
-		
+
 		return query.getSingleResult();
+	}
+
+	/**
+	 * 예정된 시험/퀴즈 목록 조회
+	 * - 학생이 수강 중인 과목의 시험
+	 * - 시험 시작일이 현재 ~ 지정된 기한 이내
+	 *
+	 * @param studentId  학생 ID
+	 * @param withinDays 시험일 기준 일수 (예: 7일 이내)
+	 * @return 예정된 시험 목록
+	 */
+	public List<UpcomingAssessmentDto> findUpcomingAssessments(Long studentId, int withinDays) {
+		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime deadline = now.plusDays(withinDays);
+
+		String jpql = """
+				SELECT new com.mzc.backend.lms.domains.dashboard.student.dto.UpcomingAssessmentDto(
+				    a.id,
+				    p.id,
+				    p.title,
+				    CAST(a.type AS string),
+				    c.id,
+				    CONCAT(s.subjectName, ' - ', c.sectionNumber),
+				    s.subjectName,
+				    a.startAt,
+				    a.durationMinutes,
+				    a.isOnline,
+				    a.location
+				)
+				FROM Assessment a
+				JOIN a.post p
+				JOIN Course c ON a.courseId = c.id
+				JOIN c.subject s
+				WHERE a.courseId IN (
+				    SELECT e.course.id FROM Enrollment e WHERE e.student.studentId = :studentId
+				)
+				AND a.startAt > :now
+				AND a.startAt <= :deadline
+				AND p.isDeleted = false
+				ORDER BY a.startAt ASC
+				""";
+
+		TypedQuery<UpcomingAssessmentDto> query = em.createQuery(jpql, UpcomingAssessmentDto.class);
+		query.setParameter("studentId", studentId);
+		query.setParameter("now", now);
+		query.setParameter("deadline", deadline);
+
+		return query.getResultList();
 	}
 }

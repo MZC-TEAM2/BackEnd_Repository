@@ -4,6 +4,7 @@ import com.mzc.backend.lms.domains.dashboard.student.dto.EnrollmentSummaryDto;
 import com.mzc.backend.lms.domains.dashboard.student.dto.NoticeDto;
 import com.mzc.backend.lms.domains.dashboard.student.dto.PendingAssignmentDto;
 import com.mzc.backend.lms.domains.dashboard.student.dto.TodayCourseDto;
+import com.mzc.backend.lms.domains.dashboard.student.dto.UpcomingAssessmentDto;
 import com.mzc.backend.lms.domains.dashboard.student.service.StudentDashboardService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -64,6 +65,39 @@ public class StudentDashboardController {
 		}
 	}
 	
+	/**
+	 * 예정된 시험/퀴즈 목록 조회
+	 *
+	 * @param studentId 학생 ID (JWT에서 추출)
+	 * @param days      시험일 기준 일수 (기본값: 7, 최대: 30)
+	 * @return 예정된 시험 목록
+	 */
+	@GetMapping("/upcoming-assessments")
+	public ResponseEntity<?> getUpcomingAssessments(
+			@AuthenticationPrincipal Long studentId,
+			@RequestParam(defaultValue = "7") int days) {
+		try {
+			validateStudentId(studentId);
+			int validDays = validateDays(days);
+
+			List<UpcomingAssessmentDto> assessments =
+					studentDashboardService.getUpcomingAssessments(studentId, validDays);
+
+			Map<String, Object> response = new HashMap<>();
+			response.put("success", true);
+			response.put("data", assessments);
+			response.put("count", assessments.size());
+
+			return ResponseEntity.ok(response);
+		} catch (IllegalArgumentException e) {
+			return ResponseEntity.badRequest().body(createErrorResponse(e.getMessage()));
+		} catch (Exception e) {
+			log.error("예정된 시험 목록 조회 실패: {}", e.getMessage(), e);
+			return ResponseEntity.internalServerError()
+					.body(createErrorResponse("예정된 시험 목록 조회에 실패했습니다."));
+		}
+	}
+
 	/**
 	 * 오늘의 강의 목록 조회
 	 *

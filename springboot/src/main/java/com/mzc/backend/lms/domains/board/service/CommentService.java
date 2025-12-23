@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -121,17 +122,43 @@ public class CommentService {
 	 */
 	public List<CommentResponseDto> getCommentsByPost(Long postId) {
 		log.info("게시글의 댓글 조회: postId={}", postId);
-		
+
 		Post post = postRepository.findById(postId)
 				.orElseThrow(() -> new BoardException(BoardErrorCode.POST_NOT_FOUND));
-		
+
 		List<Comment> comments = commentRepository.findByPost(post);
-		
+
+		// 모든 댓글 작성자 ID 수집 (하위 댓글 포함)
+		Set<Long> authorIds = collectAllAuthorIds(comments);
+
+		// 사용자 정보 일괄 조회 (캐시 활용)
+		Map<Long, UserBasicInfoDto> userInfoMap = userInfoCacheService.getUserInfoMap(authorIds);
+
 		// 최상위 댓글만 반환 (하위 댓글은 childComments에 포함됨)
 		return comments.stream()
 				.filter(comment -> comment.getParentComment() == null)
-				.map(CommentResponseDto::from)
+				.map(comment -> CommentResponseDto.from(comment, userInfoMap))
 				.collect(Collectors.toList());
+	}
+
+	/**
+	 * 댓글 목록에서 모든 작성자 ID 수집 (하위 댓글 포함)
+	 */
+	private Set<Long> collectAllAuthorIds(List<Comment> comments) {
+		Set<Long> authorIds = new HashSet<>();
+		for (Comment comment : comments) {
+			collectAuthorIdsRecursive(comment, authorIds);
+		}
+		return authorIds;
+	}
+
+	private void collectAuthorIdsRecursive(Comment comment, Set<Long> authorIds) {
+		authorIds.add(comment.getAuthorId());
+		if (comment.getChildComments() != null) {
+			for (Comment child : comment.getChildComments()) {
+				collectAuthorIdsRecursive(child, authorIds);
+			}
+		}
 	}
 	
 	/**

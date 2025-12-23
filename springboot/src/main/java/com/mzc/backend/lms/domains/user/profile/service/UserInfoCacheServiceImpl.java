@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mzc.backend.lms.domains.user.auth.encryption.service.EncryptionService;
 import com.mzc.backend.lms.domains.user.professor.repository.ProfessorRepository;
 import com.mzc.backend.lms.domains.user.profile.dto.UserBasicInfoDto;
+import com.mzc.backend.lms.domains.user.profile.entity.UserProfileImage;
+import com.mzc.backend.lms.domains.user.profile.repository.UserProfileImageRepository;
 import com.mzc.backend.lms.domains.user.profile.repository.UserProfileRepository;
 import com.mzc.backend.lms.domains.user.student.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +34,7 @@ public class UserInfoCacheServiceImpl implements UserInfoCacheService {
 	private final ObjectMapper objectMapper;
 	private final EncryptionService encryptionService;
 	private final UserProfileRepository userProfileRepository;
+	private final UserProfileImageRepository userProfileImageRepository;
 	private final StudentRepository studentRepository;
 	private final ProfessorRepository professorRepository;
 	
@@ -79,7 +82,7 @@ public class UserInfoCacheServiceImpl implements UserInfoCacheService {
 	private Map<Long, UserBasicInfoDto> fetchFromDatabase(Set<Long> userIds) {
 		Map<Long, UserBasicInfoDto> result = new HashMap<>();
 		List<Long> userIdList = new ArrayList<>(userIds);
-		
+
 		// 이름 조회 (암호화된 상태)
 		Map<Long, String> encryptedNames = userProfileRepository.findNamesByUserIds(userIdList)
 				.stream()
@@ -87,24 +90,33 @@ public class UserInfoCacheServiceImpl implements UserInfoCacheService {
 						row -> (Long) row[0],
 						row -> (String) row[1]
 				));
-		
+
+		// 프로필 이미지 (썸네일) 조회
+		Map<Long, String> thumbnailUrls = userProfileImageRepository.findByUserIds(userIdList)
+				.stream()
+				.collect(Collectors.toMap(
+						UserProfileImage::getUserId,
+						img -> img.getThumbnailUrl() != null ? img.getThumbnailUrl() : "",
+						(a, b) -> a // 중복 시 첫 번째 값 사용
+				));
+
 		// 학생 ID 조회
 		Set<Long> studentIds = studentRepository.findAllById(userIdList)
 				.stream()
 				.map(s -> s.getStudentId())
 				.collect(Collectors.toSet());
-		
+
 		// 교수 ID 조회
 		Set<Long> professorIds = professorRepository.findAllById(userIdList)
 				.stream()
 				.map(p -> p.getProfessorId())
 				.collect(Collectors.toSet());
-		
+
 		// DTO 생성
 		for (Long userId : userIds) {
 			String encryptedName = encryptedNames.get(userId);
 			String decryptedName;
-			
+
 			if (encryptedName != null) {
 				try {
 					// 복호화 시도
@@ -117,23 +129,26 @@ public class UserInfoCacheServiceImpl implements UserInfoCacheService {
 			} else {
 				decryptedName = null;
 			}
-			
+
+			String thumbnailUrl = thumbnailUrls.get(userId);
+
 			UserBasicInfoDto dto;
 			if (studentIds.contains(userId)) {
-				dto = UserBasicInfoDto.ofStudent(userId, decryptedName);
+				dto = UserBasicInfoDto.ofStudent(userId, decryptedName, thumbnailUrl);
 			} else if (professorIds.contains(userId)) {
-				dto = UserBasicInfoDto.ofProfessor(userId, decryptedName);
+				dto = UserBasicInfoDto.ofProfessor(userId, decryptedName, thumbnailUrl);
 			} else {
 				// 학생도 교수도 아닌 경우 (관리자 등)
 				dto = UserBasicInfoDto.builder()
 						.id(userId)
 						.name(decryptedName)
 						.userType("UNKNOWN")
+						.thumbnailUrl(thumbnailUrl)
 						.build();
 			}
 			result.put(userId, dto);
 		}
-		
+
 		return result;
 	}
 	
