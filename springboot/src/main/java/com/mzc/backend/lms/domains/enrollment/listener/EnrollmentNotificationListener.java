@@ -19,68 +19,68 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @Component
 @RequiredArgsConstructor
 public class EnrollmentNotificationListener {
-
-    private final NotificationEventPublisher notificationEventPublisher;
-
-    /**
-     * 수강신청 완료 이벤트 처리
-     * 학생 본인에게 수강신청 완료 알림 발송
-     */
-    @Async
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void handleEnrollmentCreated(EnrollmentCreatedEvent event) {
-        log.debug("수강신청 완료 이벤트 수신: studentId={}, courseId={}, courseName={}",
-                event.getStudentId(), event.getCourseId(), event.getCourseName());
-
-        try {
-            String message = String.format("%s (%s분반) 수강신청이 완료되었습니다.",
-                    event.getCourseName(), event.getSectionNumber());
-
-            notificationEventPublisher.publishForCourse(
-                    NotificationEventType.ENROLLMENT_CREATED,
-                    null,  // 시스템 발송
-                    event.getStudentId(),
-                    event.getCourseId(),
-                    "수강신청 완료",
-                    message
-            );
-
-            log.info("수강신청 완료 알림 발송: studentId={}, courseId={}",
-                    event.getStudentId(), event.getCourseId());
-        } catch (Exception e) {
-            log.error("수강신청 완료 알림 발송 실패: studentId={}, courseId={}, error={}",
-                    event.getStudentId(), event.getCourseId(), e.getMessage(), e);
-        }
-    }
-
-    /**
-     * 수강취소 완료 이벤트 처리
-     * 학생 본인에게 수강취소 완료 알림 발송
-     */
-    @Async
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void handleEnrollmentCancelled(EnrollmentCancelledEvent event) {
-        log.debug("수강취소 완료 이벤트 수신: studentId={}, courseId={}, courseName={}",
-                event.getStudentId(), event.getCourseId(), event.getCourseName());
-
-        try {
-            String message = String.format("%s (%s분반) 수강이 취소되었습니다.",
-                    event.getCourseName(), event.getSectionNumber());
-
-            notificationEventPublisher.publishForCourse(
-                    NotificationEventType.ENROLLMENT_CANCELLED,
-                    null,  // 시스템 발송
-                    event.getStudentId(),
-                    event.getCourseId(),
-                    "수강취소 완료",
-                    message
-            );
-
-            log.info("수강취소 완료 알림 발송: studentId={}, courseId={}",
-                    event.getStudentId(), event.getCourseId());
-        } catch (Exception e) {
-            log.error("수강취소 완료 알림 발송 실패: studentId={}, courseId={}, error={}",
-                    event.getStudentId(), event.getCourseId(), e.getMessage(), e);
-        }
-    }
+	
+	private final NotificationEventPublisher notificationEventPublisher;
+	
+	/**
+	 * 수강신청 완료 이벤트 처리
+	 * 학생 본인에게 수강신청 완료 알림 발송
+	 */
+	@Async
+	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+	public void handleEnrollmentCreated(EnrollmentCreatedEvent event) {
+		log.debug("수강신청 완료 이벤트 수신: studentId={}, courseId={}, courseName={}",
+				event.getStudentId(), event.getCourseId(), event.getCourseName());
+		
+		try {
+			String message = String.format("%s (%s분반) 수강신청이 완료되었습니다.",
+					event.getCourseName(), event.getSectionNumber());
+			
+			notificationEventPublisher.publishForCourse(
+					NotificationEventType.ENROLLMENT_CREATED,
+					null,  // 시스템 발송
+					event.getStudentId(),
+					event.getCourseId(),
+					"수강신청 완료",
+					message
+			);
+			
+			log.info("수강신청 완료 알림 발송: studentId={}, courseId={}",
+					event.getStudentId(), event.getCourseId());
+		} catch (Exception e) {
+			log.error("수강신청 완료 알림 발송 실패: studentId={}, courseId={}, error={}",
+					event.getStudentId(), event.getCourseId(), e.getMessage(), e);
+		}
+	}
+	
+	/**
+	 * 수강취소 완료 이벤트 처리
+	 * 학생 본인에게 수강취소 완료 알림 발송
+	 */
+	@Async
+	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+	public void handleEnrollmentCancelled(EnrollmentCancelledEvent event) {
+		log.debug("수강취소 완료 이벤트 수신: studentId={}, courseId={}, courseName={}",
+				event.getStudentId(), event.getCourseId(), event.getCourseName());
+		
+		try {
+			String message = String.format("%s (%s분반) 수강이 취소되었습니다.",
+					event.getCourseName(), event.getSectionNumber());
+			
+			notificationEventPublisher.publishForCourse(
+					NotificationEventType.ENROLLMENT_CANCELLED,
+					null,  // 시스템 발송
+					event.getStudentId(),
+					event.getCourseId(),
+					"수강취소 완료",
+					message
+			);
+			
+			log.info("수강취소 완료 알림 발송: studentId={}, courseId={}",
+					event.getStudentId(), event.getCourseId());
+		} catch (Exception e) {
+			log.error("수강취소 완료 알림 발송 실패: studentId={}, courseId={}, error={}",
+					event.getStudentId(), event.getCourseId(), e.getMessage(), e);
+		}
+	}
 }
