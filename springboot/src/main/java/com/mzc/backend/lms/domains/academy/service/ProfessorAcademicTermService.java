@@ -14,25 +14,25 @@ import java.util.Objects;
 @Service
 @RequiredArgsConstructor
 public class ProfessorAcademicTermService {
-
-    private final CourseRepository courseRepository;
-
-    @Transactional(readOnly = true)
-    public List<AcademicTermDto> listMyAcademicTerms(Long professorId) {
-        Objects.requireNonNull(professorId, "professorId");
-
-        List<AcademicTerm> terms = courseRepository.findDistinctAcademicTermsByProfessorId(professorId);
-        return terms.stream()
-                .sorted(Comparator.comparing(AcademicTerm::getId, Comparator.nullsLast(Comparator.naturalOrder())).reversed())
-                .map(t -> AcademicTermDto.builder()
-                        .id(t.getId())
-                        .year(t.getYear())
-                        .termType(t.getTermType())
-                        .startDate(t.getStartDate())
-                        .endDate(t.getEndDate())
-                        .build())
-                .toList();
-    }
+	
+	private final CourseRepository courseRepository;
+	
+	@Transactional(readOnly = true)
+	public List<AcademicTermDto> listMyAcademicTerms(Long professorId) {
+		Objects.requireNonNull(professorId, "professorId");
+		
+		List<AcademicTerm> terms = courseRepository.findDistinctAcademicTermsByProfessorId(professorId);
+		return terms.stream()
+				.sorted(Comparator.comparing(AcademicTerm::getId, Comparator.nullsLast(Comparator.naturalOrder())).reversed())
+				.map(t -> AcademicTermDto.builder()
+						.id(t.getId())
+						.year(t.getYear())
+						.termType(t.getTermType())
+						.startDate(t.getStartDate())
+						.endDate(t.getEndDate())
+						.build())
+				.toList();
+	}
 }
 
 
