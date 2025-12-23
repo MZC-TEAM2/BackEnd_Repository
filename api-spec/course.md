@@ -5,10 +5,12 @@
 ## 목차
 
 ### 강의 조회 (공통)
+
 - [1. 강의 목록 검색](#1-강의-목록-검색)
 - [2. 강의 상세 조회](#2-강의-상세-조회)
 
 ### 교수 강의 관리
+
 - [3. 강의 개설](#3-강의-개설)
 - [4. 강의 수정](#4-강의-수정)
 - [5. 강의 취소](#5-강의-취소)
@@ -16,6 +18,7 @@
 - [7. 교수 강의 상세 조회](#7-교수-강의-상세-조회)
 
 ### 주차/콘텐츠 관리
+
 - [8. 주차 목록 조회](#8-주차-목록-조회)
 - [9. 주차 생성](#9-주차-생성)
 - [10. 주차 수정](#10-주차-수정)
@@ -33,23 +36,26 @@
 개설된 강의를 검색합니다.
 
 ### Request
+
 ```
 GET /api/v1/courses
 ```
 
 ### Query Parameters
-| 파라미터 | 타입 | 필수 | 설명 |
-|----------|------|------|------|
-| enrollmentPeriodId | long | O | 수강신청 기간 ID |
-| keyword | string | X | 검색어 (강의명, 교수명) |
-| departmentId | long | X | 학과 ID |
-| courseType | int | X | 강의 유형 (1: 전공, 2: 교양) |
-| credits | int | X | 학점 |
-| page | int | X | 페이지 번호 (기본: 0) |
-| size | int | X | 페이지 크기 (기본: 20) |
-| sort | string | X | 정렬 기준 |
+
+| 파라미터               | 타입     | 필수 | 설명                   |
+|--------------------|--------|----|----------------------|
+| enrollmentPeriodId | long   | O  | 수강신청 기간 ID           |
+| keyword            | string | X  | 검색어 (강의명, 교수명)       |
+| departmentId       | long   | X  | 학과 ID                |
+| courseType         | int    | X  | 강의 유형 (1: 전공, 2: 교양) |
+| credits            | int    | X  | 학점                   |
+| page               | int    | X  | 페이지 번호 (기본: 0)       |
+| size               | int    | X  | 페이지 크기 (기본: 20)      |
+| sort               | string | X  | 정렬 기준                |
 
 ### Response
+
 ```json
 {
   "success": true,
@@ -82,11 +88,13 @@ GET /api/v1/courses
 강의 상세 정보를 조회합니다.
 
 ### Request
+
 ```
 GET /api/v1/courses/{courseId}
 ```
 
 ### Response
+
 ```json
 {
   "success": true,
@@ -115,11 +123,13 @@ GET /api/v1/courses/{courseId}
 새로운 강의를 개설합니다. (교수 전용)
 
 ### Request
+
 ```
 POST /api/v1/professor/courses
 ```
 
 ### Request Body
+
 ```json
 {
   "subjectId": 1,
@@ -138,6 +148,7 @@ POST /api/v1/professor/courses
 ```
 
 ### Response
+
 ```json
 {
   "success": true,
@@ -156,11 +167,13 @@ POST /api/v1/professor/courses
 강의 정보를 수정합니다. (교수 전용)
 
 ### Request
+
 ```
 PUT /api/v1/professor/courses/{courseId}
 ```
 
 ### Request Body
+
 ```json
 {
   "maxEnrollment": 50,
@@ -170,6 +183,7 @@ PUT /api/v1/professor/courses/{courseId}
 ```
 
 ### Response
+
 ```json
 {
   "success": true,
@@ -188,11 +202,13 @@ PUT /api/v1/professor/courses/{courseId}
 개설한 강의를 취소합니다. (교수 전용)
 
 ### Request
+
 ```
 DELETE /api/v1/professor/courses/{courseId}
 ```
 
 ### Response
+
 ```json
 {
   "success": true,
@@ -208,16 +224,19 @@ DELETE /api/v1/professor/courses/{courseId}
 교수가 개설한 강의 목록을 조회합니다.
 
 ### Request
+
 ```
 GET /api/v1/professor/courses
 ```
 
 ### Query Parameters
-| 파라미터 | 타입 | 필수 | 설명 |
-|----------|------|------|------|
-| academicTermId | long | X | 학기 ID (미지정 시 전체) |
+
+| 파라미터           | 타입   | 필수 | 설명               |
+|----------------|------|----|------------------|
+| academicTermId | long | X  | 학기 ID (미지정 시 전체) |
 
 ### Response
+
 ```json
 {
   "success": true,
@@ -243,11 +262,13 @@ GET /api/v1/professor/courses
 교수용 강의 상세 정보를 조회합니다.
 
 ### Request
+
 ```
 GET /api/v1/professor/courses/{courseId}
 ```
 
 ### Response
+
 ```json
 {
   "success": true,
@@ -270,11 +291,13 @@ GET /api/v1/professor/courses/{courseId}
 강의의 주차 목록을 조회합니다.
 
 ### Request
+
 ```
 GET /api/v1/professor/courses/{courseId}/weeks
 ```
 
 ### Response
+
 ```json
 {
   "success": true,
@@ -298,11 +321,13 @@ GET /api/v1/professor/courses/{courseId}/weeks
 새로운 주차를 생성합니다. (교수 전용)
 
 ### Request
+
 ```
 POST /api/v1/professor/courses/{courseId}/weeks
 ```
 
 ### Request Body
+
 ```json
 {
   "weekNumber": 1,
@@ -313,6 +338,7 @@ POST /api/v1/professor/courses/{courseId}/weeks
 ```
 
 ### Response
+
 ```json
 {
   "success": true,
@@ -332,11 +358,13 @@ POST /api/v1/professor/courses/{courseId}/weeks
 주차 정보를 수정합니다. (교수 전용)
 
 ### Request
+
 ```
 PUT /api/v1/professor/courses/{courseId}/weeks/{weekId}
 ```
 
 ### Request Body
+
 ```json
 {
   "title": "수정된 제목",
@@ -352,6 +380,7 @@ PUT /api/v1/professor/courses/{courseId}/weeks/{weekId}
 주차를 삭제합니다. (교수 전용)
 
 ### Request
+
 ```
 DELETE /api/v1/professor/courses/{courseId}/weeks/{weekId}
 ```
@@ -363,11 +392,13 @@ DELETE /api/v1/professor/courses/{courseId}/weeks/{weekId}
 특정 주차의 콘텐츠 목록을 조회합니다.
 
 ### Request
+
 ```
 GET /api/v1/professor/courses/{courseId}/weeks/{weekId}/contents
 ```
 
 ### Response
+
 ```json
 {
   "success": true,
@@ -401,11 +432,13 @@ GET /api/v1/professor/courses/{courseId}/weeks/{weekId}/contents
 주차에 콘텐츠를 등록합니다. (교수 전용)
 
 ### Request
+
 ```
 POST /api/v1/professor/courses/{courseId}/weeks/{weekId}/contents
 ```
 
 ### Request Body
+
 ```json
 {
   "contentType": "VIDEO",
@@ -418,12 +451,13 @@ POST /api/v1/professor/courses/{courseId}/weeks/{weekId}/contents
 ```
 
 ### Content Types
-| 타입 | 설명 |
-|------|------|
-| VIDEO | 영상 콘텐츠 |
-| DOCUMENT | 문서/자료 |
-| QUIZ | 퀴즈 |
-| ASSIGNMENT | 과제 |
+
+| 타입         | 설명     |
+|------------|--------|
+| VIDEO      | 영상 콘텐츠 |
+| DOCUMENT   | 문서/자료  |
+| QUIZ       | 퀴즈     |
+| ASSIGNMENT | 과제     |
 
 ---
 
@@ -432,6 +466,7 @@ POST /api/v1/professor/courses/{courseId}/weeks/{weekId}/contents
 콘텐츠를 수정합니다. (교수 전용)
 
 ### Request
+
 ```
 PUT /api/v1/professor/courses/{courseId}/weeks/{weekId}/contents/{contentId}
 ```
@@ -443,6 +478,7 @@ PUT /api/v1/professor/courses/{courseId}/weeks/{weekId}/contents/{contentId}
 콘텐츠를 삭제합니다. (교수 전용)
 
 ### Request
+
 ```
 DELETE /api/v1/professor/courses/{courseId}/weeks/{weekId}/contents/{contentId}
 ```
@@ -454,11 +490,13 @@ DELETE /api/v1/professor/courses/{courseId}/weeks/{weekId}/contents/{contentId}
 콘텐츠 ID만으로 수정/삭제합니다. (교수 전용)
 
 ### 수정
+
 ```
 PUT /api/v1/professor/contents/{contentId}
 ```
 
 ### 삭제
+
 ```
 DELETE /api/v1/professor/contents/{contentId}
 ```
