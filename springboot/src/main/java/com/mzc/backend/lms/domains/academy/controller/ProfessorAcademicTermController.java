@@ -19,39 +19,39 @@ import java.util.Map;
 @RequestMapping("/api/v1/professor/academic-terms")
 @RequiredArgsConstructor
 public class ProfessorAcademicTermController {
-
-    private final ProfessorAcademicTermService professorAcademicTermService;
-
-    /**
-     * 교수 본인 담당 학기 목록 조회 (지난 학기 강의/성적 조회용 academicTermId 확인)
-     */
-    @GetMapping
-    public ResponseEntity<?> listMyAcademicTerms(@AuthenticationPrincipal Long professorId) {
-        try {
-            if (professorId == null) {
-                return ResponseEntity.status(401).body(error("인증이 필요합니다."));
-            }
-            List<AcademicTermDto> data = professorAcademicTermService.listMyAcademicTerms(professorId);
-
-            Map<String, Object> res = new HashMap<>();
-            res.put("success", true);
-            res.put("data", data);
-            res.put("count", data.size());
-            return ResponseEntity.ok(res);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(error(e.getMessage()));
-        } catch (Exception e) {
-            log.error("교수 학기 목록 조회 실패", e);
-            return ResponseEntity.internalServerError().body(error("교수 학기 목록 조회에 실패했습니다."));
-        }
-    }
-
-    private Map<String, Object> error(String message) {
-        Map<String, Object> res = new HashMap<>();
-        res.put("success", false);
-        res.put("message", message);
-        return res;
-    }
+	
+	private final ProfessorAcademicTermService professorAcademicTermService;
+	
+	/**
+	 * 교수 본인 담당 학기 목록 조회 (지난 학기 강의/성적 조회용 academicTermId 확인)
+	 */
+	@GetMapping
+	public ResponseEntity<?> listMyAcademicTerms(@AuthenticationPrincipal Long professorId) {
+		try {
+			if (professorId == null) {
+				return ResponseEntity.status(401).body(error("인증이 필요합니다."));
+			}
+			List<AcademicTermDto> data = professorAcademicTermService.listMyAcademicTerms(professorId);
+			
+			Map<String, Object> res = new HashMap<>();
+			res.put("success", true);
+			res.put("data", data);
+			res.put("count", data.size());
+			return ResponseEntity.ok(res);
+		} catch (IllegalArgumentException e) {
+			return ResponseEntity.badRequest().body(error(e.getMessage()));
+		} catch (Exception e) {
+			log.error("교수 학기 목록 조회 실패", e);
+			return ResponseEntity.internalServerError().body(error("교수 학기 목록 조회에 실패했습니다."));
+		}
+	}
+	
+	private Map<String, Object> error(String message) {
+		Map<String, Object> res = new HashMap<>();
+		res.put("success", false);
+		res.put("message", message);
+		return res;
+	}
 }
 
 
