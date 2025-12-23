@@ -14,18 +14,18 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class PeriodType {
-    
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
-
-    @Column(name = "type_code", length = 20, unique = true, nullable = false)
-    private String typeCode; // ENROLLMENT, COURSE_REGISTRATION, ADJUSTMENT, CANCELLATION
-
-    @Column(name = "type_name", length = 50, nullable = false)
-    private String typeName; // 수강신청, 강의등록, 정정, 수강철회
-
-    @Column(name = "description", length = 200)
-    private String description;
+	
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Integer id;
+	
+	@Column(name = "type_code", length = 20, unique = true, nullable = false)
+	private String typeCode; // ENROLLMENT, COURSE_REGISTRATION, ADJUSTMENT, CANCELLATION
+	
+	@Column(name = "type_name", length = 50, nullable = false)
+	private String typeName; // 수강신청, 강의등록, 정정, 수강철회
+	
+	@Column(name = "description", length = 200)
+	private String description;
 }
 
