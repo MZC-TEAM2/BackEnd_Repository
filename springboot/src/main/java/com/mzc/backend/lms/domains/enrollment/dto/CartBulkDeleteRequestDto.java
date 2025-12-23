@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
 import java.util.List;
 
 /**
@@ -14,5 +15,5 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CartBulkDeleteRequestDto {
-    private List<Long> cartIds;
+	private List<Long> cartIds;
 }
