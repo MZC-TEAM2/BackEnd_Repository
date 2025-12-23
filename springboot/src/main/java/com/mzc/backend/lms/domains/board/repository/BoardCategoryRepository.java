@@ -9,8 +9,8 @@ import java.util.Optional;
 
 @Repository
 public interface BoardCategoryRepository extends JpaRepository<BoardCategory, Long> {
-    /**
-     * 게시판 유형으로 카테고리 조회
-     */
-    Optional<BoardCategory> findByBoardType(BoardType boardType);
+	/**
+	 * 게시판 유형으로 카테고리 조회
+	 */
+	Optional<BoardCategory> findByBoardType(BoardType boardType);
 }
