@@ -87,6 +87,11 @@ public class SecurityConfig {
                 // 공통(학생/교수) 학기 조회 API
                 .requestMatchers(HttpMethod.GET, "/api/v1/academic-terms/**").authenticated()
 
+                // 강의 관련 API - 인증된 사용자 접근 (세부 권한은 Service에서 검증)
+                // - /api/v1/courses/{courseId}/notices: 교수만 생성/수정/삭제, 수강생+교수 조회
+                // - /api/v1/courses/{courseId}/weeks: 수강생+교수 조회
+                .requestMatchers("/api/v1/courses/**").authenticated()
+
                 // 나머지 요청은 인증 필요
                 .anyRequest().authenticated()
             )
