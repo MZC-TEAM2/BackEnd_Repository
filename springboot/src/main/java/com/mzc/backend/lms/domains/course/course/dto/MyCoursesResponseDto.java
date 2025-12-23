@@ -11,8 +11,8 @@ import java.util.List;
 @Getter
 @Builder
 public class MyCoursesResponseDto {
-    private AcademicTermDto term;
-    private Integer totalCourses;
-    private List<CourseDto> courses;
+	private AcademicTermDto term;
+	private Integer totalCourses;
+	private List<CourseDto> courses;
 }
 
