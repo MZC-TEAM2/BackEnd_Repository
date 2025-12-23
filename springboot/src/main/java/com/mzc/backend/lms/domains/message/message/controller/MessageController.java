@@ -21,58 +21,58 @@ import java.util.List;
 @RequestMapping("/api/v1/messages")
 @RequiredArgsConstructor
 public class MessageController implements MessageControllerSwagger {
-
-    private final MessageService messageService;
-
-    @Override
-    @PostMapping
-    public ResponseEntity<MessageResponseDto> sendMessage(
-            @AuthenticationPrincipal Long userId,
-            @Valid @RequestBody MessageSendRequestDto request
-    ) {
-        MessageResponseDto result = messageService.sendMessage(userId, request);
-        return ResponseEntity.ok(result);
-    }
-
-    @Override
-    @PostMapping("/bulk")
-    public ResponseEntity<List<MessageResponseDto>> sendBulkMessages(
-            @AuthenticationPrincipal Long userId,
-            @Valid @RequestBody MessageBulkSendRequestDto request
-    ) {
-        List<MessageResponseDto> results = messageService.sendBulkMessages(userId, request);
-        return ResponseEntity.ok(results);
-    }
-
-    @Override
-    @GetMapping("/conversations/{conversationId}")
-    public ResponseEntity<MessageCursorResponseDto> getMessages(
-            @AuthenticationPrincipal Long userId,
-            @PathVariable Long conversationId,
-            @RequestParam(required = false) Long cursor,
-            @RequestParam(required = false, defaultValue = "20") Integer size
-    ) {
-        MessageCursorResponseDto result = messageService.getMessages(conversationId, userId, cursor, size);
-        return ResponseEntity.ok(result);
-    }
-
-    @Override
-    @DeleteMapping("/{messageId}")
-    public ResponseEntity<Void> deleteMessage(
-            @AuthenticationPrincipal Long userId,
-            @PathVariable Long messageId
-    ) {
-        messageService.deleteMessage(messageId, userId);
-        return ResponseEntity.noContent().build();
-    }
-
-    @Override
-    @PostMapping("/conversations/{conversationId}/read")
-    public ResponseEntity<Void> markMessagesAsRead(
-            @AuthenticationPrincipal Long userId,
-            @PathVariable Long conversationId
-    ) {
-        messageService.markMessagesAsRead(conversationId, userId);
-        return ResponseEntity.ok().build();
-    }
+	
+	private final MessageService messageService;
+	
+	@Override
+	@PostMapping
+	public ResponseEntity<MessageResponseDto> sendMessage(
+			@AuthenticationPrincipal Long userId,
+			@Valid @RequestBody MessageSendRequestDto request
+	) {
+		MessageResponseDto result = messageService.sendMessage(userId, request);
+		return ResponseEntity.ok(result);
+	}
+	
+	@Override
+	@PostMapping("/bulk")
+	public ResponseEntity<List<MessageResponseDto>> sendBulkMessages(
+			@AuthenticationPrincipal Long userId,
+			@Valid @RequestBody MessageBulkSendRequestDto request
+	) {
+		List<MessageResponseDto> results = messageService.sendBulkMessages(userId, request);
+		return ResponseEntity.ok(results);
+	}
+	
+	@Override
+	@GetMapping("/conversations/{conversationId}")
+	public ResponseEntity<MessageCursorResponseDto> getMessages(
+			@AuthenticationPrincipal Long userId,
+			@PathVariable Long conversationId,
+			@RequestParam(required = false) Long cursor,
+			@RequestParam(required = false, defaultValue = "20") Integer size
+	) {
+		MessageCursorResponseDto result = messageService.getMessages(conversationId, userId, cursor, size);
+		return ResponseEntity.ok(result);
+	}
+	
+	@Override
+	@DeleteMapping("/{messageId}")
+	public ResponseEntity<Void> deleteMessage(
+			@AuthenticationPrincipal Long userId,
+			@PathVariable Long messageId
+	) {
+		messageService.deleteMessage(messageId, userId);
+		return ResponseEntity.noContent().build();
+	}
+	
+	@Override
+	@PostMapping("/conversations/{conversationId}/read")
+	public ResponseEntity<Void> markMessagesAsRead(
+			@AuthenticationPrincipal Long userId,
+			@PathVariable Long conversationId
+	) {
+		messageService.markMessagesAsRead(conversationId, userId);
+		return ResponseEntity.ok().build();
+	}
 }
