@@ -17,88 +17,88 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "students", indexes = {
-    @Index(name = "idx_students_student_id", columnList = "student_id"),
-    @Index(name = "idx_students_admission_year", columnList = "admission_year")
+		@Index(name = "idx_students_student_id", columnList = "student_id"),
+		@Index(name = "idx_students_admission_year", columnList = "admission_year")
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Student implements Persistable<Long> {
-
-    @Id
-    @Column(name = "student_id")
-    private Long studentId;  // 학번 (예: 20240101001) - PK이자 User.id와 동일
-
-    @OneToOne(fetch = FetchType.LAZY)
-    @MapsId
-    @JoinColumn(name = "student_id")
-    private User user;
-
-    @Column(name = "admission_year", nullable = false)
-    private Integer admissionYear;  // 입학년도
-
-    @Column(name = "grade", nullable = false)
-    private Integer grade;  // 학년 (1~4)
-
-    @CreationTimestamp
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @OneToOne(mappedBy = "student", fetch = FetchType.LAZY)
-    private StudentDepartment studentDepartment;  // 학과 관계 (1:1)
-
-    @Transient
-    private boolean isNew = true;
-
-    @Builder
-    private Student(Long studentId, User user, Integer admissionYear, Integer grade) {
-        this.studentId = studentId;
-        this.user = user;
-        this.admissionYear = admissionYear;
-        this.grade = grade != null ? grade : 1;  // 기본값 1학년
-    }
-
-    @Override
-    public Long getId() {
-        return studentId;
-    }
-
-    @Override
-    public boolean isNew() {
-        return isNew;
-    }
-
-    @PostPersist
-    @PostLoad
-    void markNotNew() {
-        this.isNew = false;
-    }
-
-    /**
-     * 학생 생성
-     */
-    public static Student create(Long studentId, User user, Integer admissionYear, Integer grade) {
-        return Student.builder()
-                .studentId(studentId)
-                .user(user)
-                .admissionYear(admissionYear)
-                .grade(grade)
-                .build();
-    }
-
-    /**
-     * 학년 업데이트
-     */
-    public void updateGrade(Integer newGrade) {
-        if (newGrade < 1 || newGrade > 4) {
-            throw new IllegalArgumentException("학년은 1~4 사이여야 합니다.");
-        }
-        this.grade = newGrade;
-    }
-
-    /**
-     * 학번 getter (기존 코드 호환용)
-     */
-    public Long getStudentNumber() {
-        return this.studentId;
-    }
+	
+	@Id
+	@Column(name = "student_id")
+	private Long studentId;  // 학번 (예: 20240101001) - PK이자 User.id와 동일
+	
+	@OneToOne(fetch = FetchType.LAZY)
+	@MapsId
+	@JoinColumn(name = "student_id")
+	private User user;
+	
+	@Column(name = "admission_year", nullable = false)
+	private Integer admissionYear;  // 입학년도
+	
+	@Column(name = "grade", nullable = false)
+	private Integer grade;  // 학년 (1~4)
+	
+	@CreationTimestamp
+	@Column(name = "created_at")
+	private LocalDateTime createdAt;
+	
+	@OneToOne(mappedBy = "student", fetch = FetchType.LAZY)
+	private StudentDepartment studentDepartment;  // 학과 관계 (1:1)
+	
+	@Transient
+	private boolean isNew = true;
+	
+	@Builder
+	private Student(Long studentId, User user, Integer admissionYear, Integer grade) {
+		this.studentId = studentId;
+		this.user = user;
+		this.admissionYear = admissionYear;
+		this.grade = grade != null ? grade : 1;  // 기본값 1학년
+	}
+	
+	/**
+	 * 학생 생성
+	 */
+	public static Student create(Long studentId, User user, Integer admissionYear, Integer grade) {
+		return Student.builder()
+				.studentId(studentId)
+				.user(user)
+				.admissionYear(admissionYear)
+				.grade(grade)
+				.build();
+	}
+	
+	@Override
+	public Long getId() {
+		return studentId;
+	}
+	
+	@Override
+	public boolean isNew() {
+		return isNew;
+	}
+	
+	@PostPersist
+	@PostLoad
+	void markNotNew() {
+		this.isNew = false;
+	}
+	
+	/**
+	 * 학년 업데이트
+	 */
+	public void updateGrade(Integer newGrade) {
+		if (newGrade < 1 || newGrade > 4) {
+			throw new IllegalArgumentException("학년은 1~4 사이여야 합니다.");
+		}
+		this.grade = newGrade;
+	}
+	
+	/**
+	 * 학번 getter (기존 코드 호환용)
+	 */
+	public Long getStudentNumber() {
+		return this.studentId;
+	}
 }
