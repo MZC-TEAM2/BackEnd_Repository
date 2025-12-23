@@ -5,7 +5,6 @@ import com.mzc.backend.lms.domains.user.auth.encryption.strategy.AES256Encryptio
 import com.mzc.backend.lms.domains.user.auth.encryption.strategy.BCryptEncryptionStrategy
 import spock.lang.Specification
 import spock.lang.Subject
-import spock.lang.Unroll
 
 /**
  * 암호화 서비스 Spock 테스트
