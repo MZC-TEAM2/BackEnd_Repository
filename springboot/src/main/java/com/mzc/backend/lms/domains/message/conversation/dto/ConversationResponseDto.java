@@ -16,32 +16,32 @@ import java.time.LocalDateTime;
 @Getter
 @Builder
 public class ConversationResponseDto {
-
-    private Long conversationId;
-
-    private Long otherUserId;
-
-    @Encrypted
-    private String otherUserName;
-
-    private String otherUserEmail;
-
-    private String otherUserThumbnailUrl;
-
-    private LocalDateTime createdAt;
-
-    public static ConversationResponseDto from(Conversation conversation, Long myUserId) {
-        User otherUser = conversation.getOtherUser(myUserId);
-        UserProfile otherProfile = otherUser.getUserProfile();
-        UserProfileImage otherProfileImage = otherUser.getProfileImage();
-
-        return ConversationResponseDto.builder()
-                .conversationId(conversation.getId())
-                .otherUserId(otherUser.getId())
-                .otherUserName(otherProfile != null ? otherProfile.getName() : null)
-                .otherUserEmail(otherUser.getEmail())
-                .otherUserThumbnailUrl(otherProfileImage != null ? otherProfileImage.getThumbnailUrl() : null)
-                .createdAt(conversation.getCreatedAt())
-                .build();
-    }
+	
+	private Long conversationId;
+	
+	private Long otherUserId;
+	
+	@Encrypted
+	private String otherUserName;
+	
+	private String otherUserEmail;
+	
+	private String otherUserThumbnailUrl;
+	
+	private LocalDateTime createdAt;
+	
+	public static ConversationResponseDto from(Conversation conversation, Long myUserId) {
+		User otherUser = conversation.getOtherUser(myUserId);
+		UserProfile otherProfile = otherUser.getUserProfile();
+		UserProfileImage otherProfileImage = otherUser.getProfileImage();
+		
+		return ConversationResponseDto.builder()
+				.conversationId(conversation.getId())
+				.otherUserId(otherUser.getId())
+				.otherUserName(otherProfile != null ? otherProfile.getName() : null)
+				.otherUserEmail(otherUser.getEmail())
+				.otherUserThumbnailUrl(otherProfileImage != null ? otherProfileImage.getThumbnailUrl() : null)
+				.createdAt(conversation.getCreatedAt())
+				.build();
+	}
 }
