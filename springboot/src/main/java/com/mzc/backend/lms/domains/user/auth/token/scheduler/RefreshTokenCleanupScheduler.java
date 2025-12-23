@@ -18,26 +18,26 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 @Slf4j
 public class RefreshTokenCleanupScheduler {
-
-    private final RefreshTokenRepository refreshTokenRepository;
-
-    /**
-     * 만료/폐기 리프레시 토큰 정리
-     * 매일 새벽 3시에 실행
-     */
-    @Scheduled(cron = "0 0 3 * * *")
-    @SchedulerLock(
-            name = "RefreshTokenCleanupScheduler_cleanExpiredOrRevokedTokens",
-            lockAtMostFor = "10m",
-            lockAtLeastFor = "1m"
-    )
-    @Transactional
-    public void cleanExpiredOrRevokedTokens() {
-        log.info("Starting refresh token cleanup scheduler");
-
-        LocalDateTime now = LocalDateTime.now();
-        int deletedCount = refreshTokenRepository.deleteExpiredOrRevokedTokens(now);
-
-        log.info("Refresh token cleanup completed. Deleted {} tokens", deletedCount);
-    }
+	
+	private final RefreshTokenRepository refreshTokenRepository;
+	
+	/**
+	 * 만료/폐기 리프레시 토큰 정리
+	 * 매일 새벽 3시에 실행
+	 */
+	@Scheduled(cron = "0 0 3 * * *")
+	@SchedulerLock(
+			name = "RefreshTokenCleanupScheduler_cleanExpiredOrRevokedTokens",
+			lockAtMostFor = "10m",
+			lockAtLeastFor = "1m"
+	)
+	@Transactional
+	public void cleanExpiredOrRevokedTokens() {
+		log.info("Starting refresh token cleanup scheduler");
+		
+		LocalDateTime now = LocalDateTime.now();
+		int deletedCount = refreshTokenRepository.deleteExpiredOrRevokedTokens(now);
+		
+		log.info("Refresh token cleanup completed. Deleted {} tokens", deletedCount);
+	}
 }
