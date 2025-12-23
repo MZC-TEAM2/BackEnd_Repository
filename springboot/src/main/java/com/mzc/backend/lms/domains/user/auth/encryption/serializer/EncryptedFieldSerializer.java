@@ -16,27 +16,27 @@ import java.io.IOException;
 @Slf4j
 @Component
 public class EncryptedFieldSerializer extends JsonSerializer<String> {
-
-    private static EncryptionService encryptionService;
-
-    @Autowired
-    public void setEncryptionService(EncryptionService encryptionService) {
-        EncryptedFieldSerializer.encryptionService = encryptionService;
-    }
-
-    @Override
-    public void serialize(String value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-        if (value == null || value.isEmpty()) {
-            gen.writeString(value);
-            return;
-        }
-
-        try {
-            String decrypted = encryptionService.decryptPersonalInfo(value);
-            gen.writeString(decrypted);
-        } catch (Exception e) {
-            log.warn("복호화 실패, 원본 반환: {}", e.getMessage());
-            gen.writeString(value);
-        }
-    }
+	
+	private static EncryptionService encryptionService;
+	
+	@Autowired
+	public void setEncryptionService(EncryptionService encryptionService) {
+		EncryptedFieldSerializer.encryptionService = encryptionService;
+	}
+	
+	@Override
+	public void serialize(String value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+		if (value == null || value.isEmpty()) {
+			gen.writeString(value);
+			return;
+		}
+		
+		try {
+			String decrypted = encryptionService.decryptPersonalInfo(value);
+			gen.writeString(decrypted);
+		} catch (Exception e) {
+			log.warn("복호화 실패, 원본 반환: {}", e.getMessage());
+			gen.writeString(value);
+		}
+	}
 }
