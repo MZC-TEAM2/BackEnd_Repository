@@ -1,10 +1,13 @@
 #!/bin/bash
 
-# Get list of modified files
-git status --porcelain | while read -r line; do
-  file="${line:3}"
-
+git status --porcelain | cut -c4- | while read -r file; do
+  # Skip empty lines and deleted files
   if [ -z "$file" ]; then
+    continue
+  fi
+
+  # Check if file exists (skip deleted files)
+  if [ ! -e "$file" ]; then
     continue
   fi
 
@@ -42,7 +45,6 @@ git status --porcelain | while read -r line; do
       ;;
   esac
 
-  # Add and commit
   git add "$file" && git commit -m "$msg"
 done
 
