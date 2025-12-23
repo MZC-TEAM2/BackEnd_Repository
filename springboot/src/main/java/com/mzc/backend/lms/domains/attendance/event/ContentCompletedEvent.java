@@ -17,30 +17,30 @@ import java.time.LocalDateTime;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ContentCompletedEvent {
-
-    @JsonProperty("studentId")
-    private Long studentId;
-
-    @JsonProperty("contentId")
-    private Long contentId;
-
-    @JsonProperty("weekId")
-    private Long weekId;
-
-    @JsonProperty("courseId")
-    private Long courseId;
-
-    @JsonProperty("completedAt")
-    private LocalDateTime completedAt;
-
-    @Override
-    public String toString() {
-        return "ContentCompletedEvent{" +
-                "studentId=" + studentId +
-                ", contentId=" + contentId +
-                ", weekId=" + weekId +
-                ", courseId=" + courseId +
-                ", completedAt=" + completedAt +
-                '}';
-    }
+	
+	@JsonProperty("studentId")
+	private Long studentId;
+	
+	@JsonProperty("contentId")
+	private Long contentId;
+	
+	@JsonProperty("weekId")
+	private Long weekId;
+	
+	@JsonProperty("courseId")
+	private Long courseId;
+	
+	@JsonProperty("completedAt")
+	private LocalDateTime completedAt;
+	
+	@Override
+	public String toString() {
+		return "ContentCompletedEvent{" +
+				"studentId=" + studentId +
+				", contentId=" + contentId +
+				", weekId=" + weekId +
+				", courseId=" + courseId +
+				", completedAt=" + completedAt +
+				'}';
+	}
 }
