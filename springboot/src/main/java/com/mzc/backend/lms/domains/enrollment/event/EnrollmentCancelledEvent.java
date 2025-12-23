@@ -10,24 +10,24 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class EnrollmentCancelledEvent {
-
-    /**
-     * 수강취소한 학생 ID
-     */
-    private final Long studentId;
-
-    /**
-     * 취소된 강의 ID
-     */
-    private final Long courseId;
-
-    /**
-     * 강의명
-     */
-    private final String courseName;
-
-    /**
-     * 분반 번호
-     */
-    private final String sectionNumber;
+	
+	/**
+	 * 수강취소한 학생 ID
+	 */
+	private final Long studentId;
+	
+	/**
+	 * 취소된 강의 ID
+	 */
+	private final Long courseId;
+	
+	/**
+	 * 강의명
+	 */
+	private final String courseName;
+	
+	/**
+	 * 분반 번호
+	 */
+	private final String sectionNumber;
 }
