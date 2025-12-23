@@ -10,31 +10,31 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class SwaggerConfig {
-
-    private static final String SECURITY_SCHEME_NAME = "Bearer Authentication";
-
-    @Bean
-    public OpenAPI openAPI() {
-        return new OpenAPI()
-                .info(apiInfo())
-                .addSecurityItem(new SecurityRequirement().addList(SECURITY_SCHEME_NAME))
-                .components(new Components()
-                        .addSecuritySchemes(SECURITY_SCHEME_NAME, securityScheme()));
-    }
-
-    private Info apiInfo() {
-        return new Info()
-                .title("MZC LMS API")
-                .description("MZC 1st Project - LMS Backend API Documentation")
-                .version("v1.0.0");
-    }
-
-    private SecurityScheme securityScheme() {
-        return new SecurityScheme()
-                .type(SecurityScheme.Type.HTTP)
-                .scheme("bearer")
-                .bearerFormat("JWT")
-                .in(SecurityScheme.In.HEADER)
-                .name("Authorization");
-    }
+	
+	private static final String SECURITY_SCHEME_NAME = "Bearer Authentication";
+	
+	@Bean
+	public OpenAPI openAPI() {
+		return new OpenAPI()
+				.info(apiInfo())
+				.addSecurityItem(new SecurityRequirement().addList(SECURITY_SCHEME_NAME))
+				.components(new Components()
+						.addSecuritySchemes(SECURITY_SCHEME_NAME, securityScheme()));
+	}
+	
+	private Info apiInfo() {
+		return new Info()
+				.title("MZC LMS API")
+				.description("MZC 1st Project - LMS Backend API Documentation")
+				.version("v1.0.0");
+	}
+	
+	private SecurityScheme securityScheme() {
+		return new SecurityScheme()
+				.type(SecurityScheme.Type.HTTP)
+				.scheme("bearer")
+				.bearerFormat("JWT")
+				.in(SecurityScheme.In.HEADER)
+				.name("Authorization");
+	}
 }
