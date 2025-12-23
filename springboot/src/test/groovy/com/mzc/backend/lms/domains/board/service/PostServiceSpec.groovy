@@ -1,6 +1,6 @@
 package com.mzc.backend.lms.domains.board.service
 
-import com.mzc.backend.lms.domains.board.dto.request.PostCreateRequestDto
+
 import com.mzc.backend.lms.domains.board.entity.BoardCategory
 import com.mzc.backend.lms.domains.board.entity.Post
 import com.mzc.backend.lms.domains.board.entity.PostLike
