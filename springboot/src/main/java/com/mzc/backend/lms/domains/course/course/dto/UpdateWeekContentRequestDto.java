@@ -9,10 +9,10 @@ import lombok.Getter;
 @Getter
 @Builder
 public class UpdateWeekContentRequestDto {
-    private String contentType;
-    private String title;
-    private String contentUrl;
-    private String duration;
-    private Integer displayOrder;
+	private String contentType;
+	private String title;
+	private String contentUrl;
+	private String duration;
+	private Integer displayOrder;
 }
 
