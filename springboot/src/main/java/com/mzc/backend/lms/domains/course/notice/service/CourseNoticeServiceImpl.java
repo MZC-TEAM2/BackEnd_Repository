@@ -10,6 +10,7 @@ import com.mzc.backend.lms.domains.course.notice.dto.response.CourseNoticeDetail
 import com.mzc.backend.lms.domains.course.notice.dto.response.CourseNoticeResponse;
 import com.mzc.backend.lms.domains.course.notice.entity.CourseNotice;
 import com.mzc.backend.lms.domains.course.notice.entity.CourseNoticeComment;
+import com.mzc.backend.lms.domains.course.notice.event.CourseNoticeCreatedEvent;
 import com.mzc.backend.lms.domains.course.notice.repository.CourseNoticeCommentRepository;
 import com.mzc.backend.lms.domains.course.notice.repository.CourseNoticeRepository;
 import com.mzc.backend.lms.domains.enrollment.repository.EnrollmentRepository;
@@ -17,6 +18,7 @@ import com.mzc.backend.lms.domains.user.profile.dto.UserBasicInfoDto;
 import com.mzc.backend.lms.domains.user.profile.service.UserInfoCacheService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -39,6 +41,7 @@ public class CourseNoticeServiceImpl implements CourseNoticeService {
     private final CourseRepository courseRepository;
     private final EnrollmentRepository enrollmentRepository;
     private final UserInfoCacheService userInfoCacheService;
+    private final ApplicationEventPublisher eventPublisher;
 
     // === 공지 CRUD ===
 
@@ -58,6 +61,15 @@ public class CourseNoticeServiceImpl implements CourseNoticeService {
 
         courseNoticeRepository.save(notice);
         log.info("공지사항 생성: courseId={}, noticeId={}, professorId={}", courseId, notice.getId(), professorId);
+
+        // 수강생들에게 알림 발송을 위한 이벤트 발행
+        eventPublisher.publishEvent(new CourseNoticeCreatedEvent(
+                notice.getId(),
+                courseId,
+                course.getSubject().getSubjectName(),
+                notice.getTitle(),
+                professorId
+        ));
 
         String authorName = getAuthorName(professorId);
         return CourseNoticeResponse.from(notice, authorName);

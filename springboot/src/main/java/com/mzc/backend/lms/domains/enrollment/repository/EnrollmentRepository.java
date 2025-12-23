@@ -47,4 +47,10 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
      */
     @Query("SELECT DISTINCT e.course.academicTerm FROM Enrollment e WHERE e.student.studentId = :studentId")
     List<AcademicTerm> findDistinctAcademicTermsByStudentId(@Param("studentId") Long studentId);
+
+    /**
+     * 강의 ID로 수강생 ID 목록 조회
+     */
+    @Query("SELECT e.student.studentId FROM Enrollment e WHERE e.course.id = :courseId")
+    List<Long> findStudentIdsByCourseId(@Param("courseId") Long courseId);
 }
