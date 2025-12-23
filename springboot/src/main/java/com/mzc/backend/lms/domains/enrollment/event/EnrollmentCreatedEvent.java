@@ -10,24 +10,24 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class EnrollmentCreatedEvent {
-
-    /**
-     * 수강신청한 학생 ID
-     */
-    private final Long studentId;
-
-    /**
-     * 수강신청된 강의 ID
-     */
-    private final Long courseId;
-
-    /**
-     * 강의명
-     */
-    private final String courseName;
-
-    /**
-     * 분반 번호
-     */
-    private final String sectionNumber;
+	
+	/**
+	 * 수강신청한 학생 ID
+	 */
+	private final Long studentId;
+	
+	/**
+	 * 수강신청된 강의 ID
+	 */
+	private final Long courseId;
+	
+	/**
+	 * 강의명
+	 */
+	private final String courseName;
+	
+	/**
+	 * 분반 번호
+	 */
+	private final String sectionNumber;
 }
