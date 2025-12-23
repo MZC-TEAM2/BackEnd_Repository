@@ -2,7 +2,6 @@ package com.mzc.backend.lms.domains.board.service
 
 import com.mzc.backend.lms.domains.board.dto.request.CommentCreateRequestDto
 import com.mzc.backend.lms.domains.board.dto.request.CommentUpdateRequestDto
-import com.mzc.backend.lms.domains.board.entity.Attachment
 import com.mzc.backend.lms.domains.board.entity.BoardCategory
 import com.mzc.backend.lms.domains.board.entity.Comment
 import com.mzc.backend.lms.domains.board.entity.Post
@@ -10,7 +9,6 @@ import com.mzc.backend.lms.domains.board.exception.BoardException
 import com.mzc.backend.lms.domains.board.repository.AttachmentRepository
 import com.mzc.backend.lms.domains.board.repository.CommentRepository
 import com.mzc.backend.lms.domains.board.repository.PostRepository
-import com.mzc.backend.lms.domains.user.profile.dto.UserBasicInfoDto
 import com.mzc.backend.lms.domains.user.profile.service.UserInfoCacheService
 import spock.lang.Specification
 import spock.lang.Subject
