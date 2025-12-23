@@ -2,6 +2,7 @@ package com.mzc.backend.lms.domains.course.course.dto;
 
 import lombok.Builder;
 import lombok.Getter;
+
 import java.time.LocalDate;
 
 /**
@@ -10,9 +11,9 @@ import java.time.LocalDate;
 @Getter
 @Builder
 public class AcademicTermDto {
-    private Long id;
-    private Integer year;
-    private String termType;
-    private LocalDate startDate;
-    private LocalDate endDate;
+	private Long id;
+	private Integer year;
+	private String termType;
+	private LocalDate startDate;
+	private LocalDate endDate;
 }
