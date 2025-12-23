@@ -10,11 +10,11 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 public class AttemptStartResponseDto {
-
-    private Long attemptId;
-    private LocalDateTime startedAt;
-    private LocalDateTime endAt;
-    private Long remainingSeconds;
+	
+	private Long attemptId;
+	private LocalDateTime startedAt;
+	private LocalDateTime endAt;
+	private Long remainingSeconds;
 }
 
 
