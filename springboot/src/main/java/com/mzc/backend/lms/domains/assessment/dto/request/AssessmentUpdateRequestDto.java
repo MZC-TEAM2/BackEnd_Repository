@@ -14,24 +14,24 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AssessmentUpdateRequestDto {
-
-    private String title;
-    private String content;
-
-    private LocalDateTime startAt;
-    private Integer durationMinutes;
-    private BigDecimal totalScore;
-    private Boolean isOnline;
-    private String location;
-    private String instructions;
-    private Integer questionCount;
-    private BigDecimal passingScore;
-
-    /**
-     * 문제 JSON (정답 포함)
-     * - null이면 유지
-     */
-    private JsonNode questionData;
+	
+	private String title;
+	private String content;
+	
+	private LocalDateTime startAt;
+	private Integer durationMinutes;
+	private BigDecimal totalScore;
+	private Boolean isOnline;
+	private String location;
+	private String instructions;
+	private Integer questionCount;
+	private BigDecimal passingScore;
+	
+	/**
+	 * 문제 JSON (정답 포함)
+	 * - null이면 유지
+	 */
+	private JsonNode questionData;
 }
 
 
