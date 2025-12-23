@@ -10,18 +10,18 @@ import lombok.Getter;
 @Getter
 @Builder
 public class CollegeListResponseDto {
-
-    private Long id;
-
-    private String collegeName;
-
-    private String collegeCode;
-
-    public static CollegeListResponseDto from(College college) {
-        return CollegeListResponseDto.builder()
-                .id(college.getId())
-                .collegeName(college.getCollegeName())
-                .collegeCode(college.getCollegeCode())
-                .build();
-    }
+	
+	private Long id;
+	
+	private String collegeName;
+	
+	private String collegeCode;
+	
+	public static CollegeListResponseDto from(College college) {
+		return CollegeListResponseDto.builder()
+				.id(college.getId())
+				.collegeName(college.getCollegeName())
+				.collegeCode(college.getCollegeCode())
+				.build();
+	}
 }
