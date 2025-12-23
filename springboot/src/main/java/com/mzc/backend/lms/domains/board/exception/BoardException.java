@@ -7,21 +7,21 @@ import lombok.Getter;
  */
 @Getter
 public class BoardException extends RuntimeException {
-    
-    private final BoardErrorCode errorCode;
-    
-    public BoardException(BoardErrorCode errorCode) {
-        super(errorCode.getMessage());
-        this.errorCode = errorCode;
-    }
-    
-    public BoardException(BoardErrorCode errorCode, String message) {
-        super(message);
-        this.errorCode = errorCode;
-    }
-    
-    public BoardException(BoardErrorCode errorCode, Throwable cause) {
-        super(errorCode.getMessage(), cause);
-        this.errorCode = errorCode;
-    }
+	
+	private final BoardErrorCode errorCode;
+	
+	public BoardException(BoardErrorCode errorCode) {
+		super(errorCode.getMessage());
+		this.errorCode = errorCode;
+	}
+	
+	public BoardException(BoardErrorCode errorCode, String message) {
+		super(message);
+		this.errorCode = errorCode;
+	}
+	
+	public BoardException(BoardErrorCode errorCode, Throwable cause) {
+		super(errorCode.getMessage(), cause);
+		this.errorCode = errorCode;
+	}
 }
