@@ -9,7 +9,7 @@ import lombok.Getter;
 @Getter
 @Builder
 public class PrerequisiteDto {
-    private String subjectCode;
-    private String subjectName;
-    private Boolean isMandatory;  // 필수 여부
+	private String subjectCode;
+	private String subjectName;
+	private Boolean isMandatory;  // 필수 여부
 }
