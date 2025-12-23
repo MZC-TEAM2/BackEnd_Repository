@@ -8,13 +8,13 @@ public enum CommonErrorCode {
 	
 	// 인증/인가 관련 에러 (AUTH_0XX)
 	UNAUTHORIZED("AUTH_001", "Unauthorized", HttpStatus.UNAUTHORIZED),
-
+	
 	// 검증 관련 에러 (VALIDATION_0XX)
 	INVALID_INPUT("VALIDATION_001", "Invalid input", HttpStatus.BAD_REQUEST),
 	REQUIRED_FIELD_MISSING("VALIDATION_002", "Required field is missing", HttpStatus.BAD_REQUEST),
 	INVALID_FORMAT("VALIDATION_003", "Invalid format", HttpStatus.BAD_REQUEST),
 	VALUE_OUT_OF_RANGE("VALIDATION_004", "Value is out of range", HttpStatus.BAD_REQUEST),
-
+	
 	// 시스템 에러 (SYSTEM_0XX)
 	INTERNAL_SERVER_ERROR("SYSTEM_001", "Internal server error", HttpStatus.INTERNAL_SERVER_ERROR),
 	DATABASE_ERROR("SYSTEM_002", "Database error", HttpStatus.INTERNAL_SERVER_ERROR),
