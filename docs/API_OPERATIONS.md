@@ -34,6 +34,8 @@
 17. [SSE API](#17-sse-api)
 18. [출석 API](#18-출석-api)
 19. [대시보드 API](#19-대시보드-api)
+20. [시험/퀴즈 API](#20-시험퀴즈-api)
+21. [성적 API](#21-성적-api)
 
 ---
 
@@ -1845,6 +1847,334 @@
 | **예외/에러 코드** | 없음 |
 | **성능 제약** | 응답시간 < 200ms |
 | **트랜잭션/락** | 불필요 |
+
+---
+
+## 20. 시험/퀴즈 API
+
+### 20.1 시험/퀴즈 목록 조회 (학생)
+
+| 항목 | 내용 |
+|------|------|
+| **식별자** | `EXAM-001` |
+| **엔드포인트** | `GET /api/v1/exams` |
+| **책임** | 학생이 수강 중인 강의의 시험/퀴즈 목록을 반환 (시작시간 전 항목 숨김) |
+| **입력** | Query: `courseId (required)`, `examType (required: QUIZ/MIDTERM/FINAL)` |
+| **출력 (성공)** | `200 OK` - `List<AssessmentListItemResponseDto>` |
+| **출력 (실패)** | `400 Bad Request` / `401 Unauthorized` |
+| **전제조건** | 학생 권한, 해당 강의 수강 중 |
+| **후조건** | 없음 |
+| **예외/에러 코드** | `UNAUTHORIZED` / `COURSE_NOT_FOUND` / `NOT_ENROLLED` |
+| **성능 제약** | 응답시간 < 300ms |
+| **트랜잭션/락** | 불필요 |
+
+---
+
+### 20.2 시험/퀴즈 상세 조회 (학생)
+
+| 항목 | 내용 |
+|------|------|
+| **식별자** | `EXAM-002` |
+| **엔드포인트** | `GET /api/v1/exams/{examId}` |
+| **책임** | 시험/퀴즈 상세 조회 (학생에게는 정답이 마스킹된 questionData 제공) |
+| **입력** | Path: `examId (required)` |
+| **출력 (성공)** | `200 OK` - `AssessmentDetailResponseDto` |
+| **출력 (실패)** | `400 Bad Request` / `401 Unauthorized` / `404 Not Found` |
+| **전제조건** | 학생 권한, 해당 강의 수강 중 |
+| **후조건** | 없음 |
+| **예외/에러 코드** | `EXAM_NOT_FOUND` / `NOT_ENROLLED` |
+| **성능 제약** | 응답시간 < 300ms |
+| **트랜잭션/락** | 불필요 |
+
+---
+
+### 20.3 응시 시작 (학생)
+
+| 항목 | 내용 |
+|------|------|
+| **식별자** | `EXAM-003` |
+| **엔드포인트** | `POST /api/v1/exams/{examId}/start` |
+| **책임** | 응시 시작 처리 (응시 레코드 생성/조회) |
+| **입력** | Path: `examId (required)` |
+| **출력 (성공)** | `200 OK` - `AttemptStartResponseDto` |
+| **출력 (실패)** | `400 Bad Request` / `401 Unauthorized` |
+| **전제조건** | 학생 권한, 시험 시작 가능 시간/상태 |
+| **후조건** | 응시 레코드 생성 또는 기존 응시 레코드 반환 |
+| **예외/에러 코드** | `NOT_STARTED` / `ALREADY_FINISHED` |
+| **성능 제약** | 응답시간 < 500ms |
+| **트랜잭션/락** | **Required** |
+
+---
+
+### 20.4 최종 제출 (학생)
+
+| 항목 | 내용 |
+|------|------|
+| **식별자** | `EXAM-004` |
+| **엔드포인트** | `POST /api/v1/exams/results/{attemptId}/submit` |
+| **책임** | 시험/퀴즈 최종 제출 처리 |
+| **입력** | Path: `attemptId (required)`, Body: `AttemptSubmitRequestDto` |
+| **출력 (성공)** | `200 OK` - `AttemptSubmitResponseDto` |
+| **출력 (실패)** | `400 Bad Request` / `401 Unauthorized` |
+| **전제조건** | 학생 권한, 본인 응시, 제출 가능 상태 |
+| **후조건** | 응시 결과 저장, 퀴즈인 경우 자동 채점 반영 |
+| **예외/에러 코드** | `ATTEMPT_NOT_FOUND` / `NOT_OWNER` / `INVALID_STATE` |
+| **성능 제약** | 응답시간 < 1s |
+| **트랜잭션/락** | **Required** |
+
+---
+
+### 20.5 시험/퀴즈 목록 조회 (교수)
+
+| 항목 | 내용 |
+|------|------|
+| **식별자** | `EXAM-005` |
+| **엔드포인트** | `GET /api/v1/professor/exams` |
+| **책임** | 교수 강의의 시험/퀴즈 목록 조회 (시작 전 포함 전체 조회 가능) |
+| **입력** | Query: `courseId (required)`, `examType (required: QUIZ/MIDTERM/FINAL)` |
+| **출력 (성공)** | `200 OK` - `List<AssessmentListItemResponseDto>` |
+| **출력 (실패)** | `400 Bad Request` / `401 Unauthorized` |
+| **전제조건** | 교수 권한, 본인 강의 |
+| **후조건** | 없음 |
+| **예외/에러 코드** | `NOT_OWNER` / `COURSE_NOT_FOUND` |
+| **성능 제약** | 응답시간 < 300ms |
+| **트랜잭션/락** | 불필요 |
+
+---
+
+### 20.6 시험/퀴즈 상세 조회 (교수)
+
+| 항목 | 내용 |
+|------|------|
+| **식별자** | `EXAM-006` |
+| **엔드포인트** | `GET /api/v1/professor/exams/{examId}` |
+| **책임** | 시험/퀴즈 상세 조회 (교수는 정답 포함 원본 questionData 조회 가능) |
+| **입력** | Path: `examId (required)` |
+| **출력 (성공)** | `200 OK` - `AssessmentDetailResponseDto` |
+| **출력 (실패)** | `400 Bad Request` / `401 Unauthorized` / `404 Not Found` |
+| **전제조건** | 교수 권한, 본인 강의 |
+| **후조건** | 없음 |
+| **예외/에러 코드** | `EXAM_NOT_FOUND` / `NOT_OWNER` |
+| **성능 제약** | 응답시간 < 300ms |
+| **트랜잭션/락** | 불필요 |
+
+---
+
+### 20.7 응시자/응시 결과 목록 조회 (교수)
+
+| 항목 | 내용 |
+|------|------|
+| **식별자** | `EXAM-007` |
+| **엔드포인트** | `GET /api/v1/professor/exams/{examId}/attempts` |
+| **책임** | 응시자/응시 결과 목록 조회 |
+| **입력** | Path: `examId (required)`, Query: `status (optional: ALL/SUBMITTED/IN_PROGRESS, default ALL)` |
+| **출력 (성공)** | `200 OK` - `List<ProfessorAttemptListItemResponseDto>` |
+| **출력 (실패)** | `400 Bad Request` / `401 Unauthorized` |
+| **전제조건** | 교수 권한, 본인 강의 |
+| **후조건** | 없음 |
+| **예외/에러 코드** | `EXAM_NOT_FOUND` / `NOT_OWNER` |
+| **성능 제약** | 응답시간 < 500ms |
+| **트랜잭션/락** | 불필요 |
+
+---
+
+### 20.8 응시 결과 상세 조회 (교수)
+
+| 항목 | 내용 |
+|------|------|
+| **식별자** | `EXAM-008` |
+| **엔드포인트** | `GET /api/v1/professor/exams/results/{attemptId}` |
+| **책임** | 응시 결과 상세 조회 (답안 포함) |
+| **입력** | Path: `attemptId (required)` |
+| **출력 (성공)** | `200 OK` - `ProfessorAttemptDetailResponseDto` |
+| **출력 (실패)** | `400 Bad Request` / `401 Unauthorized` / `404 Not Found` |
+| **전제조건** | 교수 권한, 본인 강의 |
+| **후조건** | 없음 |
+| **예외/에러 코드** | `ATTEMPT_NOT_FOUND` / `NOT_OWNER` |
+| **성능 제약** | 응답시간 < 500ms |
+| **트랜잭션/락** | 불필요 |
+
+---
+
+### 20.9 시험/퀴즈 등록 (교수)
+
+| 항목 | 내용 |
+|------|------|
+| **식별자** | `EXAM-009` |
+| **엔드포인트** | `POST /api/v1/boards/{boardType}/exams` |
+| **책임** | 시험/퀴즈 생성 |
+| **입력** | Path: `boardType (required)`, Body: `AssessmentCreateRequestDto` |
+| **출력 (성공)** | `201 Created` - `AssessmentDetailResponseDto` |
+| **출력 (실패)** | `400 Bad Request` / `401 Unauthorized` |
+| **전제조건** | 교수 권한, 본인 강의 |
+| **후조건** | 시험/퀴즈 레코드 생성 |
+| **예외/에러 코드** | `NOT_OWNER` / `INVALID_INPUT` |
+| **성능 제약** | 응답시간 < 500ms |
+| **트랜잭션/락** | **Required** |
+
+---
+
+### 20.10 시험/퀴즈 수정 (교수)
+
+| 항목 | 내용 |
+|------|------|
+| **식별자** | `EXAM-010` |
+| **엔드포인트** | `PUT /api/v1/exams/{examId}/edit` |
+| **책임** | 시험/퀴즈 수정 |
+| **입력** | Path: `examId (required)`, Body: `AssessmentUpdateRequestDto` |
+| **출력 (성공)** | `200 OK` - `AssessmentDetailResponseDto` |
+| **출력 (실패)** | `400 Bad Request` / `401 Unauthorized` / `404 Not Found` |
+| **전제조건** | 교수 권한, 본인 강의 |
+| **후조건** | 시험/퀴즈 수정 반영 |
+| **예외/에러 코드** | `EXAM_NOT_FOUND` / `NOT_OWNER` |
+| **성능 제약** | 응답시간 < 500ms |
+| **트랜잭션/락** | **Required** |
+
+---
+
+### 20.11 시험/퀴즈 삭제 (교수)
+
+| 항목 | 내용 |
+|------|------|
+| **식별자** | `EXAM-011` |
+| **엔드포인트** | `DELETE /api/v1/exams/{examId}/delete` |
+| **책임** | 시험/퀴즈 삭제 |
+| **입력** | Path: `examId (required)` |
+| **출력 (성공)** | `200 OK` - `{ "success": true, "message": "삭제되었습니다" }` |
+| **출력 (실패)** | `400 Bad Request` / `401 Unauthorized` / `404 Not Found` |
+| **전제조건** | 교수 권한, 본인 강의 |
+| **후조건** | 시험/퀴즈 삭제 처리 |
+| **예외/에러 코드** | `EXAM_NOT_FOUND` / `NOT_OWNER` |
+| **성능 제약** | 응답시간 < 300ms |
+| **트랜잭션/락** | **Required** |
+
+---
+
+### 20.12 시험 채점 (교수)
+
+| 항목 | 내용 |
+|------|------|
+| **식별자** | `EXAM-012` |
+| **엔드포인트** | `PUT /api/v1/exams/results/{attemptId}/grade` |
+| **책임** | 시험(주관식 포함) 채점 처리 (퀴즈는 자동채점) |
+| **입력** | Path: `attemptId (required)`, Body: `AttemptGradeRequestDto` |
+| **출력 (성공)** | `200 OK` - `AttemptGradeResponseDto` |
+| **출력 (실패)** | `400 Bad Request` / `401 Unauthorized` / `404 Not Found` |
+| **전제조건** | 교수 권한, 본인 강의, 제출 상태 |
+| **후조건** | 응시 결과 점수/채점 상태 반영 |
+| **예외/에러 코드** | `ATTEMPT_NOT_FOUND` / `NOT_OWNER` / `INVALID_STATE` |
+| **성능 제약** | 응답시간 < 500ms |
+| **트랜잭션/락** | **Required** |
+
+---
+
+## 21. 성적 API
+
+### 21.1 학생 성적 조회
+
+| 항목 | 내용 |
+|------|------|
+| **식별자** | `GRADE-001` |
+| **엔드포인트** | `GET /api/v1/student/grades` |
+| **책임** | 학생 본인 성적 조회 (PUBLISHED 성적만 반환, 학기 필터 가능) |
+| **입력** | Query: `academicTermId (optional)` |
+| **출력 (성공)** | `200 OK` - `List<StudentGradeResponseDto>` |
+| **출력 (실패)** | `401 Unauthorized` |
+| **전제조건** | 학생 권한 |
+| **후조건** | 없음 |
+| **예외/에러 코드** | `UNAUTHORIZED` |
+| **성능 제약** | 응답시간 < 300ms |
+| **트랜잭션/락** | 불필요 |
+
+---
+
+### 21.2 담당 강의 수강생 성적 전체 조회 (교수)
+
+| 항목 | 내용 |
+|------|------|
+| **식별자** | `GRADE-002` |
+| **엔드포인트** | `GET /api/v1/professor/courses/{courseId}/grades` |
+| **책임** | 담당 강의 수강생 성적 전체 조회 (status 필터: ALL/PUBLISHED) |
+| **입력** | Path: `courseId (required)`, Query: `status (optional: ALL/PUBLISHED, default ALL)` |
+| **출력 (성공)** | `200 OK` - `List<ProfessorCourseGradesResponseDto>` |
+| **출력 (실패)** | `401 Unauthorized` / `400 Bad Request` |
+| **전제조건** | 교수 권한, 본인 강의 |
+| **후조건** | 없음 |
+| **예외/에러 코드** | `NOT_OWNER` / `COURSE_NOT_FOUND` |
+| **성능 제약** | 응답시간 < 500ms |
+| **트랜잭션/락** | 불필요 |
+
+---
+
+### 21.3 강의 성적 산출(점수 계산) 수동 실행 (교수)
+
+| 항목 | 내용 |
+|------|------|
+| **식별자** | `GRADE-003` |
+| **엔드포인트** | `POST /api/v1/professor/courses/{courseId}/grades/calculate` |
+| **책임** | 강의 단위 성적 산출 수행 (status=GRADED, finalScore 산출) |
+| **입력** | Path: `courseId (required)` |
+| **출력 (성공)** | `200 OK` - `{ "success": true, "message": "성적 산출 처리를 실행했습니다." }` |
+| **출력 (실패)** | `401 Unauthorized` / `400 Bad Request` |
+| **전제조건** | 교수 권한, 본인 강의, 성적산출기간(GRADE_CALCULATION) 진행 중, 채점 미완료 없음 |
+| **후조건** | grades upsert 및 status=GRADED 저장 |
+| **예외/에러 코드** | `NOT_OWNER` / `NOT_IN_CALCULATION_PERIOD` |
+| **성능 제약** | 응답시간 < 2초 |
+| **트랜잭션/락** | **Required** |
+
+---
+
+### 21.4 강의 성적 공개(확정/공개) 수동 실행 (교수)
+
+| 항목 | 내용 |
+|------|------|
+| **식별자** | `GRADE-004` |
+| **엔드포인트** | `POST /api/v1/professor/courses/{courseId}/grades/publish` |
+| **책임** | 강의 단위 성적 확정 및 공개 (finalGrade 부여, status=PUBLISHED) |
+| **입력** | Path: `courseId (required)` |
+| **출력 (성공)** | `200 OK` - `{ "success": true, "message": "성적 공개 처리를 실행했습니다." }` |
+| **출력 (실패)** | `401 Unauthorized` / `400 Bad Request` |
+| **전제조건** | 교수 권한, 본인 강의, 성적공개기간(GRADE_PUBLISH) 진행 중, 산출(GRADED) 완료 |
+| **후조건** | grades finalGrade 확정 및 status=PUBLISHED 저장 |
+| **예외/에러 코드** | `NOT_OWNER` / `NOT_IN_PUBLISH_PERIOD` / `NEED_CALCULATE` |
+| **성능 제약** | 응답시간 < 2초 |
+| **트랜잭션/락** | **Required** |
+
+---
+
+### 21.5 특정 학기 성적 공개(수동) (교수)
+
+| 항목 | 내용 |
+|------|------|
+| **식별자** | `GRADE-005` |
+| **엔드포인트** | `POST /api/v1/professor/grades/publish/terms/{academicTermId}` |
+| **책임** | 특정 학기의 강의들을 대상으로 성적 공개 처리 실행 |
+| **입력** | Path: `academicTermId (required)` |
+| **출력 (성공)** | `200 OK` - `{ "success": true, "message": "성적 공개 처리를 실행했습니다." }` |
+| **출력 (실패)** | `401 Unauthorized` / `400 Bad Request` |
+| **전제조건** | 교수 권한, 성적공개기간(GRADE_PUBLISH) 진행 중 |
+| **후조건** | 학기 내 공개 가능 강의들의 성적이 PUBLISHED로 전환 |
+| **예외/에러 코드** | `NOT_IN_PUBLISH_PERIOD` |
+| **성능 제약** | 응답시간 < 5초 |
+| **트랜잭션/락** | **Required** |
+
+---
+
+### 21.6 공개기간 대상 성적 공개 처리(배치 트리거) (교수)
+
+| 항목 | 내용 |
+|------|------|
+| **식별자** | `GRADE-006` |
+| **엔드포인트** | `POST /api/v1/professor/grades/publish-ended-terms` |
+| **책임** | 성적 공개 기간(GRADE_PUBLISH) 대상 학기의 강의들에 대해 공개 로직을 즉시 실행 |
+| **입력** | 없음 |
+| **출력 (성공)** | `200 OK` - `{ "success": true, "message": "성적 공개 처리를 실행했습니다." }` |
+| **출력 (실패)** | `401 Unauthorized` / `400 Bad Request` |
+| **전제조건** | 교수 권한 |
+| **후조건** | 공개 가능 강의들의 성적이 PUBLISHED로 전환 |
+| **예외/에러 코드** | 없음 |
+| **성능 제약** | 응답시간 < 5초 |
+| **트랜잭션/락** | **Required** |
 
 ---
 
