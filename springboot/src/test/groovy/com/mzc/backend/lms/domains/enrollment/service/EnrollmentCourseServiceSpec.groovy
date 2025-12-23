@@ -11,8 +11,8 @@ import com.mzc.backend.lms.domains.course.subject.repository.SubjectPrerequisite
 import com.mzc.backend.lms.domains.enrollment.dto.CourseSearchRequestDto
 import com.mzc.backend.lms.domains.enrollment.repository.CourseCartRepository
 import com.mzc.backend.lms.domains.enrollment.repository.EnrollmentRepository
-import com.mzc.backend.lms.domains.user.professor.entity.Professor
 import com.mzc.backend.lms.domains.user.organization.entity.Department
+import com.mzc.backend.lms.domains.user.professor.entity.Professor
 import com.mzc.backend.lms.views.UserViewService
 import spock.lang.Specification
 import spock.lang.Subject as SubjectAnnotation
