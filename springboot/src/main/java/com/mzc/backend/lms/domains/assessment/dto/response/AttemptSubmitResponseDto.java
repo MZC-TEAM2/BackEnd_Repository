@@ -11,12 +11,12 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 public class AttemptSubmitResponseDto {
-
-    private Long attemptId;
-    private LocalDateTime submittedAt;
-    private Boolean isLate;
-    private BigDecimal latePenaltyRate;
-    private BigDecimal score;
+	
+	private Long attemptId;
+	private LocalDateTime submittedAt;
+	private Boolean isLate;
+	private BigDecimal latePenaltyRate;
+	private BigDecimal score;
 }
 
 
