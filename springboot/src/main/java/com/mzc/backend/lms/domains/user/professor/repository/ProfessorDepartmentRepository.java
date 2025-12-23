@@ -16,28 +16,28 @@ import java.util.Optional;
  */
 @Repository
 public interface ProfessorDepartmentRepository extends JpaRepository<ProfessorDepartment, Long> {
-
-    /**
-     * 교수로 학과 정보 조회
-     */
-    Optional<ProfessorDepartment> findByProfessor(Professor professor);
-
-    /**
-     * 학과별 교수 목록 조회
-     */
-    List<ProfessorDepartment> findByDepartment(Department department);
-
-    /**
-     * 교수 ID로 학과 정보 조회
-     */
-    @Query("SELECT pd FROM ProfessorDepartment pd WHERE pd.professor.professorId = :professorId")
-    Optional<ProfessorDepartment> findByProfessorId(@Param("professorId") Long professorId);
-
-    /**
-     * 활성 상태인 교수-학과 관계 조회
-     */
-    @Query("SELECT pd FROM ProfessorDepartment pd WHERE pd.professor = :professor AND pd.endDate IS NULL")
-    Optional<ProfessorDepartment> findActiveByProfessor(@Param("professor") Professor professor);
-
-
+	
+	/**
+	 * 교수로 학과 정보 조회
+	 */
+	Optional<ProfessorDepartment> findByProfessor(Professor professor);
+	
+	/**
+	 * 학과별 교수 목록 조회
+	 */
+	List<ProfessorDepartment> findByDepartment(Department department);
+	
+	/**
+	 * 교수 ID로 학과 정보 조회
+	 */
+	@Query("SELECT pd FROM ProfessorDepartment pd WHERE pd.professor.professorId = :professorId")
+	Optional<ProfessorDepartment> findByProfessorId(@Param("professorId") Long professorId);
+	
+	/**
+	 * 활성 상태인 교수-학과 관계 조회
+	 */
+	@Query("SELECT pd FROM ProfessorDepartment pd WHERE pd.professor = :professor AND pd.endDate IS NULL")
+	Optional<ProfessorDepartment> findActiveByProfessor(@Param("professor") Professor professor);
+	
+	
 }
