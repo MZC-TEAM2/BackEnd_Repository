@@ -13,26 +13,26 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class CourseAttendanceOverviewDto {
-
-    private Long courseId;
-    private String courseName;
-    private String sectionNumber;
-    private Integer totalStudents;
-    private Integer totalWeeks;
-    private Double averageAttendanceRate;
-    private List<WeekAttendanceSummaryDto> weekSummaries;
-
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Builder
-    public static class WeekAttendanceSummaryDto {
-        private Long weekId;
-        private Integer weekNumber;
-        private String weekTitle;
-        private Integer completedStudents;
-        private Integer totalStudents;
-        private Double completionRate;
-    }
+	
+	private Long courseId;
+	private String courseName;
+	private String sectionNumber;
+	private Integer totalStudents;
+	private Integer totalWeeks;
+	private Double averageAttendanceRate;
+	private List<WeekAttendanceSummaryDto> weekSummaries;
+	
+	@Getter
+	@Setter
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@Builder
+	public static class WeekAttendanceSummaryDto {
+		private Long weekId;
+		private Integer weekNumber;
+		private String weekTitle;
+		private Integer completedStudents;
+		private Integer totalStudents;
+		private Double completionRate;
+	}
 }
