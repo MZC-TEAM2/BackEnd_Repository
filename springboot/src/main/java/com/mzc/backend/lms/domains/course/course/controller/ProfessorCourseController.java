@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -29,15 +29,14 @@ public class ProfessorCourseController {
     @PostMapping
     public ResponseEntity<?> createCourse(
             @RequestBody CreateCourseRequestDto request,
-            Authentication authentication) {
+            @AuthenticationPrincipal Long professorId) {
         try {
             // 인증 확인
-            if (authentication == null || authentication.getName() == null) {
+            if (professorId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(createErrorResponse("로그인이 필요합니다."));
             }
 
-            Long professorId = Long.parseLong(authentication.getName());
             log.debug("강의 개설 요청: professorId={}", professorId);
 
             CreateCourseResponseDto response = professorCourseService.createCourse(request, professorId);
@@ -61,15 +60,14 @@ public class ProfessorCourseController {
     public ResponseEntity<?> updateCourse(
             @PathVariable Long courseId,
             @RequestBody UpdateCourseRequestDto request,
-            Authentication authentication) {
+            @AuthenticationPrincipal Long professorId) {
         try {
             // 인증 확인
-            if (authentication == null || authentication.getName() == null) {
+            if (professorId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(createErrorResponse("로그인이 필요합니다."));
             }
 
-            Long professorId = Long.parseLong(authentication.getName());
             log.debug("강의 수정 요청: courseId={}, professorId={}", courseId, professorId);
 
             CreateCourseResponseDto response = professorCourseService.updateCourse(courseId, request, professorId);
@@ -91,15 +89,14 @@ public class ProfessorCourseController {
     @DeleteMapping("/{courseId}")
     public ResponseEntity<?> cancelCourse(
             @PathVariable Long courseId,
-            Authentication authentication) {
+            @AuthenticationPrincipal Long professorId) {
         try {
             // 인증 확인
-            if (authentication == null || authentication.getName() == null) {
+            if (professorId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(createErrorResponse("로그인이 필요합니다."));
             }
 
-            Long professorId = Long.parseLong(authentication.getName());
             log.debug("강의 취소 요청: courseId={}, professorId={}", courseId, professorId);
 
             professorCourseService.cancelCourse(courseId, professorId);
@@ -121,15 +118,14 @@ public class ProfessorCourseController {
     @GetMapping
     public ResponseEntity<?> getMyCourses(
             @RequestParam(required = false) Long academicTermId,
-            Authentication authentication) {
+            @AuthenticationPrincipal Long professorId) {
         try {
             // 인증 확인
-            if (authentication == null || authentication.getName() == null) {
+            if (professorId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(createErrorResponse("로그인이 필요합니다."));
             }
 
-            Long professorId = Long.parseLong(authentication.getName());
             log.debug("내 강의 목록 조회: professorId={}, academicTermId={}", professorId, academicTermId);
 
             MyCoursesResponseDto response = professorCourseService.getMyCourses(professorId, academicTermId);
@@ -151,15 +147,14 @@ public class ProfessorCourseController {
     @GetMapping("/{courseId}")
     public ResponseEntity<?> getCourseDetail(
             @PathVariable Long courseId,
-            Authentication authentication) {
+            @AuthenticationPrincipal Long professorId) {
         try {
             // 인증 확인
-            if (authentication == null || authentication.getName() == null) {
+            if (professorId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(createErrorResponse("로그인이 필요합니다."));
             }
 
-            Long professorId = Long.parseLong(authentication.getName());
             log.debug("교수 강의 상세 조회: courseId={}, professorId={}", courseId, professorId);
 
             ProfessorCourseDetailDto response = professorCourseService.getCourseDetail(courseId, professorId);

@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -32,15 +32,14 @@ public class ProfessorWeekContentController {
     public ResponseEntity<?> updateContent(
             @PathVariable Long contentId,
             @RequestBody UpdateWeekContentRequestDto request,
-            Authentication authentication
+            @AuthenticationPrincipal Long professorId
     ) {
         try {
-            if (authentication == null || authentication.getName() == null) {
+            if (professorId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(createErrorResponse("로그인이 필요합니다."));
             }
 
-            Long professorId = Long.parseLong(authentication.getName());
             WeekContentDto response = courseWeekContentService.updateContentByContentId(contentId, request, professorId);
             return ResponseEntity.ok(createSuccessResponse(response, "콘텐츠가 수정되었습니다"));
         } catch (IllegalArgumentException e) {
@@ -58,15 +57,14 @@ public class ProfessorWeekContentController {
     @DeleteMapping("/{contentId}")
     public ResponseEntity<?> deleteContent(
             @PathVariable Long contentId,
-            Authentication authentication
+            @AuthenticationPrincipal Long professorId
     ) {
         try {
-            if (authentication == null || authentication.getName() == null) {
+            if (professorId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(createErrorResponse("로그인이 필요합니다."));
             }
 
-            Long professorId = Long.parseLong(authentication.getName());
             courseWeekContentService.deleteContentByContentId(contentId, professorId);
             return ResponseEntity.ok(createSuccessResponse(null, "콘텐츠가 삭제되었습니다."));
         } catch (IllegalArgumentException e) {

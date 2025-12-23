@@ -2,6 +2,7 @@ package com.mzc.backend.lms.domains.course.course.repository;
 
 import com.mzc.backend.lms.domains.course.course.entity.Course;
 import com.mzc.backend.lms.domains.course.course.entity.CourseType;
+import com.mzc.backend.lms.domains.academy.entity.AcademicTerm;
 import com.mzc.backend.lms.domains.user.organization.entity.Department;
 import com.mzc.backend.lms.domains.user.professor.entity.Professor;
 import jakarta.persistence.LockModeType;
@@ -84,6 +85,18 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
     List<Course> findByAcademicTermId(Long academicTermId);
 
     /**
+     * N+1 방지: courseIds로 Course + Subject를 한 번에 로딩
+     */
+    @Query("SELECT c FROM Course c JOIN FETCH c.subject s WHERE c.id IN :ids")
+    List<Course> findByIdInWithSubject(@Param("ids") List<Long> ids);
+
+    /**
+     * 교수가 강의했던 학기 목록(중복 제거)
+     */
+    @Query("SELECT DISTINCT c.academicTerm FROM Course c WHERE c.professor.professorId = :professorId")
+    List<AcademicTerm> findDistinctAcademicTermsByProfessorId(@Param("professorId") Long professorId);
+
+    /**
      * 비관적 락을 사용하여 강의 조회 (수강신청 시 동시성 제어용)
      */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
@@ -144,4 +157,9 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
             @Param("dayOfWeek") java.time.DayOfWeek dayOfWeek,
             @Param("startTime") java.time.LocalTime startTime,
             @Param("endTime") java.time.LocalTime endTime);
+
+    /**
+     * 특정 과목(subject) + 특정 학기(academicTerm) 기준 개설된 강의 수
+     */
+    long countBySubjectIdAndAcademicTermId(Long subjectId, Long academicTermId);
 }

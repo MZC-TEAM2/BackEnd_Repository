@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -31,15 +31,14 @@ public class CourseWeekContentController {
     public ResponseEntity<?> createWeek(
             @PathVariable Long courseId,
             @RequestBody CreateWeekRequestDto request,
-            Authentication authentication) {
+            @AuthenticationPrincipal Long professorId) {
         try {
             // 인증 확인
-            if (authentication == null || authentication.getName() == null) {
+            if (professorId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(createErrorResponse("로그인이 필요합니다."));
             }
 
-            Long professorId = Long.parseLong(authentication.getName());
             log.debug("주차 생성 요청: courseId={}, weekNumber={}, professorId={}",
                     courseId, request.getWeekNumber(), professorId);
 
@@ -65,15 +64,14 @@ public class CourseWeekContentController {
             @PathVariable Long courseId,
             @PathVariable Long weekId,
             @RequestBody UpdateWeekRequestDto request,
-            Authentication authentication) {
+            @AuthenticationPrincipal Long professorId) {
         try {
             // 인증 확인
-            if (authentication == null || authentication.getName() == null) {
+            if (professorId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(createErrorResponse("로그인이 필요합니다."));
             }
 
-            Long professorId = Long.parseLong(authentication.getName());
             log.debug("주차 수정 요청: courseId={}, weekId={}, professorId={}", courseId, weekId, professorId);
 
             WeekDto response = courseWeekContentService.updateWeek(courseId, weekId, request, professorId);
@@ -96,15 +94,14 @@ public class CourseWeekContentController {
     public ResponseEntity<?> deleteWeek(
             @PathVariable Long courseId,
             @PathVariable Long weekId,
-            Authentication authentication) {
+            @AuthenticationPrincipal Long professorId) {
         try {
             // 인증 확인
-            if (authentication == null || authentication.getName() == null) {
+            if (professorId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(createErrorResponse("로그인이 필요합니다."));
             }
 
-            Long professorId = Long.parseLong(authentication.getName());
             log.debug("주차 삭제 요청: courseId={}, weekId={}, professorId={}", courseId, weekId, professorId);
 
             courseWeekContentService.deleteWeek(courseId, weekId, professorId);
@@ -128,15 +125,14 @@ public class CourseWeekContentController {
             @PathVariable Long courseId,
             @PathVariable Long weekId,
             @RequestBody CreateWeekContentRequestDto request,
-            Authentication authentication) {
+            @AuthenticationPrincipal Long professorId) {
         try {
             // 인증 확인
-            if (authentication == null || authentication.getName() == null) {
+            if (professorId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(createErrorResponse("로그인이 필요합니다."));
             }
 
-            Long professorId = Long.parseLong(authentication.getName());
             log.debug("콘텐츠 등록 요청: courseId={}, weekId={}, contentType={}, professorId={}",
                     courseId, weekId, request.getContentType(), professorId);
 
@@ -163,15 +159,14 @@ public class CourseWeekContentController {
             @PathVariable Long weekId,
             @PathVariable Long contentId,
             @RequestBody UpdateWeekContentRequestDto request,
-            Authentication authentication) {
+            @AuthenticationPrincipal Long professorId) {
         try {
             // 인증 확인
-            if (authentication == null || authentication.getName() == null) {
+            if (professorId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(createErrorResponse("로그인이 필요합니다."));
             }
 
-            Long professorId = Long.parseLong(authentication.getName());
             log.debug("콘텐츠 수정 요청: courseId={}, weekId={}, contentId={}, professorId={}",
                     courseId, weekId, contentId, professorId);
 
@@ -197,15 +192,14 @@ public class CourseWeekContentController {
             @PathVariable Long courseId,
             @PathVariable Long weekId,
             @PathVariable Long contentId,
-            Authentication authentication) {
+            @AuthenticationPrincipal Long professorId) {
         try {
             // 인증 확인
-            if (authentication == null || authentication.getName() == null) {
+            if (professorId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(createErrorResponse("로그인이 필요합니다."));
             }
 
-            Long professorId = Long.parseLong(authentication.getName());
             log.debug("콘텐츠 삭제 요청: courseId={}, weekId={}, contentId={}, professorId={}",
                     courseId, weekId, contentId, professorId);
 
@@ -228,15 +222,14 @@ public class CourseWeekContentController {
     @GetMapping
     public ResponseEntity<?> getWeeks(
             @PathVariable Long courseId,
-            Authentication authentication) {
+            @AuthenticationPrincipal Long requesterId) {
         try {
             // 인증 확인
-            if (authentication == null || authentication.getName() == null) {
+            if (requesterId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(createErrorResponse("로그인이 필요합니다."));
             }
 
-            Long requesterId = Long.parseLong(authentication.getName());
             log.debug("강의 주차 목록 조회: courseId={}, requesterId={}", courseId, requesterId);
 
             List<WeekListResponseDto> response = courseWeekContentService.getWeeks(courseId, requesterId);
@@ -259,15 +252,14 @@ public class CourseWeekContentController {
     public ResponseEntity<?> getWeekContents(
             @PathVariable Long courseId,
             @PathVariable Long weekId,
-            Authentication authentication) {
+            @AuthenticationPrincipal Long requesterId) {
         try {
             // 인증 확인
-            if (authentication == null || authentication.getName() == null) {
+            if (requesterId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(createErrorResponse("로그인이 필요합니다."));
             }
 
-            Long requesterId = Long.parseLong(authentication.getName());
             log.debug("주차별 콘텐츠 목록 조회: courseId={}, weekId={}, requesterId={}",
                     courseId, weekId, requesterId);
 

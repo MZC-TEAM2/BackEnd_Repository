@@ -108,4 +108,31 @@ public interface EnrollmentPeriodRepository extends JpaRepository<EnrollmentPeri
            "AND ep.endDatetime >= :now " +
            "ORDER BY ep.startDatetime ASC")
     Optional<EnrollmentPeriod> findFirstActivePeriod(@Param("now") LocalDateTime now);
+
+    /**
+     * 특정 학기의 특정 타입 기간이 "활성"인지 확인
+     */
+    @Query("SELECT COUNT(ep) > 0 FROM EnrollmentPeriod ep " +
+            "JOIN ep.periodType pt " +
+            "WHERE pt.typeCode = :typeCode " +
+            "AND ep.academicTerm.id = :academicTermId " +
+            "AND ep.startDatetime <= :now " +
+            "AND ep.endDatetime >= :now")
+    boolean existsActivePeriodByTypeCodeAndAcademicTermId(
+            @Param("typeCode") String typeCode,
+            @Param("academicTermId") Long academicTermId,
+            @Param("now") LocalDateTime now);
+
+    /**
+     * 특정 학기의 강의등록(COURSE_REGISTRATION) 기간이 활성화되어 있는지 확인
+     */
+    @Query("SELECT COUNT(ep) > 0 FROM EnrollmentPeriod ep " +
+            "JOIN ep.periodType pt " +
+            "WHERE pt.typeCode = 'COURSE_REGISTRATION' " +
+            "AND ep.academicTerm.id = :academicTermId " +
+            "AND ep.startDatetime <= :now " +
+            "AND ep.endDatetime >= :now")
+    boolean existsActiveCourseRegistrationPeriodByAcademicTermId(
+            @Param("academicTermId") Long academicTermId,
+            @Param("now") LocalDateTime now);
 }

@@ -15,7 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -69,10 +69,8 @@ public class EnrollmentController {
             @RequestParam(required = false) Integer credits,
             @RequestParam(required = true) Long enrollmentPeriodId,
             @RequestParam(required = false) String sort,
-            Authentication authentication) {
+            @AuthenticationPrincipal Long studentId) {
         try {
-            String studentId = authentication != null ? authentication.getName() : null;
-
             if (studentId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(createErrorResponse("로그인이 필요합니다."));
@@ -93,7 +91,7 @@ public class EnrollmentController {
                     .sort(sort)
                     .build();
 
-            CourseListResponseDto response = enrollmentCourseService.searchCourses(request, studentId);
+            CourseListResponseDto response = enrollmentCourseService.searchCourses(request, String.valueOf(studentId));
             return ResponseEntity.ok(createSuccessResponse(response));
         } catch (Exception e) {
             log.error("강의 목록 조회 실패: {}", e.getMessage(), e);
@@ -108,18 +106,17 @@ public class EnrollmentController {
     @PostMapping("/bulk")
     public ResponseEntity<?> enrollBulk(
             @RequestBody CourseIdsRequestDto request,
-            Authentication authentication) {
+            @AuthenticationPrincipal Long studentId) {
         try {
             // 인증 확인
-            if (authentication == null || authentication.getName() == null) {
+            if (studentId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(createErrorResponse("로그인이 필요합니다."));
             }
 
-            String studentId = authentication.getName();
             log.debug("일괄 수강신청: studentId={}, courseIds={}", studentId, request.getCourseIds());
 
-            EnrollmentBulkResponseDto response = enrollmentService.enrollBulk(request, studentId);
+            EnrollmentBulkResponseDto response = enrollmentService.enrollBulk(request, String.valueOf(studentId));
             
             // 메시지 생성 - totalAttempted 포함
             String message = String.format("%d개 과목 수강신청 완료", response.getSummary().getSuccessCount());
@@ -147,18 +144,17 @@ public class EnrollmentController {
     @DeleteMapping("/bulk")
     public ResponseEntity<?> cancelBulk(
             @RequestBody EnrollmentBulkCancelRequestDto request,
-            Authentication authentication) {
+            @AuthenticationPrincipal Long studentId) {
         try {
             // 인증 확인
-            if (authentication == null || authentication.getName() == null) {
+            if (studentId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(createErrorResponse("로그인이 필요합니다."));
             }
 
-            String studentId = authentication.getName();
             log.debug("일괄 수강신청 취소: studentId={}, enrollmentIds={}", studentId, request.getEnrollmentIds());
 
-            EnrollmentBulkCancelResponseDto response = enrollmentService.cancelBulk(request, studentId);
+            EnrollmentBulkCancelResponseDto response = enrollmentService.cancelBulk(request, String.valueOf(studentId));
             
             // 메시지 생성
             String message = String.format("%d개 과목 취소 완료", response.getSummary().getSuccessCount());
@@ -186,18 +182,17 @@ public class EnrollmentController {
     @GetMapping("/my")
     public ResponseEntity<?> getMyEnrollments(
             @RequestParam(required = false) Long enrollmentPeriodId,
-            Authentication authentication) {
+            @AuthenticationPrincipal Long studentId) {
         try {
             // 인증 확인
-            if (authentication == null || authentication.getName() == null) {
+            if (studentId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(createErrorResponse("로그인이 필요합니다."));
             }
 
-            String studentId = authentication.getName();
             log.debug("내 수강신청 목록 조회: studentId={}, enrollmentPeriodId={}", studentId, enrollmentPeriodId);
 
-            MyEnrollmentsResponseDto response = enrollmentService.getMyEnrollments(studentId, enrollmentPeriodId);
+            MyEnrollmentsResponseDto response = enrollmentService.getMyEnrollments(String.valueOf(studentId), enrollmentPeriodId);
             return ResponseEntity.ok(createSuccessResponse(response));
         } catch (IllegalArgumentException e) {
             log.warn("내 수강신청 목록 조회 실패: {}", e.getMessage());
