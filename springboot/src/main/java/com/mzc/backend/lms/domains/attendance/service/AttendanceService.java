@@ -12,6 +12,7 @@ import com.mzc.backend.lms.domains.course.course.repository.CourseRepository;
 import com.mzc.backend.lms.domains.course.course.repository.CourseWeekRepository;
 import com.mzc.backend.lms.domains.course.course.repository.WeekContentRepository;
 import com.mzc.backend.lms.domains.enrollment.repository.EnrollmentRepository;
+import com.mzc.backend.lms.domains.user.auth.encryption.service.EncryptionService;
 import com.mzc.backend.lms.domains.user.student.entity.Student;
 import com.mzc.backend.lms.domains.user.student.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,7 @@ public class AttendanceService {
     private final CourseRepository courseRepository;
     private final StudentRepository studentRepository;
     private final EnrollmentRepository enrollmentRepository;
+    private final EncryptionService encryptionService;
 
     /**
      * 콘텐츠 완료 이벤트 처리
@@ -362,11 +364,24 @@ public class AttendanceService {
         return studentRepository.findById(studentId)
                 .map(student -> {
                     if (student.getUser() != null && student.getUser().getUserProfile() != null) {
-                        return student.getUser().getUserProfile().getName();
+                        String encryptedOrPlainName = student.getUser().getUserProfile().getName();
+                        return decryptNameSafely(encryptedOrPlainName);
                     }
                     return "Unknown";
                 })
                 .orElse("Unknown");
+    }
+
+    private String decryptNameSafely(String encryptedOrPlainName) {
+        if (encryptedOrPlainName == null) {
+            return null;
+        }
+        try {
+            return encryptionService.decryptName(encryptedOrPlainName);
+        } catch (Exception e) {
+            // 복호화 실패 시 평문으로 간주 (초기 더미 데이터 등)
+            return encryptedOrPlainName;
+        }
     }
 
     /**

@@ -29,7 +29,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -416,8 +415,16 @@ public class GradePublishService {
                     .build());
         }
 
-        // 상대평가 등급 배정(finalScore 기반) - 결석 F 확정자를 제외한 집단
-        Map<Long, String> eligibleMap = assignRelativeGrades(eligibleCalcs);
+        // 상대평가 등급 배정(finalScore 기반)
+        // - "랭킹/배정 대상"에서는 결석 F 확정자를 제외한다.
+        // - 다만, A+/A0... 등의 '정원(비율로 계산되는 자리 수)'은 전체 수강생 수(결석 F 포함)를 기준으로 계산한다.
+        //   (결석 F가 생겼다고 상위 등급 정원이 줄어들지 않게 하기 위함)
+        Map<Long, String> eligibleMap = RelativeGradeAssigner.assign(
+                eligibleCalcs.stream()
+                        .map(c -> new RelativeGradeAssigner.ScoreRow(c.getStudentId(), c.getFinalScore()))
+                        .toList(),
+                grades.size()
+        );
         gradeMap.putAll(eligibleMap);
 
         for (Grade g : grades) {
@@ -498,102 +505,6 @@ public class GradePublishService {
      * - 등급 경계에서 동점이 발생하면, 해당 점수대는 상위 등급을 주지 않고 한 단계 아래 등급으로 내림
      *   (예: A0 컷에서 동점이면 그 점수대는 A0 대신 A-로 처리)
      */
-    private Map<Long, String> assignRelativeGrades(List<StudentGradeCalc> calcs) {
-        int n = calcs.size();
-        Map<Long, String> out = new HashMap<>(Math.max(16, n * 2));
-        if (n == 0) return out;
-
-        List<StudentGradeCalc> sorted = calcs.stream()
-                .sorted(Comparator
-                        .comparing(StudentGradeCalc::getFinalScore, Comparator.nullsFirst(Comparator.naturalOrder()))
-                        .reversed()
-                        .thenComparing(StudentGradeCalc::getStudentId))
-                .toList();
-
-        List<GradeBucket> buckets = List.of(
-                new GradeBucket("A+", 0.10),
-                new GradeBucket("A0", 0.15),
-                new GradeBucket("A-", 0.05),
-                new GradeBucket("B+", 0.10),
-                new GradeBucket("B0", 0.20),
-                new GradeBucket("B-", 0.10),
-                new GradeBucket("C+", 0.05),
-                new GradeBucket("C0", 0.10),
-                new GradeBucket("C-", 0.05),
-                new GradeBucket("D+", 0.03),
-                new GradeBucket("D0", 0.04),
-                new GradeBucket("D-", 0.03)
-        );
-
-        int idx = 0;
-        for (int bi = 0; bi < buckets.size(); bi++) {
-            GradeBucket b = buckets.get(bi);
-            String currentLabel = b.label();
-            String nextLabel = (bi + 1 < buckets.size()) ? buckets.get(bi + 1).label() : "F";
-
-            int cnt = (int) Math.floor(n * b.ratio());
-            int startIdx = idx;
-            for (int k = 0; k < cnt && idx < n; k++, idx++) {
-                out.put(sorted.get(idx).getStudentId(), currentLabel);
-            }
-
-            // 등급 경계 동점 처리:
-            // 현재 버킷의 마지막 점수 == 다음 점수이면, 그 점수대(현재 버킷에 들어간 사람들)는 nextLabel로 내림
-            if (idx < n && idx > startIdx) {
-                BigDecimal lastScore = sorted.get(idx - 1).getFinalScore();
-                BigDecimal nextScore = sorted.get(idx).getFinalScore();
-                if (lastScore != null && nextScore != null && lastScore.compareTo(nextScore) == 0) {
-                    BigDecimal tieScore = lastScore;
-                    for (int j = idx - 1; j >= startIdx; j--) {
-                        BigDecimal s = sorted.get(j).getFinalScore();
-                        if (s == null || s.compareTo(tieScore) != 0) {
-                            break;
-                        }
-                        out.put(sorted.get(j).getStudentId(), nextLabel);
-                    }
-                }
-            }
-        }
-
-        // 남은 인원은 F
-        while (idx < n) {
-            out.put(sorted.get(idx).getStudentId(), "F");
-            idx++;
-        }
-
-        // 동점 처리(강제 정규화):
-        // 같은 finalScore를 가진 학생들은 "가장 낮은 등급"으로 통일
-        // (경계 동점에서 상위 등급을 주지 않는 정책을 일반화)
-        Map<BigDecimal, String> worstByScore = new HashMap<>();
-        Map<String, Integer> rank = gradeRank();
-        for (StudentGradeCalc s : sorted) {
-            BigDecimal score = s.getFinalScore();
-            String g = out.get(s.getStudentId());
-            if (g == null) continue;
-            String prev = worstByScore.get(score);
-            if (prev == null) {
-                worstByScore.put(score, g);
-            } else {
-                int prevRank = rank.getOrDefault(prev, 999);
-                int curRank = rank.getOrDefault(g, 999);
-                if (curRank > prevRank) {
-                    worstByScore.put(score, g);
-                }
-            }
-        }
-        for (StudentGradeCalc s : sorted) {
-            BigDecimal score = s.getFinalScore();
-            String worst = worstByScore.get(score);
-            if (worst != null) {
-                out.put(s.getStudentId(), worst);
-            }
-        }
-
-        return out;
-    }
-
-    private record GradeBucket(String label, double ratio) {}
-
     @lombok.Getter
     @lombok.Builder
     private static class StudentGradeCalc {
@@ -604,16 +515,6 @@ public class GradePublishService {
         private BigDecimal finalEarned;
         private BigDecimal attendanceNormalized;
         private BigDecimal finalScore;
-    }
-
-    private Map<String, Integer> gradeRank() {
-        // 낮을수록 "좋은 등급"
-        Map<String, Integer> r = new HashMap<>();
-        String[] order = {"A+", "A0", "A-", "B+", "B0", "B-", "C+", "C0", "C-", "D+", "D0", "D-", "F"};
-        for (int i = 0; i < order.length; i++) {
-            r.put(order[i], i);
-        }
-        return r;
     }
 
 }
