@@ -9,30 +9,30 @@ import java.time.LocalDateTime;
 @Getter
 @Builder
 public class ProfessorCourseGradesResponseDto {
-    private Long courseId;
-    private Long academicTermId;
-    private String courseName;
-
-    private StudentDto student;
-
-    private BigDecimal midtermScore;
-    private BigDecimal finalExamScore;
-    private BigDecimal quizScore;
-    private BigDecimal assignmentScore;
-    private BigDecimal attendanceScore;
-    private BigDecimal finalScore;
-    private String finalGrade;
-    private String status; // PENDING/GRADED/PUBLISHED
-    private LocalDateTime gradedAt;
-    private LocalDateTime publishedAt;
-
-    @Getter
-    @Builder
-    public static class StudentDto {
-        private Long id;
-        private Long studentNumber;
-        private String name;
-    }
+	private Long courseId;
+	private Long academicTermId;
+	private String courseName;
+	
+	private StudentDto student;
+	
+	private BigDecimal midtermScore;
+	private BigDecimal finalExamScore;
+	private BigDecimal quizScore;
+	private BigDecimal assignmentScore;
+	private BigDecimal attendanceScore;
+	private BigDecimal finalScore;
+	private String finalGrade;
+	private String status; // PENDING/GRADED/PUBLISHED
+	private LocalDateTime gradedAt;
+	private LocalDateTime publishedAt;
+	
+	@Getter
+	@Builder
+	public static class StudentDto {
+		private Long id;
+		private Long studentNumber;
+		private String name;
+	}
 }
 
 
