@@ -12,9 +12,9 @@ import java.util.List;
 @Getter
 @Builder
 public class WeekDto {
-    private Long id;
-    private Integer weekNumber;
-    private String weekTitle;
-    private List<WeekContentDto> contents;  // 주차 등록 응답에 포함
-    private LocalDateTime createdAt;
+	private Long id;
+	private Integer weekNumber;
+	private String weekTitle;
+	private List<WeekContentDto> contents;  // 주차 등록 응답에 포함
+	private LocalDateTime createdAt;
 }
