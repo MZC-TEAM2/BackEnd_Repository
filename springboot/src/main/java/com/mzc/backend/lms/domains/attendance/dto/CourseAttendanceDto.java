@@ -13,12 +13,12 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class CourseAttendanceDto {
-
-    private Long courseId;
-    private String courseName;
-    private String sectionNumber;
-    private Integer completedWeeks;
-    private Integer totalWeeks;
-    private Double attendanceRate;
-    private List<WeekAttendanceDto> weekAttendances;
+	
+	private Long courseId;
+	private String courseName;
+	private String sectionNumber;
+	private Integer completedWeeks;
+	private Integer totalWeeks;
+	private Double attendanceRate;
+	private List<WeekAttendanceDto> weekAttendances;
 }
