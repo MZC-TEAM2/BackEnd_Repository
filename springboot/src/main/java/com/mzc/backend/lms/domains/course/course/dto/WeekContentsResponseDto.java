@@ -11,9 +11,9 @@ import java.util.List;
 @Getter
 @Builder
 public class WeekContentsResponseDto {
-    private Long weekId;
-    private Integer weekNumber;
-    private String weekTitle;
-    private List<WeekContentDto> contents;
+	private Long weekId;
+	private Integer weekNumber;
+	private String weekTitle;
+	private List<WeekContentDto> contents;
 }
 
