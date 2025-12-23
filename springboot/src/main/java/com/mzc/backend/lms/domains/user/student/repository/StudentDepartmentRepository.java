@@ -16,20 +16,20 @@ import java.util.Optional;
  */
 @Repository
 public interface StudentDepartmentRepository extends JpaRepository<StudentDepartment, Long> {
-
-    /**
-     * 학생으로 학과 정보 조회
-     */
-    Optional<StudentDepartment> findByStudent(Student student);
-
-    /**
-     * 학생 ID로 학과 정보 조회
-     */
-    @Query("SELECT sd FROM StudentDepartment sd WHERE sd.student.studentId = :studentId")
-    Optional<StudentDepartment> findByStudentId(@Param("studentId") Long studentId);
-
-    /**
-     * 학과별 학생 목록 조회
-     */
-    List<StudentDepartment> findByDepartment(Department department);
+	
+	/**
+	 * 학생으로 학과 정보 조회
+	 */
+	Optional<StudentDepartment> findByStudent(Student student);
+	
+	/**
+	 * 학생 ID로 학과 정보 조회
+	 */
+	@Query("SELECT sd FROM StudentDepartment sd WHERE sd.student.studentId = :studentId")
+	Optional<StudentDepartment> findByStudentId(@Param("studentId") Long studentId);
+	
+	/**
+	 * 학과별 학생 목록 조회
+	 */
+	List<StudentDepartment> findByDepartment(Department department);
 }
