@@ -10,7 +10,6 @@ import com.mzc.backend.lms.domains.user.professor.entity.ProfessorDepartment
 import com.mzc.backend.lms.domains.user.professor.repository.ProfessorDepartmentRepository
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
-import org.springframework.data.domain.Pageable
 import spock.lang.Specification
 import spock.lang.Subject as SubjectAnnotation
 
