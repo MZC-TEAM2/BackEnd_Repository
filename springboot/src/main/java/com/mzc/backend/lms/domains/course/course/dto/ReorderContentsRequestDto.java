@@ -11,6 +11,6 @@ import java.util.List;
 @Getter
 @Builder
 public class ReorderContentsRequestDto {
-    private List<ContentOrderDto> contentOrders;
+	private List<ContentOrderDto> contentOrders;
 }
 
