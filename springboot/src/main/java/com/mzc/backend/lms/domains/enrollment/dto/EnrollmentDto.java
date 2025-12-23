@@ -9,7 +9,7 @@ import lombok.Getter;
 @Getter
 @Builder
 public class EnrollmentDto {
-    private Integer current;
-    private Integer max;
-    private Boolean isFull;
+	private Integer current;
+	private Integer max;
+	private Boolean isFull;
 }
