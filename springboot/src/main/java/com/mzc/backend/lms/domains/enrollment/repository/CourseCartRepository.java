@@ -13,27 +13,28 @@ import java.util.Optional;
 
 @Repository
 public interface CourseCartRepository extends JpaRepository<CourseCart, Long> {
-    /**
-     * 학생 ID와 강의 ID로 코스 카트 조회
-     */
-    Optional<CourseCart> findByStudentIdAndCourseId(Long studentId, Long courseId);
-    /**
-     * 학생 ID와 강의 ID로 코스 카트 존재 여부 확인
-     */
-    boolean existsByStudentIdAndCourseId(Long studentId, Long courseId);
-
-    /**
-     * 학생 ID로 코스 카트 목록 조회
-     */
-    List<CourseCart> findByStudentId(Long studentId);
-
-    /**
-     * 강의 ID로 코스 카트 목록 조회
-     */
-    List<CourseCart> findByCourseId(Long courseId);
-
-    /**
-     * 학생 ID로 코스 카트 전체 지우기
-     */
-    void deleteByStudentId(Long studentId);
+	/**
+	 * 학생 ID와 강의 ID로 코스 카트 조회
+	 */
+	Optional<CourseCart> findByStudentIdAndCourseId(Long studentId, Long courseId);
+	
+	/**
+	 * 학생 ID와 강의 ID로 코스 카트 존재 여부 확인
+	 */
+	boolean existsByStudentIdAndCourseId(Long studentId, Long courseId);
+	
+	/**
+	 * 학생 ID로 코스 카트 목록 조회
+	 */
+	List<CourseCart> findByStudentId(Long studentId);
+	
+	/**
+	 * 강의 ID로 코스 카트 목록 조회
+	 */
+	List<CourseCart> findByCourseId(Long courseId);
+	
+	/**
+	 * 학생 ID로 코스 카트 전체 지우기
+	 */
+	void deleteByStudentId(Long studentId);
 }
