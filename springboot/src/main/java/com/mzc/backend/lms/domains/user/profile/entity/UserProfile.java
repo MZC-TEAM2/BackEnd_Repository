@@ -20,63 +20,63 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class UserProfile implements Persistable<Long> {
-
-    @Id
-    @Column(name = "user_id")
-    private Long userId;
-
-    @OneToOne(fetch = FetchType.LAZY)
-    @MapsId
-    @JoinColumn(name = "user_id")
-    private User user;
-
-    @Column(name = "name", length = 50, nullable = false)
-    private String name;
-
-    @CreationTimestamp
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @Transient
-    private boolean isNew = true;
-
-    @Builder
-    private UserProfile(User user, String name) {
-        this.user = user;
-        this.name = name;
-        this.userId = user.getId();
-    }
-
-    @Override
-    public Long getId() {
-        return userId;
-    }
-
-    @Override
-    public boolean isNew() {
-        return isNew;
-    }
-
-    @PostPersist
-    @PostLoad
-    void markNotNew() {
-        this.isNew = false;
-    }
-
-    /**
-     * 프로필 생성
-     */
-    public static UserProfile create(User user, String name) {
-        return UserProfile.builder()
-                .user(user)
-                .name(name)
-                .build();
-    }
-
-    /**
-     * 이름 변경
-     */
-    public void changeName(String newName) {
-        this.name = newName;
-    }
+	
+	@Id
+	@Column(name = "user_id")
+	private Long userId;
+	
+	@OneToOne(fetch = FetchType.LAZY)
+	@MapsId
+	@JoinColumn(name = "user_id")
+	private User user;
+	
+	@Column(name = "name", length = 50, nullable = false)
+	private String name;
+	
+	@CreationTimestamp
+	@Column(name = "created_at")
+	private LocalDateTime createdAt;
+	
+	@Transient
+	private boolean isNew = true;
+	
+	@Builder
+	private UserProfile(User user, String name) {
+		this.user = user;
+		this.name = name;
+		this.userId = user.getId();
+	}
+	
+	/**
+	 * 프로필 생성
+	 */
+	public static UserProfile create(User user, String name) {
+		return UserProfile.builder()
+				.user(user)
+				.name(name)
+				.build();
+	}
+	
+	@Override
+	public Long getId() {
+		return userId;
+	}
+	
+	@Override
+	public boolean isNew() {
+		return isNew;
+	}
+	
+	@PostPersist
+	@PostLoad
+	void markNotNew() {
+		this.isNew = false;
+	}
+	
+	/**
+	 * 이름 변경
+	 */
+	public void changeName(String newName) {
+		this.name = newName;
+	}
 }
