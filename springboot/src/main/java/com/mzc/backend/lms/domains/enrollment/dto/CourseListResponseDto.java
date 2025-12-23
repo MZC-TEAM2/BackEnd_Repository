@@ -2,6 +2,7 @@ package com.mzc.backend.lms.domains.enrollment.dto;
 
 import lombok.Builder;
 import lombok.Getter;
+
 import java.util.List;
 
 /**
@@ -10,9 +11,9 @@ import java.util.List;
 @Getter
 @Builder
 public class CourseListResponseDto {
-    private List<CourseItemDto> content;
-    private int totalElements;
-    private int totalPages;
-    private int currentPage;
-    private int size;
+	private List<CourseItemDto> content;
+	private int totalElements;
+	private int totalPages;
+	private int currentPage;
+	private int size;
 }
