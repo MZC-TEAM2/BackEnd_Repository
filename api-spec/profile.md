@@ -3,6 +3,7 @@
 > 프로필 관리 API
 
 ## 목차
+
 - [1. 내 프로필 조회](#1-내-프로필-조회)
 - [2. 프로필 수정](#2-프로필-수정)
 - [3. 프로필 이미지 업로드](#3-프로필-이미지-업로드)
@@ -15,16 +16,19 @@
 로그인한 사용자의 프로필 정보를 조회합니다.
 
 ### Request
+
 ```
 GET /api/v1/profile/me
 ```
 
 ### Headers
+
 ```
 Authorization: Bearer {accessToken}
 ```
 
 ### Response
+
 ```json
 {
   "userId": 2025010001,
@@ -47,17 +51,20 @@ Authorization: Bearer {accessToken}
 프로필 정보를 수정합니다.
 
 ### Request
+
 ```
 PATCH /api/v1/profile/me
 ```
 
 ### Headers
+
 ```
 Authorization: Bearer {accessToken}
 Content-Type: application/json
 ```
 
 ### Request Body
+
 ```json
 {
   "phoneNumber": "010-9876-5432",
@@ -66,6 +73,7 @@ Content-Type: application/json
 ```
 
 ### Response
+
 ```json
 {
   "userId": 2025010001,
@@ -88,22 +96,26 @@ Content-Type: application/json
 프로필 이미지를 업로드합니다.
 
 ### Request
+
 ```
 POST /api/v1/profile/me/image
 ```
 
 ### Headers
+
 ```
 Authorization: Bearer {accessToken}
 Content-Type: multipart/form-data
 ```
 
 ### Request Body (Form Data)
-| 필드 | 타입 | 필수 | 설명 |
-|------|------|------|------|
-| image | file | O | 이미지 파일 (jpg, png, gif) |
+
+| 필드    | 타입   | 필수 | 설명                     |
+|-------|------|----|------------------------|
+| image | file | O  | 이미지 파일 (jpg, png, gif) |
 
 ### Response
+
 ```
 HTTP/1.1 202 Accepted
 ```
@@ -117,16 +129,19 @@ HTTP/1.1 202 Accepted
 프로필 이미지를 삭제합니다.
 
 ### Request
+
 ```
 DELETE /api/v1/profile/me/image
 ```
 
 ### Headers
+
 ```
 Authorization: Bearer {accessToken}
 ```
 
 ### Response
+
 ```
 HTTP/1.1 200 OK
 ```
