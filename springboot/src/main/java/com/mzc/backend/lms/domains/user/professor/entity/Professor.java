@@ -18,72 +18,72 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "professors", indexes = {
-    @Index(name = "idx_professors_professor_id", columnList = "professor_id")
+		@Index(name = "idx_professors_professor_id", columnList = "professor_id")
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Professor implements Persistable<Long> {
-
-    @Id
-    @Column(name = "professor_id")
-    private Long professorId;  // 교번 (예: 20240101001) - PK이자 User.id와 동일
-
-    @OneToOne(fetch = FetchType.LAZY)
-    @MapsId
-    @JoinColumn(name = "professor_id")
-    private User user;
-
-    @OneToOne(mappedBy = "professor", fetch = FetchType.LAZY)
-    private ProfessorDepartment professorDepartment;  // 학과 관계 (1:1)
-
-    @Column(name = "appointment_date", nullable = false)
-    private LocalDate appointmentDate;  // 임용일자
-
-    @CreationTimestamp
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @Transient
-    private boolean isNew = true;
-
-    @Builder
-    private Professor(Long professorId, User user, LocalDate appointmentDate) {
-        this.professorId = professorId;
-        this.user = user;
-        this.appointmentDate = appointmentDate;
-    }
-
-    @Override
-    public Long getId() {
-        return professorId;
-    }
-
-    @Override
-    public boolean isNew() {
-        return isNew;
-    }
-
-    @PostPersist
-    @PostLoad
-    void markNotNew() {
-        this.isNew = false;
-    }
-
-    /**
-     * 교수 생성
-     */
-    public static Professor create(Long professorId, User user, LocalDate appointmentDate) {
-        return Professor.builder()
-                .professorId(professorId)
-                .user(user)
-                .appointmentDate(appointmentDate)
-                .build();
-    }
-
-    /**
-     * 교번 getter (기존 코드 호환용)
-     */
-    public Long getProfessorNumber() {
-        return this.professorId;
-    }
+	
+	@Id
+	@Column(name = "professor_id")
+	private Long professorId;  // 교번 (예: 20240101001) - PK이자 User.id와 동일
+	
+	@OneToOne(fetch = FetchType.LAZY)
+	@MapsId
+	@JoinColumn(name = "professor_id")
+	private User user;
+	
+	@OneToOne(mappedBy = "professor", fetch = FetchType.LAZY)
+	private ProfessorDepartment professorDepartment;  // 학과 관계 (1:1)
+	
+	@Column(name = "appointment_date", nullable = false)
+	private LocalDate appointmentDate;  // 임용일자
+	
+	@CreationTimestamp
+	@Column(name = "created_at")
+	private LocalDateTime createdAt;
+	
+	@Transient
+	private boolean isNew = true;
+	
+	@Builder
+	private Professor(Long professorId, User user, LocalDate appointmentDate) {
+		this.professorId = professorId;
+		this.user = user;
+		this.appointmentDate = appointmentDate;
+	}
+	
+	/**
+	 * 교수 생성
+	 */
+	public static Professor create(Long professorId, User user, LocalDate appointmentDate) {
+		return Professor.builder()
+				.professorId(professorId)
+				.user(user)
+				.appointmentDate(appointmentDate)
+				.build();
+	}
+	
+	@Override
+	public Long getId() {
+		return professorId;
+	}
+	
+	@Override
+	public boolean isNew() {
+		return isNew;
+	}
+	
+	@PostPersist
+	@PostLoad
+	void markNotNew() {
+		this.isNew = false;
+	}
+	
+	/**
+	 * 교번 getter (기존 코드 호환용)
+	 */
+	public Long getProfessorNumber() {
+		return this.professorId;
+	}
 }
