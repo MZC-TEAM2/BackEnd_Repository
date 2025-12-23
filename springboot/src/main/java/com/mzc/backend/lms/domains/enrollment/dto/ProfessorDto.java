@@ -10,8 +10,8 @@ import lombok.Getter;
 @Getter
 @Builder
 public class ProfessorDto {
-    private Long id;
-
-    @Encrypted
-    private String name;
+	private Long id;
+	
+	@Encrypted
+	private String name;
 }
