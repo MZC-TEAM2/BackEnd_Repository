@@ -1,6 +1,10 @@
--- V22__seed_30_dummy_students_course_50.sql
+-- V22__seed_30_dummy_students_course_52.sql
 -- 더미 학생 30명 생성 + course_id=52 수강 등록
 -- 로그인: username=학번(숫자), password=password123
+
+-- 먼저 course_id=52 생성 (subject_id=52 마이크로서비스, professor_id=20250101002)
+INSERT INTO `courses` (`id`, `subject_id`, `academic_term_id`, `section_number`, `current_students`, `professor_id`, `max_students`, `created_at`, `description`) VALUES
+(52, 52, 1, '01', 0, 20250101002, 60, NOW(), '마이크로서비스 아키텍처 강의');
 
 INSERT INTO `users` (`id`, `email`, `password`, `created_at`, `updated_at`, `deleted_at`) VALUES
 (20250102100, 'c2nTlYsK/IzDAZLBk11JH+jC+atAJ0iLLRtZnLAhuYE=', '$2a$12$ZcgzTwf5HH/w3/qxh/y1pe9bzo1x6tr8YlZGxXENnZ14Pl2BtI34m', '2025-12-22 10:00:00.000000', NULL, NULL),
