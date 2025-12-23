@@ -17,12 +17,12 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 @RequestMapping("/api/v1/sse")
 @RequiredArgsConstructor
 public class SseController implements SseControllerSwagger {
-
-    private final SseService sseService;
-
-    @Override
-    @GetMapping(value = "/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter subscribe(@AuthenticationPrincipal Long userId) {
-        return sseService.subscribe(userId);
-    }
+	
+	private final SseService sseService;
+	
+	@Override
+	@GetMapping(value = "/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+	public SseEmitter subscribe(@AuthenticationPrincipal Long userId) {
+		return sseService.subscribe(userId);
+	}
 }
