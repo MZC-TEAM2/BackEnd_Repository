@@ -15,7 +15,9 @@ import java.lang.annotation.*;
 @Constraint(validatedBy = GradeValidator.class)
 @Documented
 public @interface ValidGrade {
-    String message() default "유효하지 않은 학년 정보입니다";
-    Class<?>[] groups() default {};
-    Class<? extends Payload>[] payload() default {};
+	String message() default "유효하지 않은 학년 정보입니다";
+	
+	Class<?>[] groups() default {};
+	
+	Class<? extends Payload>[] payload() default {};
 }
