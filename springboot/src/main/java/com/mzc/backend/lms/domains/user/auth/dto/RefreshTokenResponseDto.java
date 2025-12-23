@@ -9,17 +9,17 @@ import lombok.Data;
 @Data
 @Builder
 public class RefreshTokenResponseDto {
-
-    private String accessToken;
-    private String refreshToken;
-
-    /**
-     * 토큰 응답 생성
-     */
-    public static RefreshTokenResponseDto of(String accessToken, String refreshToken) {
-        return RefreshTokenResponseDto.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .build();
-    }
+	
+	private String accessToken;
+	private String refreshToken;
+	
+	/**
+	 * 토큰 응답 생성
+	 */
+	public static RefreshTokenResponseDto of(String accessToken, String refreshToken) {
+		return RefreshTokenResponseDto.builder()
+				.accessToken(accessToken)
+				.refreshToken(refreshToken)
+				.build();
+	}
 }
