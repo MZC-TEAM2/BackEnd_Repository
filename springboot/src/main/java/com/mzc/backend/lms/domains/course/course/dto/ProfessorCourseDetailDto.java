@@ -12,17 +12,17 @@ import java.util.List;
 @Getter
 @Builder
 public class ProfessorCourseDetailDto {
-    private Long id;
-    private String courseCode;
-    private String courseName;
-    private String section;
-    private DepartmentDto department;
-    private Integer credits;
-    private CourseTypeDto courseType;
-    private Integer maxStudents;
-    private Integer currentStudents;
-    private String description;
-    private List<ScheduleDto> schedule;
-    private LocalDateTime createdAt;
+	private Long id;
+	private String courseCode;
+	private String courseName;
+	private String section;
+	private DepartmentDto department;
+	private Integer credits;
+	private CourseTypeDto courseType;
+	private Integer maxStudents;
+	private Integer currentStudents;
+	private String description;
+	private List<ScheduleDto> schedule;
+	private LocalDateTime createdAt;
 }
 
