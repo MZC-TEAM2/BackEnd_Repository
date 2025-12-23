@@ -6,28 +6,29 @@
 
 ## Tech Stack
 
-| Category | Technology |
-|----------|------------|
-| Language | Java 21 |
-| Framework | Spring Boot 3.5.7 |
-| Database | MySQL 8.0 |
-| Cache | Redis 7 |
-| Reverse Proxy | Nginx |
-| Authentication | JWT (Access/Refresh Token) |
-| DB Migration | Flyway |
-| API Docs | Swagger (SpringDoc OpenAPI) |
-| Code Quality | CheckStyle, PMD, SpotBugs |
-| Container | Docker, Docker Compose |
+| Category       | Technology                  |
+|----------------|-----------------------------|
+| Language       | Java 21                     |
+| Framework      | Spring Boot 3.5.7           |
+| Database       | MySQL 8.0                   |
+| Cache          | Redis 7                     |
+| Reverse Proxy  | Nginx                       |
+| Authentication | JWT (Access/Refresh Token)  |
+| DB Migration   | Flyway                      |
+| API Docs       | Swagger (SpringDoc OpenAPI) |
+| Code Quality   | CheckStyle, PMD, SpotBugs   |
+| Container      | Docker, Docker Compose      |
 
 ---
+
 ## Documentation
 
-| Document | Description |
-|----------|-------------|
-| [API Specification](./api-spec/README.md) | 도메인별 API 명세 (12개 도메인, 94개 API) |
+| Document                                           | Description                                  |
+|----------------------------------------------------|----------------------------------------------|
+| [API Specification](./api-spec/README.md)          | 도메인별 API 명세 (12개 도메인, 94개 API)               |
 | [Architecture Guide](./docs/ARCHITECTURE_GUIDE.md) | 인프라 아키텍처 가이드 (Docker, Nginx, Load Balancing) |
-| [Flow Charts](./flow-chart) | 기능별 플로우 차트 (33개) |
-| [DB Table Spec](./docs/TABLE_SPEC.md) | 데이터베이스 테이블 명세서 |
+| [Flow Charts](./flow-chart)                        | 기능별 플로우 차트 (33개)                             |
+| [DB Table Spec](./docs/TABLE_SPEC.md)              | 데이터베이스 테이블 명세서                               |
 
 ### Database Schema
 
@@ -80,17 +81,17 @@
 
 ## Domains
 
-| Domain | Description |
-|--------|-------------|
-| **User** | 사용자 관리 (학생, 교수), 인증/인가, 프로필 |
-| **Academy** | 단과대, 학과 정보 관리 |
-| **Course** | 강의 개설, 주차별 콘텐츠, 강의 검색 |
-| **Enrollment** | 수강신청, 장바구니, 일괄 신청 (분산 락 적용) |
-| **Attendance** | 출석 체크, 출석 현황 조회 |
-| **Board** | 게시판 (공지, 자유, Q&A), 게시글 CRUD, 댓글 |
-| **Message** | 1:1 대화, 메시지 발송, 읽음 처리 |
+| Domain           | Description                     |
+|------------------|---------------------------------|
+| **User**         | 사용자 관리 (학생, 교수), 인증/인가, 프로필     |
+| **Academy**      | 단과대, 학과 정보 관리                   |
+| **Course**       | 강의 개설, 주차별 콘텐츠, 강의 검색           |
+| **Enrollment**   | 수강신청, 장바구니, 일괄 신청 (분산 락 적용)     |
+| **Attendance**   | 출석 체크, 출석 현황 조회                 |
+| **Board**        | 게시판 (공지, 자유, Q&A), 게시글 CRUD, 댓글 |
+| **Message**      | 1:1 대화, 메시지 발송, 읽음 처리           |
 | **Notification** | 알림 발송 (Redis Queue), SSE 실시간 푸시 |
-| **Dashboard** | 학생 대시보드 (미제출 과제, 오늘 강의, 수강 현황) |
+| **Dashboard**    | 학생 대시보드 (미제출 과제, 오늘 강의, 수강 현황)  |
 
 ---
 
@@ -123,13 +124,13 @@ springboot/
 
 ---
 
-
 ### Access Points
-| Service | URL |
-|---------|-----|
-| API Server | http://localhost:8080 |
-| Swagger UI | http://localhost:8080/swagger-ui.html |
-| phpMyAdmin | http://localhost:8081 |
-| Redis Commander | http://localhost:8082 |
+
+| Service         | URL                                   |
+|-----------------|---------------------------------------|
+| API Server      | http://localhost:8080                 |
+| Swagger UI      | http://localhost:8080/swagger-ui.html |
+| phpMyAdmin      | http://localhost:8081                 |
+| Redis Commander | http://localhost:8082                 |
 
 ---
