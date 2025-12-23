@@ -13,15 +13,15 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class LikeCheckResponseDto {
-    
-    private Boolean liked;
-    
-    /**
-     * 좋아요 여부 응답 생성
-     */
-    public static LikeCheckResponseDto of(boolean liked) {
-        return LikeCheckResponseDto.builder()
-                .liked(liked)
-                .build();
-    }
+	
+	private Boolean liked;
+	
+	/**
+	 * 좋아요 여부 응답 생성
+	 */
+	public static LikeCheckResponseDto of(boolean liked) {
+		return LikeCheckResponseDto.builder()
+				.liked(liked)
+				.build();
+	}
 }
