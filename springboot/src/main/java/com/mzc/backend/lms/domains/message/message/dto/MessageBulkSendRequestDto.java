@@ -13,10 +13,10 @@ import java.util.List;
 @Getter
 @Setter
 public class MessageBulkSendRequestDto {
-
-    @NotEmpty(message = "수신자 목록은 필수입니다.")
-    private List<Long> receiverIds;
-
-    @NotBlank(message = "메시지 내용은 필수입니다.")
-    private String content;
+	
+	@NotEmpty(message = "수신자 목록은 필수입니다.")
+	private List<Long> receiverIds;
+	
+	@NotBlank(message = "메시지 내용은 필수입니다.")
+	private String content;
 }
